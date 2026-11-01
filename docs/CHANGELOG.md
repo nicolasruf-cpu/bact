@@ -1,6 +1,17 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-03 — Urocultivo de punta a punta
+- Lectura: opciones del protocolo (teclas 1–5), aislamientos con recuento, placa de origen y significancia (la marca el bacteriólogo); reincubación limitada; cierre automático según la opción.
+- Identificación: preliminar o definitiva (bioquímicas, VITEK manual, otro); antibiograma solo si hay panel para el grupo; sin ATB con motivo.
+- Antibiograma: difusión o CIM, panel según el grupo; grilla con vista previa; interpretación automática con el set de puntos de corte vigente (congelado en el test); cambio de interpretación con motivo y permiso; elegir qué se informa.
+- Validación: vista previa del informe, confirmación explícita, informe definitivo inmutable (snapshot) e imprimible; estados de estudio y muestra.
+- Perfil de sensibilidad: % S/I/R por especie y antibiótico; primer aislamiento por paciente y especie; solo informes validados; aviso con < 30 aislamientos (metodología de referencia CLSI M39, Q-C9).
+- Mesadas de lectura, identificación, antibiogramas y validación; contadores en inicio; la mesada muestra lo disponible aunque el liberador no haya corrido.
+- Catálogo de referencia (16 organismos, 18 antibióticos, 4 paneles) y set de puntos de corte FICTICIO solo para demo.
+- `demo:advance N` simula el paso del tiempo (siembras, lecturas, antibiogramas).
+- Pruebas: 128 en verde (incluye el circuito completo por HTTP).
+
 ### 2026-11-03 — Urocultivo, parte 1: tanda de siembra
 - Módulo `Cultures`: cultivo + placas según la versión de protocolo congelada; omitir un medio exige motivo; idempotente.
 - Módulo `WorkBatches`: iniciar tanda desde la mesada (las actividades quedan tomadas), sembrar ítem por ítem, confirmación múltiple con protocolo estándar, retirar ítem con motivo, pausar/reanudar/finalizar (los pendientes vuelven a la mesada). Una actividad en una sola tanda activa (garantizado por la base). Historial de la tanda.

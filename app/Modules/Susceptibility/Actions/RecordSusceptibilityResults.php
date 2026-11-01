@@ -4,9 +4,8 @@ namespace App\Modules\Susceptibility\Actions;
 
 use App\Models\User;
 use App\Modules\Audit\Services\Auditor;
-use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use App\Modules\Configuration\Models\Breakpoint;
-use App\Modules\Configuration\Models\BreakpointSet;
+use App\Modules\Configuration\Services\ActiveBreakpointSet;
 use App\Modules\Configuration\Services\BreakpointInterpreter;
 use App\Modules\Cultures\Services\CultureClosure;
 use App\Modules\Identity\Enums\Permission;
@@ -31,6 +30,7 @@ class RecordSusceptibilityResults
 {
     public function __construct(
         private readonly BreakpointInterpreter $interpreter,
+        private readonly ActiveBreakpointSet $activeSet,
         private readonly CultureClosure $closure,
         private readonly Auditor $auditor,
     ) {}
@@ -55,7 +55,7 @@ class RecordSusceptibilityResults
                 throw ValidationException::withMessages(['results' => 'El antibiograma todavía no cumplió la incubación mínima del protocolo.']);
             }
 
-            $set = $this->activeBreakpointSet();
+            $set = $this->activeSet->resolve();
             $group = $test->isolate->organism?->organism_group;
             $breakpoints = $set === null || $group === null ? collect() : Breakpoint::query()
                 ->where('breakpoint_set_id', $set->id)
@@ -141,18 +141,5 @@ class RecordSusceptibilityResults
 
             return $test;
         });
-    }
-
-    /**
-     * Set vigente. En producción solo sets reales; el ficticio de demo nunca se usa allí.
-     */
-    private function activeBreakpointSet(): ?BreakpointSet
-    {
-        return BreakpointSet::query()
-            ->where('status', ProtocolVersionStatus::Active->value)
-            ->when(app()->isProduction(), fn ($q) => $q->where('is_synthetic', false))
-            ->orderBy('is_synthetic')
-            ->latest('id')
-            ->first();
     }
 }

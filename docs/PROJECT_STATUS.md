@@ -1,7 +1,7 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-11-01
-**Fase actual:** 3 — Base técnica (parte 1 hecha) → siguiente: primer circuito de urocultivo (Fase 4a, con datos sintéticos)
+**Última actualización:** 2026-11-03
+**Fase actual:** 4a — MVP urocultivo: circuito de punta a punta funcionando con datos sintéticos; pendiente revisión del usuario y validación clínica
 
 ## Terminado
 - **Fase 0:** análisis, versiones, arquitectura y ADR 0001–0008 (aceptados).
@@ -14,20 +14,25 @@
   - **Pruebas:** `./sail composer test` → 70 en verde, Larastan sin errores; frontend sin errores de tipos ni de lint.
 - **Auditoría base (2026-11-01):** append-only con triggers, hash encadenado, `audit:verify`, pantalla de consulta.
 - **Urocultivo, entrega 1 (2026-11-02):** plantilla de referencia, recepción manual, actividades de siembra, mesada de siembra.
-- **Recepción por orden (2026-11-02, Q-F8):** una orden con varias muestras; muestras posteriores se suman a la orden. 94 pruebas en verde.
+- **Recepción por orden (2026-11-02, Q-F8):** una orden con varias muestras; muestras posteriores se suman a la orden.
+- **Tanda de siembra (2026-11-03):** cultivos y placas según protocolo; lectura programada.
+- **Urocultivo de punta a punta (2026-11-03):** tanda de siembra → lectura → aislamientos → identificación → antibiograma → validación → informe → perfil de sensibilidad. 128 pruebas en verde.
 
 ## En desarrollo
 - Nada a medio hacer.
 
 ## Bloqueos
 - Ninguno técnico.
-- Clínicos: se avanza con plantillas de referencia (D-0008). Sigue abierto Q-C4 (edición CLSI; quién confirma los puntos de corte).
+- Clínicos: la plantilla de urocultivo (docs/templates/UROCULTIVO.md) debe revisarla el Director técnico responsable; puntos de corte reales (Q-C4); metodología del perfil (Q-C9).
 
 ## Próximos pasos
-1. **Urocultivo, entrega 2:** tanda de siembra (WorkBatches) → cultivo y placas según protocolo → lectura programada (`READ_CULTURE` SCHEDULED → READY).
-2. **Urocultivo, entrega 3:** lectura (opciones y criterios de la plantilla, a agregar con su fuente; Q-C2).
-3. Administración de usuarios (alta, asignación de roles por sede, desactivación).
-4. CI (pendiente Q-T3: repositorio remoto).
+1. Usuario: recorrer el circuito en la demo y revisar la plantilla con el Director técnico.
+2. Administración de usuarios y de configuración clínica (aprobar protocolos y cargar puntos de corte por CSV, Fase 4d).
+3. Corrección de informes (nueva versión con motivo), PDF.
+4. Tandas de lectura (Q-F9), hemocultivo y resultados críticos (Fase 4b).
+5. CI (Q-T3).
+
+3: repositorio remoto).
 
 ## Problemas conocidos
 - El script oficial `vendor/bin/sail` no funciona en Git Bash: usar `./sail` (atajo propio).

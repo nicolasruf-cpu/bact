@@ -57,4 +57,6 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-F6 [RESPONDIDA 2026-11-02]** El paciente se identifica por número de documento (D-0013 aceptada).
 - **Q-F8 [RESPONDIDA 2026-11-02]** Una orden (paciente, médico) puede tener varias muestras (p. ej., urocultivo + hemocultivo ×2 + retrocultivo). Cada muestra tiene su propio código; suelen llegar juntas, pero pueden llegar en distintos momentos. Implementado: recepción por orden con número de LABWIN; las muestras posteriores se suman a la orden existente.
 - **Q-F7** Tiempo objetivo para sembrar desde la recepción (para marcar siembras demoradas). Sin definir, las siembras no vencen (relacionada con Q-C6).
+- **Q-C9** Perfil de sensibilidad: se aplica la metodología de referencia de CLSI M39 (primer aislamiento por paciente y especie en el período, solo resultados informados, advertencia con < 30 aislamientos). ¿El laboratorio la adopta así? ¿Período anual? ¿Separar por servicio (internados/ambulatorios) o por tipo de muestra?
+- **Q-F9** Tandas de lectura: hoy la lectura, la identificación y el antibiograma se hacen ítem por ítem desde su mesada; ¿hace falta tanda también para la lectura (como en la siembra)?
 - **Q-F5** ¿Se derivan aislamientos a laboratorios de referencia (p. ej., INEI-ANLIS Malbrán)? ¿Hay que registrar derivaciones y sus resultados?

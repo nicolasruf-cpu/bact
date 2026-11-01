@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, ScanLine, ScrollText, TestTubes } from '@lucide/vue';
+import {
+    BarChart3,
+    Dna,
+    LayoutGrid,
+    Microscope,
+    Pill,
+    ScanLine,
+    ScrollText,
+    ShieldCheck,
+    TestTubes,
+} from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -19,7 +29,8 @@ import { usePermissions } from '@/composables/usePermissions';
 import { dashboard } from '@/routes';
 import { index as auditIndex } from '@/routes/audit';
 import { create as receptionCreate } from '@/routes/reception';
-import { inoculation } from '@/routes/workbenches';
+import { susceptibility as profile } from '@/routes/statistics';
+import { inoculation, show as workbench } from '@/routes/workbenches';
 import type { NavItem } from '@/types';
 
 const { can } = usePermissions();
@@ -35,6 +46,45 @@ const mainNavItems = computed<NavItem[]>(() => [
         : []),
     ...(can('cultures.inoculate')
         ? [{ title: 'Siembra', href: inoculation(), icon: TestTubes }]
+        : []),
+    ...(can('cultures.read_negative') || can('cultures.read_positive')
+        ? [{ title: 'Lectura', href: workbench('reading'), icon: Microscope }]
+        : []),
+    ...(can('identification.perform')
+        ? [
+              {
+                  title: 'Identificación',
+                  href: workbench('identification'),
+                  icon: Dna,
+              },
+          ]
+        : []),
+    ...(can('ast.setup') || can('ast.read')
+        ? [
+              {
+                  title: 'Antibiogramas',
+                  href: workbench('susceptibility'),
+                  icon: Pill,
+              },
+          ]
+        : []),
+    ...(can('reports.validate')
+        ? [
+              {
+                  title: 'Validación',
+                  href: workbench('validation'),
+                  icon: ShieldCheck,
+              },
+          ]
+        : []),
+    ...(can('statistics.view')
+        ? [
+              {
+                  title: 'Perfil de sensibilidad',
+                  href: profile(),
+                  icon: BarChart3,
+              },
+          ]
         : []),
     ...(can('audit.view')
         ? [{ title: 'Auditoría', href: auditIndex(), icon: ScrollText }]
