@@ -16,7 +16,7 @@ Columnas comunes:
 |---|---|
 | Sujeto | Sample (preregistrada por el LIS) |
 | Se crea cuando | El LIS informa una solicitud con muestra esperada (sin integración: no existe; la recepción se registra directamente) |
-| Registra | Hora de recepción, condiciones (temperatura, envase, volumen, rotulado ⚙ config), observaciones |
+| Registra | **Por orden** (Q-F8): número de orden de LABWIN, paciente, médico, servicio, prioridad; **por muestra**: código propio, tipo, estudios, hora de toma, observaciones. Si la orden ya existe en la sede, las muestras se suman a ella (pueden llegar en distintos momentos). Cada entrega queda registrada como `Reception`. Condiciones de recepción ⚙ config: pendiente |
 | Resultado | `SampleReceived` → un `INOCULATE` por estudio (y `DIRECT_EXAM` si el protocolo lo indica) · o `SampleRejected` (motivo de rechazo ⚙ config, ❓ Q-C8) |
 | En tanda | Sí (recepción por lote con lector de barras) |
 | Confirmación múltiple | Sí, solo "recibida en condiciones" sin observaciones |

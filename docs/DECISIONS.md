@@ -15,7 +15,7 @@
 | D-0010 | 2026-10-31 | Sin Redis: colas, caché, sesiones y bloqueos en MariaDB (modifica ADR-0002) | Aceptada | [adr/0002](adr/0002-stack-y-versiones.md) |
 | D-0011 | 2026-11-01 | Sin autorregistro ni autoeliminación de cuentas: las crea y desactiva el Administrador (la auditoría debe conservar al autor de cada acción) | Aceptada (seguridad, alineada con SECURITY.md) | — |
 | D-0012 | 2026-11-01 | Roles por sede con la función *teams* de spatie/laravel-permission (team = `Site`); roles definidos una vez, asignados por sede | Aceptada (implementa ADR-0008) | [ADR-0008](adr/0008-multisede.md) |
-| D-0013 | 2026-11-02 | En la recepción el paciente se identifica por número de documento; si ya existe se reutiliza sin modificar sus datos (la corrección de datos de paciente será una operación aparte, auditada) | Propuesta (❓ Q-F6) | [OPEN_QUESTIONS](OPEN_QUESTIONS.md) |
+| D-0013 | 2026-11-02 | En la recepción el paciente se identifica por número de documento; si ya existe se reutiliza sin modificar sus datos (la corrección de datos de paciente será una operación aparte, auditada) | Aceptada (Q-F6) | [OPEN_QUESTIONS](OPEN_QUESTIONS.md) |
 | D-0014 | 2026-11-02 | Alias polimórficos estables (`Relation::enforceMorphMap`): la base no guarda nombres de clase PHP | Aceptada (técnica) | — |
 
 ADR-0001 a 0007 aprobadas por el usuario el 2026-10-30 ("avancemos"). D-0008, D-0009 y ADR-0008 decididas por el usuario el 2026-10-31.

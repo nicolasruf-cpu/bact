@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $requesting_physician
  * @property Priority $priority
  * @property int $created_by
+ * @property int $lock_version
  * @property-read Patient $patient
  */
 class LabOrder extends Model

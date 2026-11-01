@@ -54,6 +54,7 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-F2** ¿Se registran lotes de medios de cultivo, discos o tarjetas (trazabilidad)? ¿Se gestiona el control de calidad con cepas ATCC dentro del sistema?
 - **Q-F3** VITEK: ¿qué datos de carga se registran (turbidez de la suspensión, operador, casete/posición)?
 - **Q-F4 [RESPONDIDA 2026-10-31]** Validación de informes negativos en lote: **no**; cada informe se valida individualmente.
-- **Q-F6** Identificación del paciente en la recepción: hoy se busca solo por número de documento (D-0013). ¿Alcanza, o hace falta tipo de documento (DNI, pasaporte, extranjero) y algún control adicional (p. ej., fecha de nacimiento) para evitar homónimos o errores de tipeo? Con el LIS integrado, el paciente vendría de LABWIN.
+- **Q-F6 [RESPONDIDA 2026-11-02]** El paciente se identifica por número de documento (D-0013 aceptada).
+- **Q-F8 [RESPONDIDA 2026-11-02]** Una orden (paciente, médico) puede tener varias muestras (p. ej., urocultivo + hemocultivo ×2 + retrocultivo). Cada muestra tiene su propio código; suelen llegar juntas, pero pueden llegar en distintos momentos. Implementado: recepción por orden con número de LABWIN; las muestras posteriores se suman a la orden existente.
 - **Q-F7** Tiempo objetivo para sembrar desde la recepción (para marcar siembras demoradas). Sin definir, las siembras no vencen (relacionada con Q-C6).
 - **Q-F5** ¿Se derivan aislamientos a laboratorios de referencia (p. ej., INEI-ANLIS Malbrán)? ¿Hay que registrar derivaciones y sus resultados?

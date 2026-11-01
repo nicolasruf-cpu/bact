@@ -27,11 +27,28 @@ return new class extends Migration
             $table->ulid()->unique();
             $table->foreignId('site_id')->constrained()->restrictOnDelete();
             $table->foreignId('patient_id')->constrained()->restrictOnDelete();
-            $table->string('external_number', 50)->nullable()->index();
+            // Número de orden del LIS (LABWIN). Único por sede; varias órdenes sin número son posibles.
+            $table->string('external_number', 50)->nullable();
             $table->string('requesting_service', 100)->nullable();
             $table->string('requesting_physician', 150)->nullable();
             $table->string('priority', 10);
             $table->foreignId('created_by')->constrained('users')->restrictOnDelete();
+            $table->unsignedInteger('lock_version')->default(0);
+            $table->timestamps();
+
+            $table->unique(['site_id', 'external_number']);
+        });
+
+        // Recepción = una entrega física (una o varias muestras de una orden).
+        // La idempotencia se controla aquí: un reintento no duplica la entrega.
+        Schema::create('receptions', function (Blueprint $table) {
+            $table->id();
+            $table->ulid()->unique();
+            $table->foreignId('lab_order_id')->constrained()->restrictOnDelete();
+            $table->foreignId('site_id')->constrained()->restrictOnDelete();
+            $table->dateTime('received_at', 6);
+            $table->foreignId('received_by')->constrained('users')->restrictOnDelete();
+            $table->char('idempotency_key', 36)->unique();
             $table->timestamps();
         });
 
@@ -40,6 +57,7 @@ return new class extends Migration
             $table->ulid()->unique();
             $table->string('barcode', 50)->unique();
             $table->foreignId('lab_order_id')->constrained()->restrictOnDelete();
+            $table->foreignId('reception_id')->constrained()->restrictOnDelete();
             $table->foreignId('origin_site_id')->constrained('sites')->restrictOnDelete();
             $table->foreignId('sample_type_id')->constrained()->restrictOnDelete();
             $table->string('status', 30);
@@ -47,7 +65,6 @@ return new class extends Migration
             $table->dateTime('received_at', 6);
             $table->foreignId('received_by')->constrained('users')->restrictOnDelete();
             $table->text('reception_notes')->nullable();
-            $table->char('idempotency_key', 36)->unique();
             $table->unsignedInteger('lock_version')->default(0);
             $table->timestamps();
 
@@ -73,6 +90,7 @@ return new class extends Migration
     {
         Schema::dropIfExists('sample_studies');
         Schema::dropIfExists('samples');
+        Schema::dropIfExists('receptions');
         Schema::dropIfExists('lab_orders');
         Schema::dropIfExists('patients');
     }

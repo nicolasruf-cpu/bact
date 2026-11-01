@@ -38,7 +38,7 @@ Configuration: SampleType, Study, Protocol(+versiones), Medium, IncubationCondit
 | Entidad | Puntos clave |
 |---|---|
 | **Patient** | Datos identificatorios mínimos, ID externo del LIS, documento. Datos sensibles bajo control de acceso. |
-| **LabOrder** (Solicitud) | Procedencia/servicio, médico solicitante, prioridad, número externo. |
+| **LabOrder** (Orden / solicitud) | Pertenece a un paciente; la pide un médico desde un servicio; prioridad; número de orden del LIS. **Agrupa varias muestras**: p. ej., una orden con urocultivo + hemocultivo ×2 + retrocultivo son 4 muestras (4 etiquetas) de la misma orden. La muestra sigue siendo la unidad de seguimiento; la orden es el contexto clínico (quién, para quién, por qué) y la vista de conjunto (qué muestras llegaron y cuáles faltan). |
 | **Sample** (Muestra) | Código de barras único, tipo de muestra, fecha y hora de toma y de recepción, condiciones de recepción, estado (registrada → recibida → en proceso → informada → cerrada; o rechazada con motivo). |
 | **SampleStudy** | Estudio solicitado + **versión de protocolo congelada** al momento de recibir la muestra. |
 | **Culture** | Proceso microbiológico de un estudio; estado propio. |

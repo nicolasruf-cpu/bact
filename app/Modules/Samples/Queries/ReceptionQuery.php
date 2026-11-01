@@ -6,7 +6,9 @@ use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use App\Modules\Configuration\Models\Protocol;
 use App\Modules\Configuration\Models\SampleType;
 use App\Modules\Configuration\Models\Study;
+use App\Modules\Orders\Models\LabOrder;
 use App\Modules\Patients\Models\Patient;
+use App\Modules\Samples\Models\Reception;
 use App\Modules\Samples\Models\Sample;
 use Illuminate\Support\Facades\Date;
 
@@ -47,31 +49,81 @@ class ReceptionQuery
     }
 
     /**
-     * Muestras recibidas hoy en la sede.
+     * Entregas recibidas hoy en la sede, con sus muestras.
      *
      * @return array<int, array<string, mixed>>
      */
     public function receivedToday(int $siteId): array
     {
-        return Sample::query()
-            ->where('origin_site_id', $siteId)
+        return Reception::query()
+            ->where('site_id', $siteId)
             ->where('received_at', '>=', Date::now()->startOfDay()->utc())
-            ->with(['labOrder.patient', 'sampleType', 'studies.study'])
+            ->with(['labOrder.patient', 'samples.sampleType', 'samples.studies.study'])
             ->orderByDesc('received_at')
             ->limit(50)
             ->get()
-            ->map(fn (Sample $sample) => [
-                'ulid' => $sample->ulid,
-                'barcode' => $sample->barcode,
-                'patient' => $sample->labOrder->patient->fullName(),
-                'sample_type' => $sample->sampleType->name,
-                'studies' => $sample->studies->map(fn ($s) => $s->study->name)->values()->all(),
-                'priority' => $sample->labOrder->priority->value,
-                'received_at' => $sample->received_at->toIso8601String(),
-                'status' => $sample->status->label(),
+            ->map(fn (Reception $reception) => [
+                'ulid' => $reception->ulid,
+                'order_number' => $reception->labOrder->external_number,
+                'patient' => $reception->labOrder->patient->fullName(),
+                'priority' => $reception->labOrder->priority->value,
+                'received_at' => $reception->received_at->toIso8601String(),
+                'samples' => $reception->samples->map(fn (Sample $sample) => $this->sampleSummary($sample))->values()->all(),
             ])
             ->values()
             ->all();
+    }
+
+    /**
+     * Orden existente de la sede por su número de LABWIN, con las muestras ya recibidas.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function orderByNumber(int $siteId, ?string $number): ?array
+    {
+        if ($number === null || trim($number) === '') {
+            return null;
+        }
+
+        $order = LabOrder::query()
+            ->where('site_id', $siteId)
+            ->where('external_number', strtoupper(trim($number)))
+            ->with('patient')
+            ->first();
+
+        if ($order === null) {
+            return null;
+        }
+
+        $samples = Sample::query()
+            ->where('lab_order_id', $order->id)
+            ->with(['sampleType', 'studies.study'])
+            ->orderBy('received_at')
+            ->get();
+
+        return [
+            'order_number' => $order->external_number,
+            'patient' => $this->patientSummary($order->patient),
+            'requesting_service' => $order->requesting_service,
+            'requesting_physician' => $order->requesting_physician,
+            'priority' => $order->priority->value,
+            'samples' => $samples->map(fn (Sample $sample) => $this->sampleSummary($sample))->values()->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function sampleSummary(Sample $sample): array
+    {
+        return [
+            'ulid' => $sample->ulid,
+            'barcode' => $sample->barcode,
+            'sample_type' => $sample->sampleType->name,
+            'studies' => $sample->studies->map(fn ($s) => $s->study->name)->values()->all(),
+            'received_at' => $sample->received_at->toIso8601String(),
+            'status' => $sample->status->label(),
+        ];
     }
 
     /**
@@ -85,12 +137,20 @@ class ReceptionQuery
 
         $patient = Patient::query()->where('document_number', strtoupper(trim($document)))->first();
 
-        return $patient ? [
+        return $patient ? $this->patientSummary($patient) : null;
+    }
+
+    /**
+     * @return array{document_number: string, last_name: string, first_name: string, birth_date: string|null, sex: string}
+     */
+    private function patientSummary(Patient $patient): array
+    {
+        return [
             'document_number' => $patient->document_number,
             'last_name' => $patient->last_name,
             'first_name' => $patient->first_name,
             'birth_date' => $patient->birth_date?->toDateString(),
             'sex' => $patient->sex->value,
-        ] : null;
+        ];
     }
 }

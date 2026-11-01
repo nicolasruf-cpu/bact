@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ScanLine, UserCheck } from '@lucide/vue';
+import { ClipboardList, Plus, ScanLine, Trash2, UserCheck } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import PriorityBadge from '@/components/domain/PriorityBadge.vue';
 import ReferenceTemplateNotice from '@/components/domain/ReferenceTemplateNotice.vue';
@@ -23,22 +23,43 @@ import { create as receptionCreate, store } from '@/routes/reception';
 
 type Option = { id: number; code: string; name: string };
 type Choice = { value: string; label: string };
-type PatientMatch = {
+type PatientSummary = {
     document_number: string;
     last_name: string;
     first_name: string;
     birth_date: string | null;
     sex: string;
 };
-type Received = {
+type SampleSummary = {
     ulid: string;
     barcode: string;
-    patient: string;
     sample_type: string;
     studies: string[];
-    priority: string;
     received_at: string;
     status: string;
+};
+type OrderMatch = {
+    order_number: string;
+    patient: PatientSummary;
+    requesting_service: string | null;
+    requesting_physician: string | null;
+    priority: string;
+    samples: SampleSummary[];
+};
+type Delivery = {
+    ulid: string;
+    order_number: string | null;
+    patient: string;
+    priority: string;
+    received_at: string;
+    samples: SampleSummary[];
+};
+type SampleRow = {
+    barcode: string;
+    sample_type_id: number | null;
+    study_ids: number[];
+    collected_at: string;
+    notes: string;
 };
 
 const props = defineProps<{
@@ -48,8 +69,9 @@ const props = defineProps<{
     referenceTemplates: number[];
     priorities: Choice[];
     sexes: Choice[];
-    receivedToday: Received[];
-    patientMatch?: PatientMatch | null;
+    receivedToday: Delivery[];
+    orderMatch?: OrderMatch | null;
+    patientMatch?: PatientSummary | null;
 }>();
 
 defineOptions({
@@ -60,64 +82,102 @@ defineOptions({
 
 const emptyForm = () => ({
     idempotency_key: uuid(),
-    barcode: '',
+    order_number: '',
     document_number: '',
     last_name: '',
     first_name: '',
     birth_date: '',
     sex: 'U',
-    sample_type_id:
-        props.sampleTypes.length === 1
-            ? props.sampleTypes[0].id
-            : (null as number | null),
-    study_ids: [] as number[],
     priority: 'routine',
-    collected_at: '',
     requesting_service: '',
     requesting_physician: '',
-    notes: '',
+    samples: [] as SampleRow[],
 });
 
 const form = useForm(emptyForm());
+const scan = ref('');
+const lastSampleType = ref<number | null>(
+    props.sampleTypes.length === 1 ? props.sampleTypes[0].id : null,
+);
+const existingOrder = ref<OrderMatch | null>(null);
 const knownPatient = ref(false);
 const lookingUp = ref(false);
 
-const studiesForType = computed(() => {
-    const allowed = form.sample_type_id
-        ? (props.available[form.sample_type_id] ?? [])
-        : [];
-
-    return props.studies.filter((study) => allowed.includes(study.id));
-});
-
-const usesReferenceTemplate = computed(
-    () =>
-        form.sample_type_id !== null &&
-        props.referenceTemplates.includes(form.sample_type_id),
+const patientLocked = computed(
+    () => knownPatient.value || existingOrder.value !== null,
 );
 
-// Al cambiar el tipo de muestra se descartan estudios que no aplican; si hay uno solo, se marca.
-watch(
-    () => form.sample_type_id,
-    () => {
-        const allowed = studiesForType.value.map((s) => s.id);
-        form.study_ids = form.study_ids.filter((id) => allowed.includes(id));
-        if (form.study_ids.length === 0 && allowed.length === 1) {
-            form.study_ids = [allowed[0]];
-        }
-    },
-    { immediate: true },
+function studiesFor(sampleTypeId: number | null): Option[] {
+    const allowed = sampleTypeId ? (props.available[sampleTypeId] ?? []) : [];
+
+    return props.studies.filter((study) => allowed.includes(study.id));
+}
+
+function defaultStudies(sampleTypeId: number | null): number[] {
+    const options = studiesFor(sampleTypeId);
+
+    return options.length === 1 ? [options[0].id] : [];
+}
+
+const usesReferenceTemplate = computed(() =>
+    form.samples.some(
+        (s) =>
+            s.sample_type_id !== null &&
+            props.referenceTemplates.includes(s.sample_type_id),
+    ),
 );
 
 function focusField(id: string) {
     void nextTick(() => document.getElementById(id)?.focus());
 }
 
+// --- Orden -----------------------------------------------------------------
+
+function lookupOrder() {
+    const orderNumber = form.order_number.trim();
+    if (!orderNumber) {
+        existingOrder.value = null;
+
+        return;
+    }
+
+    lookingUp.value = true;
+    router.reload({
+        only: ['orderMatch'],
+        data: { order: orderNumber },
+        onFinish: () => (lookingUp.value = false),
+    });
+}
+
+watch(
+    () => props.orderMatch,
+    (match) => {
+        if (
+            match &&
+            match.order_number === form.order_number.trim().toUpperCase()
+        ) {
+            existingOrder.value = match;
+            form.document_number = match.patient.document_number;
+            form.last_name = match.patient.last_name;
+            form.first_name = match.patient.first_name;
+            form.birth_date = match.patient.birth_date ?? '';
+            form.sex = match.patient.sex;
+            form.priority = match.priority;
+            form.requesting_service = match.requesting_service ?? '';
+            form.requesting_physician = match.requesting_physician ?? '';
+            focusField('scan');
+        } else {
+            existingOrder.value = null;
+            focusField('document_number');
+        }
+    },
+);
+
+// --- Paciente --------------------------------------------------------------
+
 function lookupPatient() {
     const documentNumber = form.document_number.trim();
-    if (!documentNumber) {
-        knownPatient.value = false;
-
+    if (!documentNumber || existingOrder.value) {
         return;
     }
 
@@ -132,6 +192,9 @@ function lookupPatient() {
 watch(
     () => props.patientMatch,
     (match) => {
+        if (existingOrder.value) {
+            return;
+        }
         if (
             match &&
             match.document_number === form.document_number.trim().toUpperCase()
@@ -147,19 +210,61 @@ watch(
     },
 );
 
+// --- Muestras --------------------------------------------------------------
+
+function addSample() {
+    const barcode = scan.value.trim().toUpperCase();
+    if (!barcode) {
+        return;
+    }
+    scan.value = '';
+    if (form.samples.some((s) => s.barcode === barcode)) {
+        return;
+    }
+
+    form.samples.push({
+        barcode,
+        sample_type_id: lastSampleType.value,
+        study_ids: defaultStudies(lastSampleType.value),
+        collected_at: '',
+        notes: '',
+    });
+}
+
+function setSampleType(row: SampleRow, sampleTypeId: number) {
+    row.sample_type_id = sampleTypeId;
+    lastSampleType.value = sampleTypeId;
+    const allowed = studiesFor(sampleTypeId).map((s) => s.id);
+    row.study_ids = row.study_ids.filter((id) => allowed.includes(id));
+    if (row.study_ids.length === 0) {
+        row.study_ids = defaultStudies(sampleTypeId);
+    }
+}
+
+function removeSample(index: number) {
+    form.samples.splice(index, 1);
+}
+
+function sampleError(index: number, field: string): string | undefined {
+    return (form.errors as Record<string, string>)[`samples.${index}.${field}`];
+}
+
+// --- Envío -----------------------------------------------------------------
+
+function resetAll() {
+    form.defaults(emptyForm());
+    form.reset();
+    form.clearErrors();
+    existingOrder.value = null;
+    knownPatient.value = false;
+    focusField('order_number');
+}
+
 function submit() {
+    addSample();
     form.post(store().url, {
         preserveScroll: true,
-        onSuccess: () => {
-            const keep = {
-                sample_type_id: form.sample_type_id,
-                priority: 'routine',
-            };
-            form.defaults({ ...emptyForm(), ...keep });
-            form.reset();
-            knownPatient.value = false;
-            focusField('barcode');
-        },
+        onSuccess: resetAll,
     });
 }
 </script>
@@ -168,37 +273,99 @@ function submit() {
     <Head title="Recepción" />
 
     <div class="grid gap-6 p-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <Card>
-            <CardHeader>
-                <CardTitle class="flex items-center gap-2">
-                    <ScanLine class="size-5" /> Recepción de muestras
-                </CardTitle>
-                <CardDescription>
-                    Escaneá la etiqueta del LIS y completá los datos de la
-                    solicitud.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form class="grid gap-5" @submit.prevent="submit">
-                    <div class="grid gap-2">
-                        <Label for="barcode">Código de muestra</Label>
-                        <Input
-                            id="barcode"
-                            v-model="form.barcode"
-                            v-focus
-                            autocomplete="off"
-                            class="font-mono text-lg uppercase"
-                            placeholder="Escaneá la etiqueta"
-                            @keydown.enter.prevent="
-                                focusField('document_number')
-                            "
-                        />
-                        <InputError :message="form.errors.barcode" />
+        <form class="grid content-start gap-6" @submit.prevent="submit">
+            <!-- Orden y paciente -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <ClipboardList class="size-5" /> Orden
+                    </CardTitle>
+                    <CardDescription>
+                        Ingresá el número de orden de LABWIN. Si la orden ya
+                        existe, las muestras se suman a ella.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="grid gap-5">
+                    <div
+                        class="grid gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+                    >
+                        <div class="grid gap-2">
+                            <Label for="order_number">Número de orden</Label>
+                            <Input
+                                id="order_number"
+                                v-model="form.order_number"
+                                v-focus
+                                autocomplete="off"
+                                class="font-mono uppercase"
+                                placeholder="Nº de orden (LABWIN)"
+                                :readonly="existingOrder !== null"
+                                @blur="lookupOrder"
+                                @keydown.enter.prevent="lookupOrder"
+                            />
+                            <InputError :message="form.errors.order_number" />
+                        </div>
+                        <div class="flex items-center gap-2 pb-1">
+                            <Badge
+                                v-if="lookingUp"
+                                variant="outline"
+                                class="gap-1"
+                                ><Spinner class="size-3" /> Buscando…</Badge
+                            >
+                            <Badge
+                                v-else-if="existingOrder"
+                                variant="secondary"
+                                data-test="existing-order"
+                                >Orden existente ·
+                                {{ existingOrder.samples.length }}
+                                recibidas</Badge
+                            >
+                            <Button
+                                v-if="existingOrder"
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                @click="resetAll"
+                                >Otra orden</Button
+                            >
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="existingOrder && existingOrder.samples.length"
+                        class="rounded-md border bg-muted/40 p-3 text-sm"
+                    >
+                        <p class="mb-1 font-medium">
+                            Ya recibidas en esta orden
+                        </p>
+                        <ul class="grid gap-1">
+                            <li
+                                v-for="sample in existingOrder.samples"
+                                :key="sample.ulid"
+                                class="flex flex-wrap gap-2 text-muted-foreground"
+                            >
+                                <span class="font-mono text-foreground">{{
+                                    sample.barcode
+                                }}</span>
+                                {{ sample.sample_type }} ·
+                                {{ sample.studies.join(', ') }} ·
+                                {{ sample.status }}
+                            </li>
+                        </ul>
                     </div>
 
                     <fieldset class="grid gap-4 rounded-lg border p-4">
-                        <legend class="px-1 text-sm font-medium">
+                        <legend
+                            class="flex items-center gap-2 px-1 text-sm font-medium"
+                        >
                             Paciente
+                            <Badge
+                                v-if="knownPatient && !existingOrder"
+                                variant="secondary"
+                                class="gap-1"
+                                data-test="known-patient"
+                                ><UserCheck class="size-3" /> Ya
+                                registrado</Badge
+                            >
                         </legend>
                         <div class="grid gap-4 sm:grid-cols-3">
                             <div class="grid gap-2">
@@ -207,6 +374,7 @@ function submit() {
                                     id="document_number"
                                     v-model="form.document_number"
                                     autocomplete="off"
+                                    :readonly="existingOrder !== null"
                                     @blur="lookupPatient"
                                     @keydown.enter.prevent="lookupPatient"
                                 />
@@ -219,7 +387,7 @@ function submit() {
                                 <Input
                                     id="last_name"
                                     v-model="form.last_name"
-                                    :readonly="knownPatient"
+                                    :readonly="patientLocked"
                                 />
                                 <InputError :message="form.errors.last_name" />
                             </div>
@@ -228,7 +396,7 @@ function submit() {
                                 <Input
                                     id="first_name"
                                     v-model="form.first_name"
-                                    :readonly="knownPatient"
+                                    :readonly="patientLocked"
                                 />
                                 <InputError :message="form.errors.first_name" />
                             </div>
@@ -240,7 +408,7 @@ function submit() {
                                     id="birth_date"
                                     v-model="form.birth_date"
                                     type="date"
-                                    :readonly="knownPatient"
+                                    :readonly="patientLocked"
                                 />
                                 <InputError :message="form.errors.birth_date" />
                             </div>
@@ -250,7 +418,7 @@ function submit() {
                                     id="sex"
                                     v-model="form.sex"
                                     class="h-9 rounded-md border bg-background px-2 text-sm"
-                                    :disabled="knownPatient"
+                                    :disabled="patientLocked"
                                 >
                                     <option
                                         v-for="sex in props.sexes"
@@ -262,172 +430,230 @@ function submit() {
                                 </select>
                                 <InputError :message="form.errors.sex" />
                             </div>
-                            <div class="flex items-end">
-                                <Badge
-                                    v-if="lookingUp"
-                                    variant="outline"
-                                    class="gap-1"
-                                    ><Spinner class="size-3" /> Buscando…</Badge
-                                >
-                                <Badge
-                                    v-else-if="knownPatient"
-                                    variant="secondary"
-                                    class="gap-1"
-                                    data-test="known-patient"
-                                    ><UserCheck class="size-3" /> Paciente ya
-                                    registrado</Badge
-                                >
-                            </div>
                         </div>
                     </fieldset>
 
-                    <fieldset class="grid gap-4 rounded-lg border p-4">
-                        <legend class="px-1 text-sm font-medium">
-                            Muestra y estudios
-                        </legend>
-
+                    <div class="grid gap-4 sm:grid-cols-3">
                         <div class="grid gap-2">
-                            <span class="text-sm font-medium"
-                                >Tipo de muestra</span
+                            <Label for="requesting_physician"
+                                >Médico solicitante</Label
                             >
+                            <Input
+                                id="requesting_physician"
+                                v-model="form.requesting_physician"
+                                :readonly="existingOrder !== null"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="requesting_service"
+                                >Servicio / procedencia</Label
+                            >
+                            <Input
+                                id="requesting_service"
+                                v-model="form.requesting_service"
+                                :readonly="existingOrder !== null"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <span class="text-sm font-medium">Prioridad</span>
                             <div class="flex flex-wrap gap-2" role="radiogroup">
                                 <label
-                                    v-for="type in props.sampleTypes"
-                                    :key="type.id"
-                                    class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+                                    v-for="priority in props.priorities"
+                                    :key="priority.value"
+                                    class="flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
                                 >
                                     <input
-                                        v-model="form.sample_type_id"
+                                        v-model="form.priority"
                                         type="radio"
-                                        name="sample_type_id"
-                                        :value="type.id"
+                                        name="priority"
+                                        :value="priority.value"
+                                        :disabled="existingOrder !== null"
                                     />
-                                    {{ type.name }}
+                                    {{ priority.label }}
                                 </label>
                             </div>
-                            <InputError :message="form.errors.sample_type_id" />
+                            <InputError :message="form.errors.priority" />
                         </div>
+                    </div>
+                </CardContent>
+            </Card>
 
-                        <div class="grid gap-2">
-                            <span class="text-sm font-medium">Estudios</span>
-                            <p
+            <!-- Muestras -->
+            <Card>
+                <CardHeader>
+                    <CardTitle class="flex items-center gap-2">
+                        <ScanLine class="size-5" /> Muestras
+                    </CardTitle>
+                    <CardDescription>
+                        Escaneá cada etiqueta: cada muestra tiene su propio
+                        código.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent class="grid gap-4">
+                    <div class="flex gap-2">
+                        <Input
+                            id="scan"
+                            v-model="scan"
+                            autocomplete="off"
+                            class="font-mono text-lg uppercase"
+                            placeholder="Escaneá o escribí el código y Enter"
+                            @keydown.enter.prevent="addSample"
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            @click="addSample"
+                        >
+                            <Plus /> Agregar
+                        </Button>
+                    </div>
+                    <InputError :message="form.errors.samples" />
+
+                    <p
+                        v-if="form.samples.length === 0"
+                        class="text-sm text-muted-foreground"
+                    >
+                        Todavía no agregaste muestras.
+                    </p>
+
+                    <div
+                        v-for="(row, index) in form.samples"
+                        :key="row.barcode"
+                        class="grid gap-3 rounded-lg border p-3"
+                        data-test="sample-row"
+                    >
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-mono text-lg font-medium">{{
+                                row.barcode
+                            }}</span>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                :aria-label="`Quitar ${row.barcode}`"
+                                @click="removeSample(index)"
+                                ><Trash2
+                            /></Button>
+                        </div>
+                        <InputError :message="sampleError(index, 'barcode')" />
+
+                        <div
+                            class="flex flex-wrap gap-2"
+                            role="radiogroup"
+                            :aria-label="`Tipo de muestra de ${row.barcode}`"
+                        >
+                            <label
+                                v-for="type in props.sampleTypes"
+                                :key="type.id"
+                                class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+                            >
+                                <input
+                                    type="radio"
+                                    :name="`sample_type_${index}`"
+                                    :value="type.id"
+                                    :checked="row.sample_type_id === type.id"
+                                    @change="setSampleType(row, type.id)"
+                                />
+                                {{ type.name }}
+                            </label>
+                        </div>
+                        <InputError
+                            :message="sampleError(index, 'sample_type_id')"
+                        />
+
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm text-muted-foreground"
+                                >Estudios:</span
+                            >
+                            <span
                                 v-if="
-                                    form.sample_type_id &&
-                                    studiesForType.length === 0
+                                    row.sample_type_id &&
+                                    studiesFor(row.sample_type_id).length === 0
                                 "
                                 class="text-sm text-destructive"
+                                >Sin estudios con protocolo vigente para este
+                                tipo.</span
                             >
-                                No hay estudios con protocolo vigente para este
-                                tipo de muestra.
-                            </p>
-                            <div class="flex flex-wrap gap-2">
-                                <label
-                                    v-for="study in studiesForType"
-                                    :key="study.id"
-                                    class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
-                                >
-                                    <input
-                                        v-model="form.study_ids"
-                                        type="checkbox"
-                                        :value="study.id"
-                                    />
-                                    {{ study.name }}
-                                </label>
-                            </div>
-                            <InputError :message="form.errors.study_ids" />
+                            <label
+                                v-for="study in studiesFor(row.sample_type_id)"
+                                :key="study.id"
+                                class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+                            >
+                                <input
+                                    v-model="row.study_ids"
+                                    type="checkbox"
+                                    :value="study.id"
+                                />
+                                {{ study.name }}
+                            </label>
                         </div>
+                        <InputError
+                            :message="sampleError(index, 'study_ids')"
+                        />
 
-                        <ReferenceTemplateNotice v-if="usesReferenceTemplate" />
-
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="grid gap-2">
-                                <span class="text-sm font-medium"
-                                    >Prioridad</span
-                                >
-                                <div class="flex gap-2" role="radiogroup">
-                                    <label
-                                        v-for="priority in props.priorities"
-                                        :key="priority.value"
-                                        class="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/10"
-                                    >
-                                        <input
-                                            v-model="form.priority"
-                                            type="radio"
-                                            name="priority"
-                                            :value="priority.value"
-                                        />
-                                        {{ priority.label }}
-                                    </label>
-                                </div>
-                                <InputError :message="form.errors.priority" />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="collected_at"
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="grid gap-1">
+                                <Label
+                                    :for="`collected_at_${index}`"
+                                    class="text-xs"
                                     >Fecha y hora de toma</Label
                                 >
                                 <Input
-                                    id="collected_at"
-                                    v-model="form.collected_at"
+                                    :id="`collected_at_${index}`"
+                                    v-model="row.collected_at"
                                     type="datetime-local"
                                 />
                                 <InputError
-                                    :message="form.errors.collected_at"
+                                    :message="
+                                        sampleError(index, 'collected_at')
+                                    "
                                 />
                             </div>
-                            <div class="grid gap-2">
-                                <Label for="requesting_service"
-                                    >Servicio / procedencia</Label
+                            <div class="grid gap-1">
+                                <Label :for="`notes_${index}`" class="text-xs"
+                                    >Observaciones</Label
                                 >
                                 <Input
-                                    id="requesting_service"
-                                    v-model="form.requesting_service"
-                                />
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="requesting_physician"
-                                    >Médico solicitante</Label
-                                >
-                                <Input
-                                    id="requesting_physician"
-                                    v-model="form.requesting_physician"
+                                    :id="`notes_${index}`"
+                                    v-model="row.notes"
                                 />
                             </div>
                         </div>
+                    </div>
 
-                        <div class="grid gap-2">
-                            <Label for="notes"
-                                >Observaciones de recepción</Label
-                            >
-                            <textarea
-                                id="notes"
-                                v-model="form.notes"
-                                rows="2"
-                                class="rounded-md border bg-background px-3 py-2 text-sm"
-                            />
-                            <InputError :message="form.errors.notes" />
-                        </div>
-                    </fieldset>
+                    <ReferenceTemplateNotice v-if="usesReferenceTemplate" />
 
                     <div class="flex justify-end">
                         <Button
                             type="submit"
                             size="lg"
-                            :disabled="form.processing"
+                            :disabled="
+                                form.processing || form.samples.length === 0
+                            "
                             data-test="receive-button"
                         >
                             <Spinner v-if="form.processing" />
                             Registrar recepción
+                            <template v-if="form.samples.length">
+                                ({{ form.samples.length }}
+                                {{
+                                    form.samples.length === 1
+                                        ? 'muestra'
+                                        : 'muestras'
+                                }})
+                            </template>
                         </Button>
                     </div>
-                </form>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </form>
 
-        <Card>
+        <!-- Recibidas hoy -->
+        <Card class="h-fit">
             <CardHeader>
                 <CardTitle class="text-base">Recibidas hoy</CardTitle>
                 <CardDescription
-                    >{{ props.receivedToday.length }} muestras</CardDescription
+                    >{{ props.receivedToday.length }} entregas</CardDescription
                 >
             </CardHeader>
             <CardContent class="grid gap-2">
@@ -438,30 +664,41 @@ function submit() {
                     Todavía no se recibieron muestras hoy.
                 </p>
                 <div
-                    v-for="sample in props.receivedToday"
-                    :key="sample.ulid"
+                    v-for="delivery in props.receivedToday"
+                    :key="delivery.ulid"
                     class="grid gap-1 rounded-md border p-2 text-sm"
                 >
                     <div class="flex items-center justify-between gap-2">
-                        <span class="font-mono font-medium">{{
-                            sample.barcode
-                        }}</span>
+                        <span class="font-medium">
+                            Orden
+                            <span class="font-mono">{{
+                                delivery.order_number ?? 's/n'
+                            }}</span>
+                        </span>
                         <span
                             class="text-xs text-muted-foreground tabular-nums"
-                            >{{ formatTime(sample.received_at) }}</span
+                            >{{ formatTime(delivery.received_at) }}</span
                         >
                     </div>
-                    <div class="truncate">{{ sample.patient }}</div>
-                    <div
-                        class="flex flex-wrap items-center gap-1 text-xs text-muted-foreground"
-                    >
-                        {{ sample.sample_type }} ·
-                        {{ sample.studies.join(', ') }}
+                    <div class="flex items-center gap-2 truncate">
+                        {{ delivery.patient }}
                         <PriorityBadge
-                            v-if="sample.priority !== 'routine'"
-                            :priority="sample.priority"
+                            v-if="delivery.priority !== 'routine'"
+                            :priority="delivery.priority"
                         />
                     </div>
+                    <ul class="grid gap-0.5 text-xs text-muted-foreground">
+                        <li
+                            v-for="sample in delivery.samples"
+                            :key="sample.ulid"
+                        >
+                            <span class="font-mono text-foreground">{{
+                                sample.barcode
+                            }}</span>
+                            · {{ sample.sample_type }} ·
+                            {{ sample.studies.join(', ') }}
+                        </li>
+                    </ul>
                 </div>
             </CardContent>
         </Card>

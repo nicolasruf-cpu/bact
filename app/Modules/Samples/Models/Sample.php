@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $ulid
  * @property string $barcode
  * @property int $lab_order_id
+ * @property int $reception_id
  * @property int $origin_site_id
  * @property int $sample_type_id
  * @property SampleStatus $status
@@ -27,9 +28,9 @@ use Illuminate\Support\Carbon;
  * @property Carbon $received_at
  * @property int $received_by
  * @property string|null $reception_notes
- * @property string $idempotency_key
  * @property int $lock_version
  * @property-read LabOrder $labOrder
+ * @property-read Reception $reception
  * @property-read SampleType $sampleType
  * @property-read Site $originSite
  * @property-read Collection<int, SampleStudy> $studies
@@ -68,6 +69,14 @@ class Sample extends Model
     public function labOrder(): BelongsTo
     {
         return $this->belongsTo(LabOrder::class);
+    }
+
+    /**
+     * @return BelongsTo<Reception, $this>
+     */
+    public function reception(): BelongsTo
+    {
+        return $this->belongsTo(Reception::class);
     }
 
     /**

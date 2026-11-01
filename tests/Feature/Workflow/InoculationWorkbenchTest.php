@@ -30,14 +30,16 @@ function receive(User $user, string $barcode, string $priority = 'routine', stri
 {
     test()->actingAs($user)->post(route('reception.store'), [
         'idempotency_key' => (string) Str::uuid(),
-        'barcode' => $barcode,
         'document_number' => fake()->unique()->numerify('########'),
         'last_name' => 'Sintético',
         'first_name' => 'Paciente',
         'sex' => 'U',
-        'sample_type_id' => SampleType::where('code', $sampleType)->value('id'),
-        'study_ids' => [Study::where('code', 'URO')->value('id')],
         'priority' => $priority,
+        'samples' => [[
+            'barcode' => $barcode,
+            'sample_type_id' => SampleType::where('code', $sampleType)->value('id'),
+            'study_ids' => [Study::where('code', 'URO')->value('id')],
+        ]],
     ])->assertSessionHasNoErrors();
 }
 

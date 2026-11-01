@@ -4,8 +4,10 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Modules\Configuration\Models\ProtocolVersion;
+use App\Modules\Orders\Models\LabOrder;
 use App\Modules\Organization\Models\Site;
 use App\Modules\Patients\Models\Patient;
+use App\Modules\Samples\Models\Reception;
 use App\Modules\Samples\Models\Sample;
 use App\Modules\Samples\Models\SampleStudy;
 use App\Modules\Workflow\Models\Activity;
@@ -67,6 +69,8 @@ class AppServiceProvider extends ServiceProvider
             'user' => User::class,
             'site' => Site::class,
             'patient' => Patient::class,
+            'lab_order' => LabOrder::class,
+            'reception' => Reception::class,
             'sample' => Sample::class,
             'sample_study' => SampleStudy::class,
             'protocol_version' => ProtocolVersion::class,

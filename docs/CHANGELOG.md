@@ -1,6 +1,13 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-02 — Recepción por orden (Q-F8)
+- Una recepción registra una orden (número de LABWIN, paciente, médico, servicio, prioridad) con una o varias muestras, cada una con su código, tipo y estudios.
+- Si el número de orden ya existe en la sede, las muestras se suman a esa orden (muestras que llegan después); la orden conserva paciente, médico y prioridad. Se rechaza si el documento no coincide.
+- Nueva entidad `Reception` (entrega física); la idempotencia pasa a nivel de entrega.
+- Pantalla de recepción rediseñada: orden → muestras escaneadas una por una; "Recibidas hoy" agrupado por entrega.
+- Pruebas: 94 en verde.
+
 ### 2026-11-02 — Urocultivo, entrega 1: recepción → mesada de siembra
 - Plantilla de referencia de urocultivo (`docs/templates/UROCULTIVO.md`, D-0008): chorro medio y sonda vesical; agar sangre + MacConkey; 35 ± 2 °C; lectura 18–24 h. En producción se carga en borrador; en demo, vigente.
 - Módulo `Configuration`: tipos de muestra, estudios, medios, protocolos con versiones (`draft → approved → active → retired`); la base garantiza una sola versión vigente por protocolo.

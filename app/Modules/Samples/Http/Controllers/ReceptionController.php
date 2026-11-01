@@ -7,8 +7,8 @@ use App\Models\User;
 use App\Modules\Orders\Enums\Priority;
 use App\Modules\Organization\Models\Site;
 use App\Modules\Patients\Enums\Sex;
-use App\Modules\Samples\Actions\ReceiveSample;
-use App\Modules\Samples\Http\Requests\ReceiveSampleRequest;
+use App\Modules\Samples\Actions\ReceiveOrderSamples;
+use App\Modules\Samples\Http\Requests\ReceiveOrderSamplesRequest;
 use App\Modules\Samples\Queries\ReceptionQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,22 +26,23 @@ class ReceptionController extends Controller
             'priorities' => array_map(fn (Priority $p) => ['value' => $p->value, 'label' => $p->label()], Priority::cases()),
             'sexes' => array_map(fn (Sex $s) => ['value' => $s->value, 'label' => $s->label()], Sex::cases()),
             'receivedToday' => $query->receivedToday($site->id),
-            // Se pide con una recarga parcial al salir del campo documento.
+            // Se piden con recargas parciales al salir de los campos orden y documento.
+            'orderMatch' => Inertia::optional(fn () => $query->orderByNumber($site->id, $request->string('order')->toString())),
             'patientMatch' => Inertia::optional(fn () => $query->patientByDocument($request->string('document')->toString())),
         ]);
     }
 
-    public function store(ReceiveSampleRequest $request, ReceiveSample $receiveSample): RedirectResponse
+    public function store(ReceiveOrderSamplesRequest $request, ReceiveOrderSamples $receive): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
 
-        $sample = $receiveSample->handle($user, $this->activeSite($request), $request->toData());
+        $reception = $receive->handle($user, $this->activeSite($request), $request->toData());
 
-        $studies = $sample->studies()->count();
+        $count = $reception->samples()->count();
         Inertia::flash('toast', [
             'type' => 'success',
-            'message' => "Muestra {$sample->barcode} recibida: {$studies} ".($studies === 1 ? 'siembra pendiente' : 'siembras pendientes').'.',
+            'message' => $count === 1 ? '1 muestra recibida.' : "{$count} muestras recibidas.",
         ]);
 
         return to_route('reception.create');

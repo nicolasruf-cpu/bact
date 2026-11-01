@@ -2,6 +2,7 @@
 
 use App\Modules\Audit\AuditServiceProvider;
 use App\Modules\Identity\IdentityServiceProvider;
+use App\Modules\Orders\OrdersServiceProvider;
 use App\Modules\Patients\PatientsServiceProvider;
 use App\Modules\Samples\SamplesServiceProvider;
 use App\Modules\Workflow\WorkflowServiceProvider;
@@ -14,6 +15,7 @@ return [
     AuditServiceProvider::class,
     IdentityServiceProvider::class,
     PatientsServiceProvider::class,
+    OrdersServiceProvider::class,
     SamplesServiceProvider::class,
     WorkflowServiceProvider::class,
 ];

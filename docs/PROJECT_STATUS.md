@@ -13,7 +13,8 @@
   - Tests de arquitectura de módulos.
   - **Pruebas:** `./sail composer test` → 70 en verde, Larastan sin errores; frontend sin errores de tipos ni de lint.
 - **Auditoría base (2026-11-01):** append-only con triggers, hash encadenado, `audit:verify`, pantalla de consulta.
-- **Urocultivo, entrega 1 (2026-11-02):** plantilla de referencia, recepción manual, actividades de siembra, mesada de siembra. 88 pruebas en verde.
+- **Urocultivo, entrega 1 (2026-11-02):** plantilla de referencia, recepción manual, actividades de siembra, mesada de siembra.
+- **Recepción por orden (2026-11-02, Q-F8):** una orden con varias muestras; muestras posteriores se suman a la orden. 94 pruebas en verde.
 
 ## En desarrollo
 - Nada a medio hacer.
