@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid, ScrollText } from '@lucide/vue';
+import { LayoutGrid, ScanLine, ScrollText, TestTubes } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -18,6 +18,8 @@ import {
 import { usePermissions } from '@/composables/usePermissions';
 import { dashboard } from '@/routes';
 import { index as auditIndex } from '@/routes/audit';
+import { create as receptionCreate } from '@/routes/reception';
+import { inoculation } from '@/routes/workbenches';
 import type { NavItem } from '@/types';
 
 const { can } = usePermissions();
@@ -28,6 +30,12 @@ const mainNavItems = computed<NavItem[]>(() => [
         href: dashboard(),
         icon: LayoutGrid,
     },
+    ...(can('samples.receive')
+        ? [{ title: 'Recepción', href: receptionCreate(), icon: ScanLine }]
+        : []),
+    ...(can('cultures.inoculate')
+        ? [{ title: 'Siembra', href: inoculation(), icon: TestTubes }]
+        : []),
     ...(can('audit.view')
         ? [{ title: 'Auditoría', href: auditIndex(), icon: ScrollText }]
         : []),

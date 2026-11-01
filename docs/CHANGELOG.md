@@ -1,6 +1,15 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-02 — Urocultivo, entrega 1: recepción → mesada de siembra
+- Plantilla de referencia de urocultivo (`docs/templates/UROCULTIVO.md`, D-0008): chorro medio y sonda vesical; agar sangre + MacConkey; 35 ± 2 °C; lectura 18–24 h. En producción se carga en borrador; en demo, vigente.
+- Módulo `Configuration`: tipos de muestra, estudios, medios, protocolos con versiones (`draft → approved → active → retired`); la base garantiza una sola versión vigente por protocolo.
+- Módulos `Patients`, `Orders`, `Samples`: recepción manual escaneando la etiqueta del LIS; búsqueda de paciente por documento; versión de protocolo congelada por estudio; idempotencia y auditoría.
+- Módulo `Workflow`: actividades con generación idempotente; política `SampleReceived → INOCULATE` por estudio en la sede de procesamiento.
+- Pantallas: Recepción (lector + teclado), Mesada de siembra (por protocolo, prioridad, refresco cada 30 s), inicio con contadores reales.
+- Alias polimórficos estables (morph map).
+- Pruebas: 88 en verde.
+
 ### 2026-11-01 — Auditoría base (ADR-0006)
 - Módulo `Audit`: tabla `audit_events` append-only (triggers de MariaDB rechazan UPDATE/DELETE), hash encadenado serializado con `audit_chain_head`, escritura solo dentro de transacción (`Auditor`).
 - `audit:verify` (programado a diario 03:00) detecta eventos alterados, insertados o eliminados.

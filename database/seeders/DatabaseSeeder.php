@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Modules\Configuration\Database\Seeders\UrineCultureTemplateSeeder;
 use App\Modules\Identity\Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -14,8 +15,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
 
-        if (! app()->isProduction()) {
-            $this->call(DemoSeeder::class);
+        if (app()->isProduction()) {
+            // Plantilla en BORRADOR: no se usa hasta que la apruebe el Director técnico (D-0008).
+            $this->call(UrineCultureTemplateSeeder::class);
+
+            return;
         }
+
+        $this->call(DemoSeeder::class);
     }
 }

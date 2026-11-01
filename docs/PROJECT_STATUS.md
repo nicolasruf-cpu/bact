@@ -12,6 +12,8 @@
   - Interfaz en español; login sin autorregistro; pantalla de inicio con las mesadas previstas.
   - Tests de arquitectura de módulos.
   - **Pruebas:** `./sail composer test` → 70 en verde, Larastan sin errores; frontend sin errores de tipos ni de lint.
+- **Auditoría base (2026-11-01):** append-only con triggers, hash encadenado, `audit:verify`, pantalla de consulta.
+- **Urocultivo, entrega 1 (2026-11-02):** plantilla de referencia, recepción manual, actividades de siembra, mesada de siembra. 88 pruebas en verde.
 
 ## En desarrollo
 - Nada a medio hacer.
@@ -20,12 +22,11 @@
 - Ninguno técnico.
 - Clínicos: se avanza con plantillas de referencia (D-0008). Sigue abierto Q-C4 (edición CLSI; quién confirma los puntos de corte).
 
-- **Auditoría base (2026-11-01):** append-only con triggers, hash encadenado, `audit:verify`, pantalla de consulta.
-
 ## Próximos pasos
-1. **Primer circuito de urocultivo** (datos sintéticos, plantilla de referencia en `draft`): catálogos mínimos (tipo de muestra, estudio, medios, protocolo) → recepción manual escaneando la etiqueta → actividad de siembra → mesada de siembra → siembra en tanda → lectura programada.
-2. Administración de usuarios (alta, asignación de roles por sede, desactivación).
-3. CI (pendiente Q-T3: repositorio remoto).
+1. **Urocultivo, entrega 2:** tanda de siembra (WorkBatches) → cultivo y placas según protocolo → lectura programada (`READ_CULTURE` SCHEDULED → READY).
+2. **Urocultivo, entrega 3:** lectura (opciones y criterios de la plantilla, a agregar con su fuente; Q-C2).
+3. Administración de usuarios (alta, asignación de roles por sede, desactivación).
+4. CI (pendiente Q-T3: repositorio remoto).
 
 ## Problemas conocidos
 - El script oficial `vendor/bin/sail` no funciona en Git Bash: usar `./sail` (atajo propio).

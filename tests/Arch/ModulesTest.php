@@ -16,7 +16,7 @@ arch('los enums de los módulos son enums')
     ->toBeEnums();
 
 arch('los módulos base no dependen de módulos clínicos')
-    ->expect(['App\Modules\Organization', 'App\Modules\Identity', 'App\Modules\Audit'])
+    ->expect(['App\Modules\Organization', 'App\Modules\Identity', 'App\Modules\Audit', 'App\Modules\Configuration'])
     ->not->toUse([
         'App\Modules\Patients',
         'App\Modules\Orders',
@@ -31,6 +31,19 @@ arch('los módulos base no dependen de módulos clínicos')
         'App\Modules\CriticalResults',
         'App\Modules\Integrations',
     ]);
+
+arch('los módulos clínicos no conocen a Workflow: emiten eventos (ARCHITECTURE §3)')
+    ->expect(['App\Modules\Patients', 'App\Modules\Orders', 'App\Modules\Samples'])
+    ->not->toUse(['App\Modules\Workflow', 'App\Modules\WorkBatches']);
+
+arch('los eventos de dominio son inmutables')
+    ->expect('App\Modules\*\Events')
+    ->toBeReadonly()
+    ->toBeFinal();
+
+arch('las consultas de lectura no escriben en la base')
+    ->expect('App\Modules\*\Queries')
+    ->not->toUse(['App\Modules\Audit\Services\Auditor']);
 
 arch('Audit no depende de Identity (los módulos registran sus acciones en Audit, no al revés)')
     ->expect('App\Modules\Audit')

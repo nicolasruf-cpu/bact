@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Modules\Configuration\Database\Seeders\UrineCultureTemplateSeeder;
+use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use App\Modules\Identity\Enums\Role;
 use App\Modules\Organization\Models\Site;
 use Illuminate\Database\Seeder;
@@ -35,6 +37,10 @@ class DemoSeeder extends Seeder
         ]);
         $this->user('auxiliar@bactruf.test', 'Andrés Auxiliar', [[$central, Role::Assistant]]);
         $this->user('consulta@bactruf.test', 'Carla Consulta', [[$central, Role::Viewer]]);
+
+        // Solo en demo: la plantilla de referencia queda vigente para probar el circuito
+        // con datos sintéticos. En producción se carga en borrador (D-0008).
+        $this->callWith(UrineCultureTemplateSeeder::class, ['status' => ProtocolVersionStatus::Active]);
     }
 
     /**
