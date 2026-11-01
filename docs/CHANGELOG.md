@@ -1,6 +1,13 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-03 — Urocultivo, parte 1: tanda de siembra
+- Módulo `Cultures`: cultivo + placas según la versión de protocolo congelada; omitir un medio exige motivo; idempotente.
+- Módulo `WorkBatches`: iniciar tanda desde la mesada (las actividades quedan tomadas), sembrar ítem por ítem, confirmación múltiple con protocolo estándar, retirar ítem con motivo, pausar/reanudar/finalizar (los pendientes vuelven a la mesada). Una actividad en una sola tanda activa (garantizado por la base). Historial de la tanda.
+- Workflow: la siembra completa `INOCULATE` y programa `READ_CULTURE` (disponible a las 18 h, vence a las 24 h según la plantilla). `activities:release` cada minuto; `demo:advance N` (solo demo) para adelantar el reloj.
+- Pantallas: mesada con selección e "Iniciar tanda con N"; pantalla de tanda (J/K, Enter, Esc); barra "Mis tandas abiertas".
+- Pruebas: 115 en verde.
+
 ### 2026-11-02 — Recepción por orden (Q-F8)
 - Una recepción registra una orden (número de LABWIN, paciente, médico, servicio, prioridad) con una o varias muestras, cada una con su código, tipo y estudios.
 - Si el número de orden ya existe en la sede, las muestras se suman a esa orden (muestras que llegan después); la orden conserva paciente, médico y prioridad. Se rechaza si el documento no coincide.

@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { Head, usePoll } from '@inertiajs/vue3';
-import { Play, TestTubes } from '@lucide/vue';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { Head, router, usePoll } from '@inertiajs/vue3';
+import { Layers, Play, TestTubes } from '@lucide/vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import PriorityBadge from '@/components/domain/PriorityBadge.vue';
 import ReferenceTemplateNotice from '@/components/domain/ReferenceTemplateNotice.vue';
+import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Spinner } from '@/components/ui/spinner';
 import { elapsedSince } from '@/lib/elapsed';
+import { store as storeBatch } from '@/routes/batches';
 import { inoculation } from '@/routes/workbenches';
 
 type Medium = { code: string; name: string; inoculum: string };
@@ -36,6 +33,7 @@ type Item = {
 const props = defineProps<{
     items: Item[];
     counters: { ready: number; in_progress: number; urgent: number };
+    errors?: Record<string, string>;
 }>();
 
 defineOptions({
@@ -52,6 +50,63 @@ const now = ref(new Date());
 let clock: ReturnType<typeof setInterval> | undefined;
 onMounted(() => (clock = setInterval(() => (now.value = new Date()), 30_000)));
 onUnmounted(() => clearInterval(clock));
+
+// Selección: por defecto, todas las listas (WORKBENCHES.md). Las que están en otra tanda no se eligen.
+const ready = computed(() => props.items.filter((i) => i.status === 'ready'));
+const selected = ref<Set<string>>(new Set());
+const touched = ref(false);
+watch(
+    ready,
+    (items) => {
+        if (!touched.value) {
+            selected.value = new Set(items.map((i) => i.ulid));
+        } else {
+            const available = new Set(items.map((i) => i.ulid));
+            selected.value = new Set(
+                [...selected.value].filter((u) => available.has(u)),
+            );
+        }
+    },
+    { immediate: true },
+);
+
+function toggle(ulid: string) {
+    touched.value = true;
+    const next = new Set(selected.value);
+    if (next.has(ulid)) {
+        next.delete(ulid);
+    } else {
+        next.add(ulid);
+    }
+    selected.value = next;
+}
+
+function toggleGroup(items: Item[], checked: boolean) {
+    touched.value = true;
+    const next = new Set(selected.value);
+    for (const item of items.filter((i) => i.status === 'ready')) {
+        if (checked) {
+            next.add(item.ulid);
+        } else {
+            next.delete(item.ulid);
+        }
+    }
+    selected.value = next;
+}
+
+const starting = ref(false);
+function startBatch() {
+    // Se respeta el orden de la mesada (prioridad y antigüedad).
+    const activities = props.items
+        .filter((i) => selected.value.has(i.ulid))
+        .map((i) => i.ulid);
+    starting.value = true;
+    router.post(
+        storeBatch().url,
+        { type: 'inoculation', activities },
+        { onFinish: () => (starting.value = false) },
+    );
+}
 
 const groups = computed(() => {
     const byProtocol = new Map<
@@ -95,7 +150,7 @@ const usesReferenceTemplate = computed(() =>
                         >{{ props.counters.ready }} listas</Badge
                     >
                     <Badge variant="outline"
-                        >{{ props.counters.in_progress }} en proceso</Badge
+                        >{{ props.counters.in_progress }} en tanda</Badge
                     >
                     <PriorityBadge
                         v-if="props.counters.urgent > 0"
@@ -105,20 +160,18 @@ const usesReferenceTemplate = computed(() =>
                 </div>
             </div>
 
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <span tabindex="0">
-                            <Button size="lg" disabled>
-                                <Play /> Iniciar tanda de siembra
-                            </Button>
-                        </span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                        >Disponible en la próxima entrega</TooltipContent
-                    >
-                </Tooltip>
-            </TooltipProvider>
+            <div class="grid justify-items-end gap-1">
+                <Button
+                    size="lg"
+                    :disabled="selected.size === 0 || starting"
+                    data-test="start-batch"
+                    @click="startBatch"
+                >
+                    <Spinner v-if="starting" />
+                    <Play v-else /> Iniciar tanda con {{ selected.size }}
+                </Button>
+                <InputError :message="props.errors?.activities" />
+            </div>
         </div>
 
         <ReferenceTemplateNotice v-if="usesReferenceTemplate" />
@@ -138,12 +191,27 @@ const usesReferenceTemplate = computed(() =>
             <header
                 class="flex items-center justify-between gap-2 bg-muted/50 px-3 py-2"
             >
-                <h2 class="font-medium">
+                <label class="flex items-center gap-2 font-medium">
+                    <input
+                        type="checkbox"
+                        :checked="
+                            group.items
+                                .filter((i) => i.status === 'ready')
+                                .every((i) => selected.has(i.ulid))
+                        "
+                        :aria-label="`Seleccionar todas de ${group.protocol}`"
+                        @change="
+                            toggleGroup(
+                                group.items,
+                                ($event.target as HTMLInputElement).checked,
+                            )
+                        "
+                    />
                     {{ group.protocol }}
                     <span class="text-xs text-muted-foreground"
                         >v{{ group.version }}</span
                     >
-                </h2>
+                </label>
                 <span class="text-sm text-muted-foreground">{{
                     group.items.length
                 }}</span>
@@ -151,6 +219,9 @@ const usesReferenceTemplate = computed(() =>
             <table class="w-full text-sm">
                 <thead class="text-left text-xs text-muted-foreground">
                     <tr>
+                        <th class="w-8 px-3 py-2">
+                            <span class="sr-only">Elegir</span>
+                        </th>
                         <th class="px-3 py-2 font-medium">Prioridad</th>
                         <th class="px-3 py-2 font-medium">Muestra</th>
                         <th class="px-3 py-2 font-medium">Paciente</th>
@@ -165,7 +236,22 @@ const usesReferenceTemplate = computed(() =>
                         v-for="item in group.items"
                         :key="item.ulid"
                         class="border-t"
+                        :class="{ 'opacity-60': item.status !== 'ready' }"
                     >
+                        <td class="px-3 py-2">
+                            <input
+                                v-if="item.status === 'ready'"
+                                type="checkbox"
+                                :checked="selected.has(item.ulid)"
+                                :aria-label="`Elegir ${item.barcode}`"
+                                @change="toggle(item.ulid)"
+                            />
+                            <Layers
+                                v-else
+                                class="size-4 text-muted-foreground"
+                                aria-label="En una tanda"
+                            />
+                        </td>
                         <td class="px-3 py-2">
                             <PriorityBadge
                                 :priority="item.priority"
@@ -174,6 +260,12 @@ const usesReferenceTemplate = computed(() =>
                         </td>
                         <td class="px-3 py-2 font-mono font-medium">
                             {{ item.barcode }}
+                            <Badge
+                                v-if="item.status !== 'ready'"
+                                variant="outline"
+                                class="ml-1 font-sans"
+                                >En tanda</Badge
+                            >
                         </td>
                         <td class="px-3 py-2">{{ item.patient }}</td>
                         <td class="px-3 py-2">

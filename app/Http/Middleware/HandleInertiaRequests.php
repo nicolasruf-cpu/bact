@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Identity\Enums\Role;
 use App\Modules\Identity\Services\ActiveSite;
 use App\Modules\Organization\Models\Site;
+use App\Modules\WorkBatches\Queries\WorkBatchQuery;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -57,6 +58,10 @@ class HandleInertiaRequests extends Middleware
                     ? $user->getAllPermissions()->pluck('name')->values()
                     : [],
             ],
+            // "Mis tandas abiertas": siempre visibles para retomar después de una interrupción.
+            'openBatches' => $user instanceof User && $activeSite instanceof Site
+                ? app(WorkBatchQuery::class)->openFor($user->id, $activeSite->id)
+                : [],
             'site' => [
                 'active' => $activeSite instanceof Site ? $activeSite->only(['id', 'code', 'name']) : null,
                 'available' => $user instanceof User

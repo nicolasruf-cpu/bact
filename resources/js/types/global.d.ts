@@ -1,6 +1,6 @@
 import type { Directive } from 'vue';
 import type { Auth } from '@/types/auth';
-import type { SiteContext } from '@/types/site';
+import type { OpenBatch, SiteContext } from '@/types/site';
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -21,6 +21,7 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             site: SiteContext;
+            openBatches: OpenBatch[];
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

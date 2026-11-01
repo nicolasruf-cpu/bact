@@ -1,50 +1,50 @@
 <?php
 
+use App\Models\User;
+use App\Modules\Configuration\Models\SampleType;
+use App\Modules\Configuration\Models\Study;
+use App\Modules\Identity\Enums\Role;
+use App\Modules\Organization\Models\Site;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
-
-/*
-|--------------------------------------------------------------------------
-| Test Case
-|--------------------------------------------------------------------------
-|
-| The closure you provide to your test functions is always bound to a specific PHPUnit test
-| case class. By default, that class is "PHPUnit\Framework\TestCase". Of course, you may
-| need to change it using the "pest()" function to bind different classes or traits.
-|
-*/
 
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
-|--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
+| Ayudantes compartidos (datos SINTÉTICOS).
 */
 
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
-| Functions
-|--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
-*/
-
-function something()
+function userWithRole(Site $site, Role $role): User
 {
-    // ..
+    $user = User::factory()->create();
+    setPermissionsTeamId($site->id);
+    $user->unsetRelation('roles')->assignRole($role->value);
+    setPermissionsTeamId(null);
+
+    return $user;
+}
+
+/**
+ * Recibe una orden con urocultivos por HTTP, como lo haría la pantalla de recepción.
+ *
+ * @param  list<string>  $barcodes
+ */
+function receiveUrineOrder(User $user, array $barcodes, string $priority = 'routine', string $sampleType = 'URI-CM'): void
+{
+    test()->actingAs($user)->post(route('reception.store'), [
+        'idempotency_key' => (string) Str::uuid(),
+        'document_number' => fake()->unique()->numerify('########'),
+        'last_name' => 'Sintético',
+        'first_name' => 'Paciente',
+        'sex' => 'U',
+        'priority' => $priority,
+        'samples' => array_map(fn (string $barcode) => [
+            'barcode' => $barcode,
+            'sample_type_id' => SampleType::where('code', $sampleType)->value('id'),
+            'study_ids' => [Study::where('code', 'URO')->value('id')],
+        ], $barcodes),
+    ])->assertSessionHasNoErrors();
 }

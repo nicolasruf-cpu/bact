@@ -28,6 +28,8 @@ El script oficial `vendor/bin/sail` no funciona en Git Bash, así que el repo tr
 ./sail npm run check           # formato + lint del frontend (check:fix corrige)
 ./sail shell                   # bash dentro del contenedor
 ./sail db                      # consola de MariaDB
+./sail artisan schedule:work   # tareas programadas (libera lecturas a su hora)
+./sail artisan demo:advance 18 # SOLO DEMO: adelanta 18 h las actividades programadas
 ```
 
 ## Primera instalación (PC nueva)
