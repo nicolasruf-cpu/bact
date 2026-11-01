@@ -51,6 +51,11 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $user instanceof User
                     ? $user->getRoleNames()->map(fn (string $name) => Role::tryFrom($name)?->label() ?? $name)->values()
                     : [],
+                // Permisos en la sede activa: el frontend solo los usa para mostrar u ocultar;
+                // la autorización real se hace siempre en el servidor.
+                'permissions' => $user instanceof User
+                    ? $user->getAllPermissions()->pluck('name')->values()
+                    : [],
             ],
             'site' => [
                 'active' => $activeSite instanceof Site ? $activeSite->only(['id', 'code', 'name']) : null,

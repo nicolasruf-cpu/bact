@@ -1,6 +1,13 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-01 — Auditoría base (ADR-0006)
+- Módulo `Audit`: tabla `audit_events` append-only (triggers de MariaDB rechazan UPDATE/DELETE), hash encadenado serializado con `audit_chain_head`, escritura solo dentro de transacción (`Auditor`).
+- `audit:verify` (programado a diario 03:00) detecta eventos alterados, insertados o eliminados.
+- Se auditan ingresos, salidas, intentos fallidos (sin contraseña) y cambio de sede. `X-Request-Id` por request.
+- Pantalla "Auditoría" (permiso `audit.view`) con filtro por acción y estado de la cadena.
+- Pruebas: 70 en verde.
+
 ### 2026-11-01 — Fase 3 (base técnica, parte 1)
 - Proyecto Laravel 13.17 con el starter kit oficial de Vue: Inertia 3, Vue 3 + TypeScript, Tailwind 4, shadcn-vue/Reka UI, Fortify (2FA y llaves de acceso), Wayfinder, Pest 5, Larastan (nivel 7), Pint.
 - Entorno Docker: PHP 8.5.12 + MariaDB 12.3.3 (utf8mb4); app en http://localhost:8080. Atajo `./sail` para Git Bash.

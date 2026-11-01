@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { LayoutGrid } from '@lucide/vue';
+import { LayoutGrid, ScrollText } from '@lucide/vue';
+import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -14,16 +15,23 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { usePermissions } from '@/composables/usePermissions';
 import { dashboard } from '@/routes';
+import { index as auditIndex } from '@/routes/audit';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+const { can } = usePermissions();
+
+const mainNavItems = computed<NavItem[]>(() => [
     {
         title: 'Inicio',
         href: dashboard(),
         icon: LayoutGrid,
     },
-];
+    ...(can('audit.view')
+        ? [{ title: 'Auditoría', href: auditIndex(), icon: ScrollText }]
+        : []),
+]);
 </script>
 
 <template>

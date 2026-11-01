@@ -16,7 +16,7 @@ arch('los enums de los módulos son enums')
     ->toBeEnums();
 
 arch('los módulos base no dependen de módulos clínicos')
-    ->expect(['App\Modules\Organization', 'App\Modules\Identity'])
+    ->expect(['App\Modules\Organization', 'App\Modules\Identity', 'App\Modules\Audit'])
     ->not->toUse([
         'App\Modules\Patients',
         'App\Modules\Orders',
@@ -31,6 +31,14 @@ arch('los módulos base no dependen de módulos clínicos')
         'App\Modules\CriticalResults',
         'App\Modules\Integrations',
     ]);
+
+arch('Audit no depende de Identity (los módulos registran sus acciones en Audit, no al revés)')
+    ->expect('App\Modules\Audit')
+    ->not->toUse('App\Modules\Identity');
+
+arch('solo Audit escribe la tabla de auditoría')
+    ->expect('App\Modules\Audit\Models\AuditEvent')
+    ->toOnlyBeUsedIn(['App\Modules\Audit']);
 
 arch('Organization no depende de Identity')
     ->expect('App\Modules\Organization')

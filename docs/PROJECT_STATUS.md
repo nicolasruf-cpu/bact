@@ -11,7 +11,7 @@
   - Sedes (`Organization`), roles y permisos por sede, sede activa y selector (`Identity`).
   - Interfaz en español; login sin autorregistro; pantalla de inicio con las mesadas previstas.
   - Tests de arquitectura de módulos.
-  - **Pruebas:** `./sail composer test` → 53 en verde, Larastan sin errores; frontend sin errores de tipos ni de lint.
+  - **Pruebas:** `./sail composer test` → 70 en verde, Larastan sin errores; frontend sin errores de tipos ni de lint.
 
 ## En desarrollo
 - Nada a medio hacer.
@@ -20,11 +20,12 @@
 - Ninguno técnico.
 - Clínicos: se avanza con plantillas de referencia (D-0008). Sigue abierto Q-C4 (edición CLSI; quién confirma los puntos de corte).
 
+- **Auditoría base (2026-11-01):** append-only con triggers, hash encadenado, `audit:verify`, pantalla de consulta.
+
 ## Próximos pasos
-1. **Auditoría base** (ADR-0006: append-only con hash encadenado), necesaria antes de cualquier operación clínica.
-2. **Primer circuito de urocultivo** (datos sintéticos, plantilla de referencia en `draft`): catálogos mínimos (tipo de muestra, estudio, medios, protocolo) → recepción manual escaneando la etiqueta → actividad de siembra → mesada de siembra → siembra en tanda → lectura programada.
-3. Administración de usuarios (alta, asignación de roles por sede, desactivación).
-4. CI (pendiente Q-T3: repositorio remoto).
+1. **Primer circuito de urocultivo** (datos sintéticos, plantilla de referencia en `draft`): catálogos mínimos (tipo de muestra, estudio, medios, protocolo) → recepción manual escaneando la etiqueta → actividad de siembra → mesada de siembra → siembra en tanda → lectura programada.
+2. Administración de usuarios (alta, asignación de roles por sede, desactivación).
+3. CI (pendiente Q-T3: repositorio remoto).
 
 ## Problemas conocidos
 - El script oficial `vendor/bin/sail` no funciona en Git Bash: usar `./sail` (atajo propio).
