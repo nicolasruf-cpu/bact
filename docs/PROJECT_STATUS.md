@@ -32,8 +32,6 @@
 4. Tandas de lectura (Q-F9), hemocultivo y resultados críticos (Fase 4b).
 5. CI (Q-T3).
 
-3: repositorio remoto).
-
 ## Problemas conocidos
 - El script oficial `vendor/bin/sail` no funciona en Git Bash: usar `./sail` (atajo propio).
 - VS Code marca errores PHP falsos si usa el PHP 7.1 de Laragon (ver `DEVELOPMENT.md`).
