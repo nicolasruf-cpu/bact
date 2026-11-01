@@ -33,6 +33,14 @@ class ReferenceCatalogSeeder extends Seeder
         ['SAUR', 'Staphylococcus aureus', OrganismGroup::Staphylococcus],
         ['SAGA', 'Streptococcus agalactiae', OrganismGroup::Streptococcus],
         ['CALB', 'Candida albicans', OrganismGroup::Yeast],
+        // Agregados para los casos publicados de la demo (2026-11-01).
+        ['SEPI', 'Staphylococcus epidermidis', OrganismGroup::Staphylococcus],
+        ['SPNE', 'Streptococcus pneumoniae', OrganismGroup::Streptococcus],
+        ['SPYO', 'Streptococcus pyogenes', OrganismGroup::Streptococcus],
+        ['SENT', 'Salmonella enterica', OrganismGroup::Enterobacterales],
+        ['NMEN', 'Neisseria meningitidis', OrganismGroup::Other],
+        ['NGON', 'Neisseria gonorrhoeae', OrganismGroup::Other],
+        ['CJEJ', 'Campylobacter jejuni', OrganismGroup::Other],
     ];
 
     /** @var array<string, string> */

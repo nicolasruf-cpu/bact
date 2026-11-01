@@ -1,6 +1,14 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-01 — Casos publicados en la demo
+- `PublishedCaseSeeder`: 12 escenarios basados en casos clínicos publicados, con pacientes ficticios y la fuente citada (`docs/demo/CASOS_PUBLICADOS.md`).
+  - Cubren urocultivo, hemocultivo, LCR, líquidos pleural y articular, BAL, coprocultivo, secreción uretral y fauces.
+  - Recorren el circuito real hasta distintas etapas, para que haya trabajo en cada mesada.
+- Catálogo de referencia: *S. epidermidis*, *S. pneumoniae*, *S. pyogenes*, *S. enterica*, *N. meningitidis*, *N. gonorrhoeae* y *C. jejuni*.
+- La carga mostró huecos: Q-C16 a Q-C19.
+- Pruebas: 168 en verde.
+
 ### 2026-11-01 — Administración y configuración clínica (D-0019)
 - **Usuarios:**
   - alta con contraseña inicial, perfiles por sede y baja sin borrado;

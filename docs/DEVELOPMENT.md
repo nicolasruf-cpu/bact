@@ -66,6 +66,16 @@ Si aparecen errores de permisos en `storage/` o `node_modules/`:
 6. Negativo: `./sail artisan demo:advance 120` (5 días) → "Descarga de frasco negativo" en la mesada → Validación.
 7. Manual: `demo:advance 24` → "Registrar repique" (Auxiliar) → `demo:advance 18` → lectura del repique (Bioquímica).
 
+## Casos publicados
+La demo trae 12 escenarios basados en casos publicados (códigos `PUB-01` a `PUB-12`) en distintas etapas.
+- La ficha de cada uno está en `docs/demo/CASOS_PUBLICADOS.md`.
+- Para cargarlos sobre una demo existente: `./sail artisan db:seed --class=PublishedCaseSeeder`.
+
+## Administración
+- `admin@bactruf.test`: usuarios y catálogos.
+- `bioquimica@bactruf.test`: prepara borradores de protocolos y puntos de corte.
+- `director.central@bactruf.test`: es el responsable de la configuración clínica; aprueba y pone vigente.
+
 ## Recorrer el resto de los cultivos en la demo
 1. **Recepción:** una muestra "Líquido cefalorraquídeo · Cultivo de LCR" y otra "Materia fecal · Coprocultivo".
 2. `bioquimica@bactruf.test` → **Procesamiento**: el directo del LCR aparece como inmediato.

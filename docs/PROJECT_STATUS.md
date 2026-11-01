@@ -30,12 +30,15 @@
   - protocolos versionados con editor y aprobación;
   - puntos de corte con importación CSV.
 
+- **Casos publicados en la demo (2026-11-01):** 12 escenarios con fuente citada (`docs/demo/CASOS_PUBLICADOS.md`).
+  - Huecos encontrados: Q-C16 a Q-C19.
+
 ## En desarrollo
 - Nada a medio hacer.
 
 ## Bloqueos
 - Ninguno técnico.
-- Clínicos: las plantillas de urocultivo, hemocultivo y el resto de los cultivos (`docs/templates/`) debe revisarlas el Director técnico responsable; puntos de corte reales (Q-C4); metodología del perfil (Q-C9); lista de críticos y plazos (Q-C5); tiempo diferencial de positividad (Q-C10); permisos del Auxiliar en hemocultivo (Q-S5); lecturas después de un desarrollo (Q-C12); medios, recuentos y directos de los estudios nuevos (Q-C13, Q-C14); estudios que faltan (Q-C15).
+- Clínicos: las plantillas de urocultivo, hemocultivo y el resto de los cultivos (`docs/templates/`) debe revisarlas el Director técnico responsable; puntos de corte reales (Q-C4); metodología del perfil (Q-C9); lista de críticos y plazos (Q-C5); tiempo diferencial de positividad (Q-C10); permisos del Auxiliar en hemocultivo (Q-S5); lecturas después de un desarrollo (Q-C12); medios, recuentos y directos de los estudios nuevos (Q-C13, Q-C14); estudios que faltan (Q-C15); antibiograma sin valor medido (Q-C16), pruebas complementarias (Q-C17), repique del caldo y primera lectura (Q-C18), directo no realizado (Q-C19); administración (Q-A9 a Q-A12).
 
 ## Próximos pasos
 1. Usuario: recorrer los circuitos en la demo (urocultivo, hemocultivo, LCR, herida, coprocultivo) y revisar las plantillas con el Director técnico.

@@ -81,6 +81,20 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
   - Respiratorias: ¿se rechaza un esputo por calidad (células epiteliales y leucocitos)? Hoy solo se registra.
   - Flujo vaginal: ¿se informa un puntaje (Nugent u otro)? Hoy no se calcula ni se interpreta.
 - **Q-C15** ¿Qué otros estudios hacen falta? Por ejemplo: anaerobios, micológico, micobacterias, punta de catéter, búsquedas dirigidas (*S. agalactiae*, STEC).
+- **Q-C16** Antibiograma sin valor medido: hoy cada antibiótico del panel exige el halo o la CIM.
+  - ¿Cómo se carga un resultado que llega solo con la interpretación (S/I/R), por ejemplo de un laboratorio de referencia?
+  - ¿Se puede dejar sin ensayar un antibiótico del panel?
+  - Surgió al cargar casos publicados (`docs/demo/CASOS_PUBLICADOS.md`).
+- **Q-C17** Pruebas complementarias: ¿dónde se registran y si salen en el informe?
+  - Serotipo o serogrupo (*S. pneumoniae*, *Salmonella*, *N. meningitidis*).
+  - Mecanismos de resistencia (BLEE, carbapenemasas, β-lactamasa).
+  - PCR y antígenos.
+  - Identificación por MALDI-TOF.
+  - Hoy van como texto libre en la identificación.
+- **Q-C18** Coprocultivo: si el caldo se repica antes de leer las placas primarias, la lectura siguiente espera la incubación mínima de las placas del repique (D-0017).
+  - ¿Las placas primarias se leen a las 24 h igual, y las del repique en la lectura siguiente?
+  - Es un cambio del proceso: queda a confirmar.
+- **Q-C19** ¿Se puede marcar un examen directo como no realizado (con motivo)? Hoy la actividad queda abierta.
 - **Q-S5** Hemocultivo: en la plantilla, el Auxiliar carga frascos y registra la alarma de positivo del equipo, pero no informa negativos ni lee repiques (siguiendo Q-S1). El Gram lo hace el Bioquímico. ¿Es así?
 - **Q-F9** Tandas de lectura: hoy la lectura, la identificación y el antibiograma se hacen ítem por ítem desde su mesada; ¿hace falta tanda también para la lectura (como en la siembra)?
 - **Q-F5** ¿Se derivan aislamientos a laboratorios de referencia (p. ej., INEI-ANLIS Malbrán)? ¿Hay que registrar derivaciones y sus resultados?

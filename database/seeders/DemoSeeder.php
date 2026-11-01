@@ -56,6 +56,8 @@ class DemoSeeder extends Seeder
         $this->call(ReferenceCatalogSeeder::class);
         // Puntos de corte FICTICIOS (no clínicos) solo para probar la interpretación.
         $this->call(SyntheticBreakpointSeeder::class);
+        // Escenarios basados en casos publicados (docs/demo/CASOS_PUBLICADOS.md).
+        $this->call(PublishedCaseSeeder::class);
     }
 
     /**
