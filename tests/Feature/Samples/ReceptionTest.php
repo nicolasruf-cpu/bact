@@ -274,3 +274,36 @@ test('the lookups return nothing for unknown values', function () {
                 ->where('patientMatch', null)
                 ->where('orderMatch', null)));
 });
+
+test('barcodes and order numbers accept the usual barcode symbols', function (string $barcode) {
+    $this->actingAs(staffAt($this->site, Role::Assistant))
+        ->post(route('reception.store'), orderPayload([urineSample($barcode)], ['order_number' => '2026/123.4']))
+        ->assertSessionHasNoErrors();
+
+    expect(Sample::sole()->barcode)->toBe(strtoupper($barcode))
+        ->and(LabOrder::sole()->external_number)->toBe('2026/123.4');
+})->with(['123456', '123456-01', '123456.01', 'URO/0001', 'm_000123', '00012345+1']);
+
+test('a barcode with spaces is rejected with a clear message', function () {
+    $this->actingAs(staffAt($this->site, Role::Assistant))
+        ->post(route('reception.store'), orderPayload([urineSample('M 001')]))
+        ->assertSessionHasErrors(['samples.0.barcode' => 'El código de muestra no puede tener espacios ni letras acentuadas.']);
+});
+
+test('the document number is normalized (dots, spaces and dashes are removed)', function () {
+    $user = staffAt($this->site, Role::Assistant);
+
+    $this->actingAs($user)
+        ->post(route('reception.store'), orderPayload([urineSample('M-001')], ['document_number' => '30.111.222']))
+        ->assertSessionHasNoErrors();
+    $this->actingAs($user)
+        ->post(route('reception.store'), orderPayload([urineSample('M-002')], ['document_number' => '30 111 222', 'order_number' => null]))
+        ->assertSessionHasNoErrors();
+
+    expect(Patient::sole()->document_number)->toBe('30111222');
+
+    $this->actingAs($user)
+        ->get(route('reception.create', ['document' => '30.111.222']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->reloadOnly('patientMatch', fn (Assert $reload) => $reload->where('patientMatch.document_number', '30111222')));
+});

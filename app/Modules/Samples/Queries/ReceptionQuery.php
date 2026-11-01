@@ -135,7 +135,8 @@ class ReceptionQuery
             return null;
         }
 
-        $patient = Patient::query()->where('document_number', strtoupper(trim($document)))->first();
+        $normalized = strtoupper((string) preg_replace('/[\s.\-]/', '', $document));
+        $patient = Patient::query()->where('document_number', $normalized)->first();
 
         return $patient ? $this->patientSummary($patient) : null;
     }

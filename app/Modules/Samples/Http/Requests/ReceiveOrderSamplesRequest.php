@@ -28,9 +28,30 @@ class ReceiveOrderSamplesRequest extends FormRequest
 
         $this->merge([
             'order_number' => $this->filled('order_number') ? strtoupper(trim($this->string('order_number')->toString())) : null,
-            'document_number' => $this->filled('document_number') ? strtoupper(trim($this->string('document_number')->toString())) : null,
+            // "30.111.222", "30 111 222" y "30-111-222" son el mismo documento.
+            'document_number' => $this->filled('document_number')
+                ? strtoupper((string) preg_replace('/[\s.\-]/', '', $this->string('document_number')->toString()))
+                : null,
             'samples' => $samples,
         ]);
+    }
+
+    /**
+     * Códigos de barras: cualquier carácter imprimible salvo espacios (Code 128 / Code 39
+     * pueden traer . / - _ + y otros signos).
+     */
+    private const CODE_FORMAT = 'regex:/^[\x21-\x7E]+$/';
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'order_number.regex' => 'El número de orden no puede tener espacios ni letras acentuadas.',
+            'document_number.regex' => 'El documento solo puede tener letras y números.',
+            'samples.*.barcode.regex' => 'El código de muestra no puede tener espacios ni letras acentuadas.',
+        ];
     }
 
     /**
@@ -40,7 +61,7 @@ class ReceiveOrderSamplesRequest extends FormRequest
     {
         return [
             'idempotency_key' => ['required', 'uuid'],
-            'order_number' => ['nullable', 'string', 'max:50', 'regex:/^[A-Z0-9\-\/]+$/'],
+            'order_number' => ['nullable', 'string', 'max:50', self::CODE_FORMAT],
             'document_number' => ['required', 'string', 'max:20', 'regex:/^[A-Z0-9]+$/'],
             'last_name' => ['required', 'string', 'max:100'],
             'first_name' => ['required', 'string', 'max:100'],
@@ -50,7 +71,7 @@ class ReceiveOrderSamplesRequest extends FormRequest
             'requesting_service' => ['nullable', 'string', 'max:100'],
             'requesting_physician' => ['nullable', 'string', 'max:150'],
             'samples' => ['required', 'array', 'min:1', 'max:20'],
-            'samples.*.barcode' => ['required', 'string', 'max:50', 'regex:/^[A-Z0-9\-]+$/', 'distinct'],
+            'samples.*.barcode' => ['required', 'string', 'max:50', self::CODE_FORMAT, 'distinct'],
             'samples.*.sample_type_id' => ['required', 'integer', Rule::exists('sample_types', 'id')->where('is_active', true)],
             'samples.*.study_ids' => ['required', 'array', 'min:1'],
             'samples.*.study_ids.*' => ['integer', Rule::exists('studies', 'id')->where('is_active', true)],

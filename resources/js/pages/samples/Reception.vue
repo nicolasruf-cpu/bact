@@ -175,8 +175,13 @@ watch(
 
 // --- Paciente --------------------------------------------------------------
 
+// "30.111.222" y "30111222" son el mismo documento (el servidor normaliza igual).
+function normalizeDocument(value: string): string {
+    return value.replace(/[\s.-]/g, '').toUpperCase();
+}
+
 function lookupPatient() {
-    const documentNumber = form.document_number.trim();
+    const documentNumber = normalizeDocument(form.document_number);
     if (!documentNumber || existingOrder.value) {
         return;
     }
@@ -197,7 +202,7 @@ watch(
         }
         if (
             match &&
-            match.document_number === form.document_number.trim().toUpperCase()
+            match.document_number === normalizeDocument(form.document_number)
         ) {
             knownPatient.value = true;
             form.last_name = match.last_name;
