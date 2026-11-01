@@ -4,6 +4,8 @@ namespace App\Modules\Workflow\Listeners;
 
 use App\Modules\Cultures\Events\CultureCompleted;
 use App\Modules\Cultures\Events\CultureRead;
+use App\Modules\Cultures\Events\DirectExamRecorded;
+use App\Modules\Cultures\Events\EnrichmentSubcultured;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Identification\Events\IsolateIdentified;
 use App\Modules\Orders\Enums\Priority;
@@ -56,6 +58,16 @@ class ClinicalFlowPolicy
         foreach ($event->significantIsolates as $isolate) {
             $this->scheduleFor($isolate, ActivityType::Identify, $reading?->id);
         }
+    }
+
+    public function onDirectExamRecorded(DirectExamRecorded $event): void
+    {
+        $this->lifecycle->completeFor($event->sampleStudy, ActivityType::DirectExam, $event->userId);
+    }
+
+    public function onEnrichmentSubcultured(EnrichmentSubcultured $event): void
+    {
+        $this->lifecycle->completeFor($event->broth, ActivityType::SubcultureEnrichment, $event->userId);
     }
 
     /**

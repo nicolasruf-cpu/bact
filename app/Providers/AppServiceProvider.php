@@ -8,6 +8,7 @@ use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\Configuration\Models\ProtocolVersion;
 use App\Modules\CriticalResults\Models\CriticalAlert;
 use App\Modules\Cultures\Models\Culture;
+use App\Modules\Cultures\Models\DirectExam;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Plate;
 use App\Modules\Cultures\Models\Reading;
@@ -95,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
             'blood_culture_bottle' => BloodCultureBottle::class,
             'blind_subculture' => BlindSubculture::class,
             'critical_alert' => CriticalAlert::class,
+            'direct_exam' => DirectExam::class,
         ]);
     }
 }

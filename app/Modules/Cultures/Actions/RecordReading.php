@@ -26,6 +26,11 @@ use Illuminate\Validation\ValidationException;
  * Qué pasa después lo decide el resultado de la opción (no hay reglas clínicas en el código):
  * sin desarrollo / flora mixta / no significativo → cierra; desarrollo → aislamientos;
  * reincubar → nueva lectura. La significancia de cada aislamiento la marca el bacteriólogo.
+ *
+ * Con cronograma de varias lecturas (D-0017): antes de la última, "sin desarrollo" programa
+ * la siguiente; con desarrollo se cargan los aislamientos y se siguen haciendo las lecturas
+ * programadas, en las que solo cabe desarrollo nuevo o sin desarrollo nuevo. La última
+ * lectura no se registra con un caldo de enriquecimiento sin repicar.
  */
 class RecordReading
 {
@@ -47,8 +52,9 @@ class RecordReading
             $culture = Culture::query()->lockForUpdate()->with(['sampleStudy.protocolVersion', 'readings', 'plates'])->findOrFail($culture->id);
             $version = $culture->sampleStudy->protocolVersion;
 
-            if ($culture->status !== CultureStatus::Incubating) {
-                throw ValidationException::withMessages(['option_code' => 'Este cultivo ya no está en incubación.']);
+            $inWorkup = $culture->status === CultureStatus::Workup;
+            if (! ($culture->status === CultureStatus::Incubating || ($inWorkup && ! $this->schedule->isComplete($culture)))) {
+                throw ValidationException::withMessages(['option_code' => 'Este cultivo no tiene lecturas pendientes.']);
             }
 
             $availableAt = $this->schedule->nextReadingAvailableAt($culture);
@@ -67,6 +73,23 @@ class RecordReading
             $this->authorize($user, $outcome);
             $this->validateOutcome($culture, $outcome, $isolates);
 
+            $isLast = $this->schedule->isLastStep($culture);
+            if ($inWorkup && ! in_array($outcome, [ReadingOutcome::Growth, ReadingOutcome::NoGrowth, ReadingOutcome::Reincubate], true)) {
+                throw ValidationException::withMessages([
+                    'option_code' => 'El cultivo ya tiene aislamientos: registrá desarrollo nuevo o sin desarrollo nuevo.',
+                ]);
+            }
+            $closes = in_array($outcome, [ReadingOutcome::MixedFlora, ReadingOutcome::NotSignificant], true)
+                || ($outcome !== ReadingOutcome::Reincubate && $isLast);
+            if ($closes && $this->schedule->pendingEnrichments($culture)->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'option_code' => 'Falta repicar el caldo de enriquecimiento antes de la última lectura.',
+                ]);
+            }
+            // Antes de la última lectura programada, sin desarrollo no cierra: espera la siguiente.
+            $continues = in_array($outcome, [ReadingOutcome::NoGrowth, ReadingOutcome::Growth], true) && ! $isLast;
+            $nextStep = $continues ? $this->schedule->followingStep($culture) : null;
+
             $reading = $culture->readings()->create([
                 'attempt' => $culture->readings->count() + 1,
                 'option_code' => $optionCode,
@@ -78,9 +101,10 @@ class RecordReading
 
             $created = collect();
             if ($outcome === ReadingOutcome::Growth) {
+                $offset = (int) $culture->isolates()->max('number');
                 foreach ($isolates as $index => $data) {
                     $created->push($culture->isolates()->create([
-                        'number' => $index + 1,
+                        'number' => $offset + $index + 1,
                         'morphotype' => $data->morphotype,
                         'count_category' => $data->countCategory,
                         'plate_id' => $culture->plates->contains('id', $data->plateId) ? $data->plateId : null,
@@ -88,7 +112,9 @@ class RecordReading
                         'status' => $data->isSignificant ? IsolateStatus::InIdentification : IsolateStatus::NotSignificant,
                     ]));
                 }
-                $culture->update(['status' => CultureStatus::Workup, 'lock_version' => $culture->lock_version + 1]);
+                if (! $inWorkup) {
+                    $culture->update(['status' => CultureStatus::Workup, 'lock_version' => $culture->lock_version + 1]);
+                }
             }
 
             $this->auditor->record(CultureAuditAction::Read, $culture, after: [
@@ -102,25 +128,39 @@ class RecordReading
                 ])->all(),
             ], reason: $notes);
 
-            $nextReadAt = $outcome === ReadingOutcome::Reincubate ? Date::now()->addHours((int) $version->reincubation_hours) : null;
+            [$nextReadAt, $nextReadDueAt] = match (true) {
+                $outcome === ReadingOutcome::Reincubate => [
+                    $at = Date::now()->addHours((int) $version->reincubation_hours),
+                    $at->copy()->addHours($version->first_read_due_hours - $version->first_read_min_hours),
+                ],
+                $nextStep !== null => $nextStep,
+                default => [null, null],
+            };
 
             event(new CultureRead(
                 culture: $culture,
                 reading: $reading,
                 significantIsolates: $created->filter(fn (Isolate $i) => $i->is_significant)->values(),
                 nextReadAt: $nextReadAt,
-                nextReadDueAt: $nextReadAt?->copy()->addHours($version->first_read_due_hours - $version->first_read_min_hours),
+                nextReadDueAt: $nextReadDueAt,
                 userId: $user->id,
             ));
 
+            if ($continues) {
+                return $reading;
+            }
+
             $closing = match ($outcome) {
-                ReadingOutcome::NoGrowth => CultureStatus::ClosedNegative,
+                ReadingOutcome::NoGrowth => $inWorkup ? null : CultureStatus::ClosedNegative,
                 ReadingOutcome::MixedFlora => CultureStatus::ClosedContaminated,
                 ReadingOutcome::NotSignificant => CultureStatus::ClosedNotSignificant,
                 default => null,
             };
             if ($closing !== null) {
                 $this->closure->close($culture, $closing);
+            } elseif ($inWorkup || $outcome === ReadingOutcome::Growth) {
+                // Última lectura de un cultivo con aislamientos: cierra si ya están todos resueltos.
+                $this->closure->closeIfResolved($culture->fresh() ?? $culture);
             }
 
             return $reading;

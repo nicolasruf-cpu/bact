@@ -6,6 +6,7 @@ use App\Modules\BloodCultures\Enums\BottleStatus;
 use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\CriticalResults\Models\CriticalAlert;
+use App\Modules\CriticalResults\Services\CriticalAlertLink;
 use App\Modules\Orders\Enums\Priority;
 use App\Modules\Samples\Models\SampleStudy;
 use App\Modules\Workflow\Enums\ActivityStatus;
@@ -135,7 +136,7 @@ class BloodCultureWorkbenchQuery
             $subject instanceof SampleStudy => [$subject->id, $subject->study->name],
             $subject instanceof BloodCultureBottle => [$subject->sample_study_id, $subject->method->label()],
             $subject instanceof BlindSubculture => [$subject->bottle->sample_study_id, "Repique n.º {$subject->number}"],
-            $subject instanceof CriticalAlert => [$subject->sample_study_id, $subject->summary],
+            $subject instanceof CriticalAlert => [null, $subject->summary],
             default => [null, ''],
         };
 
@@ -157,7 +158,11 @@ class BloodCultureWorkbenchQuery
             'patient' => $activity->sample->labOrder->patient->fullName(),
             'sample_type' => $activity->sample->sampleType->name,
             'detail' => $detail,
-            'url' => $studyId !== null ? route('blood-cultures.show', $studyId) : null,
+            'url' => match (true) {
+                $subject instanceof CriticalAlert => CriticalAlertLink::for($subject),
+                $studyId !== null => route('blood-cultures.show', $studyId),
+                default => null,
+            },
         ];
     }
 }

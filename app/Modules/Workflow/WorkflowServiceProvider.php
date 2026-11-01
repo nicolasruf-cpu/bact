@@ -14,6 +14,8 @@ use App\Modules\CriticalResults\Events\CriticalCommunicationRecorded;
 use App\Modules\Cultures\Events\CultureCompleted;
 use App\Modules\Cultures\Events\CultureInoculated;
 use App\Modules\Cultures\Events\CultureRead;
+use App\Modules\Cultures\Events\DirectExamRecorded;
+use App\Modules\Cultures\Events\EnrichmentSubcultured;
 use App\Modules\Identification\Events\IsolateIdentified;
 use App\Modules\Reporting\Events\ReportValidated;
 use App\Modules\Samples\Events\SampleReceived;
@@ -38,6 +40,8 @@ class WorkflowServiceProvider extends ServiceProvider
         Event::listen(SampleReceived::class, CreateInoculationActivities::class);
         Event::listen(CultureInoculated::class, ScheduleCultureReading::class);
         Event::listen(CultureRead::class, [ClinicalFlowPolicy::class, 'onCultureRead']);
+        Event::listen(DirectExamRecorded::class, [ClinicalFlowPolicy::class, 'onDirectExamRecorded']);
+        Event::listen(EnrichmentSubcultured::class, [ClinicalFlowPolicy::class, 'onEnrichmentSubcultured']);
         Event::listen(IsolateIdentified::class, [ClinicalFlowPolicy::class, 'onIsolateIdentified']);
         Event::listen(SusceptibilityTestSetUp::class, [ClinicalFlowPolicy::class, 'onSusceptibilitySetUp']);
         Event::listen(SusceptibilityTestRead::class, [ClinicalFlowPolicy::class, 'onSusceptibilityRead']);

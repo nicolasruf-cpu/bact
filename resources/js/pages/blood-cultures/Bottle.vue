@@ -6,9 +6,9 @@ import {
     FileText,
     FlaskConical,
     Microscope,
-    Phone,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import CriticalAlertCard from '@/components/domain/CriticalAlertCard.vue';
 import SampleHeaderCard from '@/components/domain/SampleHeaderCard.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { formatDateTime } from '@/lib/datetime';
 import { formatMinutes } from '@/lib/elapsed';
-import { uuid } from '@/lib/uuid';
 import { read as readSubculture } from '@/routes/blind-subcultures';
 import { load as loadRoute, show as showBottle } from '@/routes/blood-cultures';
 import {
@@ -28,10 +27,9 @@ import {
     subculture as subcultureRoute,
 } from '@/routes/bottles';
 import { store as storeSubculture } from '@/routes/bottles/blind-subcultures';
-import { store as storeCommunication } from '@/routes/critical-alerts/communications';
 import { preliminary as preliminaryRoute } from '@/routes/reports';
 import { create as validationRoute } from '@/routes/validations';
-import type { SampleHeader } from '@/types/clinical';
+import type { CriticalAlert, SampleHeader } from '@/types/clinical';
 
 type Option = { code: string; label: string };
 
@@ -94,25 +92,6 @@ type SummaryGroup = {
         positive_at: string | null;
         minutes_to_positivity: number | null;
         gram: string | null;
-    }[];
-};
-
-type CriticalAlert = {
-    ulid: string;
-    summary: string;
-    status: string;
-    status_label: string;
-    opened_at: string;
-    closed_at: string | null;
-    communications: {
-        recipient_name: string;
-        recipient_role: string | null;
-        channel: string;
-        successful: boolean;
-        read_back_confirmed: boolean;
-        notes: string | null;
-        communicated_by: string;
-        communicated_at: string;
     }[];
 };
 
@@ -278,27 +257,6 @@ function submitWorkup() {
             preserveScroll: true,
         });
     }
-}
-
-// --- Comunicación del crítico -------------------------------------------------------
-const communicationForm = useForm({
-    idempotency_key: uuid(),
-    recipient_name: '',
-    recipient_role: '',
-    channel: props.channels[0]?.value ?? 'phone',
-    successful: true,
-    read_back_confirmed: false,
-    notes: '',
-});
-
-function submitCommunication(alert: CriticalAlert) {
-    communicationForm.post(storeCommunication(alert.ulid).url, {
-        preserveScroll: true,
-        onSuccess: () => {
-            communicationForm.reset();
-            communicationForm.idempotency_key = uuid();
-        },
-    });
 }
 
 // --- Informes -----------------------------------------------------------------------
@@ -946,164 +904,13 @@ const statusClass: Record<string, string> = {
                 </section>
 
                 <!-- Resultado crítico -->
-                <section
+                <CriticalAlertCard
                     v-for="alert in props.criticalAlerts"
                     :key="alert.ulid"
-                    class="grid gap-3 rounded-lg border p-4"
-                    :class="
-                        alert.status === 'open'
-                            ? 'border-red-500 bg-red-50/60 dark:bg-red-950/30'
-                            : ''
-                    "
-                    data-test="critical-alert"
-                >
-                    <div
-                        class="flex flex-wrap items-center justify-between gap-2"
-                    >
-                        <h2 class="flex items-center gap-2 font-semibold">
-                            <AlertTriangle class="size-4" /> Resultado crítico
-                        </h2>
-                        <Badge
-                            :variant="
-                                alert.status === 'open'
-                                    ? 'destructive'
-                                    : 'secondary'
-                            "
-                            >{{ alert.status_label }}</Badge
-                        >
-                    </div>
-                    <p class="text-sm">{{ alert.summary }}</p>
-
-                    <ul
-                        v-if="alert.communications.length"
-                        class="grid gap-1 text-sm"
-                    >
-                        <li
-                            v-for="(c, index) in alert.communications"
-                            :key="index"
-                            class="rounded-md border bg-background p-2"
-                        >
-                            <span class="font-medium">{{
-                                c.successful ? 'Comunicado' : 'Sin respuesta'
-                            }}</span>
-                            a {{ c.recipient_name }}
-                            <template v-if="c.recipient_role">
-                                ({{ c.recipient_role }})</template
-                            >
-                            · {{ c.channel }}
-                            <template v-if="c.read_back_confirmed">
-                                · relectura confirmada</template
-                            >
-                            <div class="text-xs text-muted-foreground">
-                                {{ formatDateTime(c.communicated_at) }} ·
-                                {{ c.communicated_by }}
-                                <template v-if="c.notes">
-                                    · {{ c.notes }}</template
-                                >
-                            </div>
-                        </li>
-                    </ul>
-
-                    <form
-                        v-if="alert.status === 'open' && props.can.communicate"
-                        class="grid gap-3"
-                        @submit.prevent="submitCommunication(alert)"
-                    >
-                        <div class="grid gap-3 sm:grid-cols-3">
-                            <div class="grid gap-1">
-                                <Label for="recipient_name"
-                                    >A quién se comunicó</Label
-                                >
-                                <Input
-                                    id="recipient_name"
-                                    v-model="communicationForm.recipient_name"
-                                    placeholder="Nombre"
-                                    data-test="recipient-name"
-                                />
-                                <InputError
-                                    :message="
-                                        communicationForm.errors.recipient_name
-                                    "
-                                />
-                            </div>
-                            <div class="grid gap-1">
-                                <Label for="recipient_role"
-                                    >Rol o servicio</Label
-                                >
-                                <Input
-                                    id="recipient_role"
-                                    v-model="communicationForm.recipient_role"
-                                    placeholder="p. ej., médico de guardia"
-                                />
-                            </div>
-                            <div class="grid gap-1">
-                                <Label for="channel">Medio</Label>
-                                <select
-                                    id="channel"
-                                    v-model="communicationForm.channel"
-                                    class="h-9 rounded-md border bg-background px-2 text-sm"
-                                >
-                                    <option
-                                        v-for="channel in props.channels"
-                                        :key="channel.value"
-                                        :value="channel.value"
-                                    >
-                                        {{ channel.label }}
-                                    </option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="flex flex-wrap gap-4 text-sm">
-                            <label class="flex items-center gap-2">
-                                <input
-                                    v-model="communicationForm.successful"
-                                    type="checkbox"
-                                    class="size-4"
-                                />
-                                Se pudo comunicar
-                            </label>
-                            <label class="flex items-center gap-2">
-                                <input
-                                    v-model="
-                                        communicationForm.read_back_confirmed
-                                    "
-                                    type="checkbox"
-                                    class="size-4"
-                                />
-                                El receptor repitió el resultado (relectura)
-                            </label>
-                        </div>
-                        <div class="grid gap-1">
-                            <Label for="communication_notes"
-                                >Observaciones</Label
-                            >
-                            <Input
-                                id="communication_notes"
-                                v-model="communicationForm.notes"
-                                placeholder="Opcional"
-                            />
-                        </div>
-                        <div class="flex justify-end">
-                            <Button
-                                type="submit"
-                                :variant="
-                                    communicationForm.successful
-                                        ? 'default'
-                                        : 'outline'
-                                "
-                                :disabled="communicationForm.processing"
-                                data-test="save-communication"
-                            >
-                                <Phone class="size-4" />
-                                {{
-                                    communicationForm.successful
-                                        ? 'Registrar comunicación'
-                                        : 'Registrar intento fallido'
-                                }}
-                            </Button>
-                        </div>
-                    </form>
-                </section>
+                    :alert="alert"
+                    :channels="props.channels"
+                    :can-communicate="props.can.communicate"
+                />
             </div>
 
             <aside class="grid content-start gap-4">

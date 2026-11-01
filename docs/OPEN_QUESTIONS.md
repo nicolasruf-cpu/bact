@@ -33,10 +33,12 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-C4 ★ [PARCIAL 2026-10-31]** Puntos de corte: **módulo de carga** (carga asistida + importación CSV) → el bacteriólogo **revisa, ajusta y confirma**. Coincide con el flujo `draft → approved → active` de MICROBIOLOGY_RULES §3.
   - Falta: ¿qué edición del M100 usan? ¿Confirma cualquier Bioquímico o solo el Director técnico? ¿Se aplican recomendaciones locales (SADEBAC / INEI-ANLIS)? **Los puntos de corte no tienen plantilla** (derechos de autor de CLSI): los datos salen de la edición licenciada del laboratorio.
 - **Q-C5 [PARCIAL 2026-11-01]** El **Gram de un frasco de hemocultivo positivo se comunica** (decisión del laboratorio). Se registra a quién, por qué medio, si fue exitoso y si hubo relectura; un intento fallido deja el crítico abierto.
-  - Falta: el resto de la lista de críticos; plazos y escalamiento; si la relectura es obligatoria; si se comunica también un Gram sin microorganismos observados (hoy se comunica).
+  - **Directo de LCR con microorganismos: también se comunica** (decisión del laboratorio, 2026-11-01). Los directos de otras muestras se registran sin abrir un crítico.
+  - Falta: el resto de la lista de críticos; plazos y escalamiento; si la relectura es obligatoria; si se comunica también un Gram de frasco sin microorganismos observados (hoy se comunica).
 - **Q-C6** Tiempos objetivo por actividad o estudio (para calcular "demoradas").
 - **Q-C7 [PARCIAL 2026-11-01]** Hemocultivo positivo: **informe preliminar con el Gram** (decisión del laboratorio). Lo emite quien tiene permiso de validar. El preliminar congela lo registrado hasta ese momento, y el definitivo lo reemplaza.
-  - Falta: ¿preliminares en otros estudios? ¿Hace falta un segundo preliminar con la identificación, antes del antibiograma? (Hoy se puede emitir otro.)
+  - **Con el examen directo también se puede emitir un preliminar** (decisión del laboratorio, 2026-11-01), una vez sembrada la muestra. Si el cultivo sigue abierto sin desarrollo, el preliminar dice "Cultivo en curso".
+  - Falta: ¿hace falta un segundo preliminar con la identificación, antes del antibiograma? (Hoy se puede emitir otro.)
 - **Q-C8** Criterios de rechazo de muestras.
 
 ## D. Roles y validación
@@ -62,6 +64,14 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-C9** Perfil de sensibilidad: se aplica la metodología de referencia de CLSI M39 (primer aislamiento por paciente y especie en el período, solo resultados informados, advertencia con < 30 aislamientos). ¿El laboratorio la adopta así? ¿Período anual? ¿Separar por servicio (internados/ambulatorios) o por tipo de muestra?
 - **Q-C10** Tiempo diferencial de positividad (retrocultivo vs. hemocultivo periférico): el sistema muestra el tiempo hasta la positividad de cada frasco. ¿Hay que calcular la diferencia y mostrarla? ¿Con qué umbral y redacción? (No se calcula ni se interpreta hasta que el laboratorio lo defina.)
 - **Q-C11 [PLANTILLA]** Hemocultivo: tipos de frasco, días de incubación (5 en equipo y 7 manual en la plantilla), medio y horario del repique manual, medios del subcultivo y opciones de Gram. Ver `templates/HEMOCULTIVO.md`.
+- **Q-C12 [PLANTILLA]** Cronograma de lecturas (D-0017): horas de cada lectura por estudio (ver `templates/CULTIVOS.md`).
+  - **¿Se siguen haciendo las lecturas programadas después de un desarrollo?** Hoy sí: se buscan desarrollos nuevos (lentos, placas del caldo) y el cultivo cierra al terminar las lecturas y resolver los aislamientos.
+  - En urocultivo y en el subcultivo del hemocultivo no cambia nada, porque tienen una sola lectura.
+- **Q-C13 [PLANTILLA]** Medios, opciones de lectura, recuentos (semicuantitativos, UFC/mL en BAL y aspirado traqueal) y redacción de los negativos de cada estudio nuevo. El sistema no aplica umbrales de significancia.
+- **Q-C14 [PLANTILLA]** Examen directo: campos y opciones por tipo de muestra.
+  - Respiratorias: ¿se rechaza un esputo por calidad (células epiteliales y leucocitos)? Hoy solo se registra.
+  - Flujo vaginal: ¿se informa un puntaje (Nugent u otro)? Hoy no se calcula ni se interpreta.
+- **Q-C15** ¿Qué otros estudios hacen falta? Por ejemplo: anaerobios, micológico, micobacterias, punta de catéter, búsquedas dirigidas (*S. agalactiae*, STEC).
 - **Q-S5** Hemocultivo: en la plantilla, el Auxiliar carga frascos y registra la alarma de positivo del equipo, pero no informa negativos ni lee repiques (siguiendo Q-S1). El Gram lo hace el Bioquímico. ¿Es así?
 - **Q-F9** Tandas de lectura: hoy la lectura, la identificación y el antibiograma se hacen ítem por ítem desde su mesada; ¿hace falta tanda también para la lectura (como en la siembra)?
 - **Q-F5** ¿Se derivan aislamientos a laboratorios de referencia (p. ej., INEI-ANLIS Malbrán)? ¿Hay que registrar derivaciones y sus resultados?

@@ -4,6 +4,7 @@ namespace App\Modules\CriticalResults\Queries;
 
 use App\Modules\CriticalResults\Enums\CriticalAlertStatus;
 use App\Modules\CriticalResults\Models\CriticalAlert;
+use App\Modules\CriticalResults\Services\CriticalAlertLink;
 
 /**
  * Resultados críticos sin comunicar de la sede: se muestran en la barra superior.
@@ -11,7 +12,7 @@ use App\Modules\CriticalResults\Models\CriticalAlert;
 class OpenCriticalAlertsQuery
 {
     /**
-     * @return array<int, array{ulid: string, summary: string, opened_at: string, sample_study_id: int, attempts: int}>
+     * @return array<int, array{ulid: string, summary: string, opened_at: string, sample_study_id: int, attempts: int, url: string}>
      */
     public function forSite(int $siteId): array
     {
@@ -28,6 +29,7 @@ class OpenCriticalAlertsQuery
                 'opened_at' => $alert->opened_at->toIso8601String(),
                 'sample_study_id' => $alert->sample_study_id,
                 'attempts' => (int) $alert->getAttribute('communications_count'),
+                'url' => CriticalAlertLink::for($alert),
             ])
             ->values()
             ->all();

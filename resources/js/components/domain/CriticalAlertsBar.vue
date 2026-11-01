@@ -3,7 +3,6 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { AlertTriangle } from '@lucide/vue';
 import { computed } from 'vue';
 import { elapsedSince } from '@/lib/elapsed';
-import { show as showBloodCulture } from '@/routes/blood-cultures';
 
 // Resultados críticos sin comunicar (UX_UI.md): barra persistente hasta que se comunican.
 const page = usePage();
@@ -29,7 +28,7 @@ const alerts = computed(() => page.props.criticalAlerts ?? []);
         <Link
             v-for="alert in alerts"
             :key="alert.ulid"
-            :href="showBloodCulture(alert.sample_study_id)"
+            :href="alert.url"
             class="flex items-center gap-1 rounded-md bg-white/15 px-2 py-1 hover:bg-white/25"
         >
             {{ alert.summary }}

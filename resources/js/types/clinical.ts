@@ -66,6 +66,15 @@ export type BloodCultureReport = {
     }[];
 };
 
+export type DirectExamReport = {
+    label: string;
+    lines: { field: string; values: string[] }[];
+    description: string | null;
+    organisms_seen: boolean;
+    performed_by: string;
+    performed_at: string;
+};
+
 export type ReportContent = {
     kind?: string;
     site: string;
@@ -92,5 +101,25 @@ export type ReportContent = {
     result: string | null;
     reading_notes: string | null;
     blood_culture?: BloodCultureReport | null;
+    direct_exam?: DirectExamReport | null;
     isolates: ReportIsolate[];
+};
+
+export type CriticalAlert = {
+    ulid: string;
+    summary: string;
+    status: string;
+    status_label: string;
+    opened_at: string;
+    closed_at: string | null;
+    communications: {
+        recipient_name: string;
+        recipient_role: string | null;
+        channel: string;
+        successful: boolean;
+        read_back_confirmed: boolean;
+        notes: string | null;
+        communicated_by: string;
+        communicated_at: string;
+    }[];
 };

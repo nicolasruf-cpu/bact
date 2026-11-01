@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Cultures\Actions\RecordReading;
 use App\Modules\Cultures\Data\IsolateData;
+use App\Modules\Cultures\Enums\CultureStatus;
 use App\Modules\Cultures\Models\Culture;
+use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Plate;
 use App\Modules\Cultures\Models\Reading;
 use App\Modules\Cultures\Services\ReadingSchedule;
@@ -22,9 +24,12 @@ class ReadingController extends Controller
     public function create(Request $request, Culture $culture, SampleHeader $header, ReadingSchedule $schedule): Response
     {
         $this->authorizeSite($request, $culture);
-        $culture->load(['sampleStudy.protocolVersion', 'plates.medium', 'readings']);
+        $culture->load(['sampleStudy.protocolVersion', 'plates.medium', 'readings', 'isolates']);
         $version = $culture->sampleStudy->protocolVersion;
         $options = collect($version->reading_options ?? [])->keyBy('code');
+        $inWorkup = $culture->status === CultureStatus::Workup;
+        // Con aislamientos cargados, en las lecturas siguientes solo cabe desarrollo nuevo o sin desarrollo nuevo.
+        $allowed = $inWorkup ? ['growth', 'no_growth', 'reincubate'] : null;
 
         return Inertia::render('cultures/Reading', [
             'sample' => $header->for($culture->sampleStudy),
@@ -35,11 +40,23 @@ class ReadingController extends Controller
                 'inoculated_at' => $culture->inoculated_at->toIso8601String(),
                 'available_at' => $schedule->nextReadingAvailableAt($culture)->toIso8601String(),
                 'attempt' => $culture->readings->count() + 1,
-                'plates' => $culture->plates->map(fn (Plate $p) => [
+                'step' => $schedule->step($culture) + 1,
+                'steps' => $schedule->steps($culture),
+                'step_hours' => $schedule->stepHours($culture),
+                'is_last' => $schedule->isLastStep($culture),
+                'in_workup' => $inWorkup,
+                'pending_enrichments' => $schedule->pendingEnrichments($culture)->map(fn (Plate $p) => $p->medium->name)->values(),
+                'enrichment_url' => $culture->plates->contains(fn (Plate $p) => $p->is_enrichment) ? route('enrichments.show', $culture) : null,
+                'plates' => $culture->plates->reject(fn (Plate $p) => $p->is_enrichment)->map(fn (Plate $p) => [
                     'id' => $p->id,
                     'medium' => $p->medium->name,
                     'code' => $p->medium->code,
                     'inoculum' => $p->inoculum,
+                ])->values(),
+                'isolates' => $culture->isolates->map(fn (Isolate $i) => [
+                    'number' => $i->number,
+                    'morphotype' => $i->morphotype,
+                    'is_significant' => $i->is_significant,
                 ])->values(),
                 'readings' => $culture->readings->map(fn (Reading $r) => [
                     'attempt' => $r->attempt,
@@ -48,7 +65,9 @@ class ReadingController extends Controller
                     'read_at' => $r->read_at->toIso8601String(),
                 ])->values(),
             ],
-            'options' => $version->reading_options ?? [],
+            'options' => collect($version->reading_options ?? [])
+                ->filter(fn (array $o) => $allowed === null || in_array($o['outcome'], $allowed, true))
+                ->values(),
             'countCategories' => $version->count_categories ?? [],
             'can' => [
                 'negative' => $request->user()?->can(Permission::CulturesReadNegative->value) ?? false,

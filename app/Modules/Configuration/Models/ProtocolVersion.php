@@ -3,6 +3,7 @@
 namespace App\Modules\Configuration\Models;
 
 use App\Modules\Configuration\Data\BloodCultureSettings;
+use App\Modules\Configuration\Data\DirectExamSettings;
 use App\Modules\Configuration\Enums\ProcessingKind;
 use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use Illuminate\Database\Eloquent\Collection;
@@ -24,12 +25,14 @@ use Illuminate\Support\Carbon;
  * @property string|null $notes
  * @property int $first_read_min_hours
  * @property int $first_read_due_hours
+ * @property list<array{min_hours: int, due_hours: int}>|null $reading_schedule
  * @property int|null $reincubation_hours
  * @property int $max_reincubations
  * @property bool $allow_bulk_negative_confirmation
  * @property list<array{code: string, label: string, outcome: string}>|null $reading_options
  * @property list<array{code: string, label: string}>|null $count_categories
  * @property array<string, mixed>|null $blood_culture_settings
+ * @property array<string, mixed>|null $direct_exam_settings
  * @property int|null $ast_read_min_hours
  * @property int|null $ast_read_due_hours
  * @property Carbon|null $approved_at
@@ -51,6 +54,8 @@ class ProtocolVersion extends Model
             'reading_options' => 'array',
             'count_categories' => 'array',
             'blood_culture_settings' => 'array',
+            'reading_schedule' => 'array',
+            'direct_exam_settings' => 'array',
             'approved_at' => 'datetime',
             'activated_at' => 'datetime',
         ];
@@ -64,6 +69,27 @@ class ProtocolVersion extends Model
     public function bloodCultureSettings(): ?BloodCultureSettings
     {
         return $this->blood_culture_settings === null ? null : BloodCultureSettings::fromArray($this->blood_culture_settings);
+    }
+
+    /**
+     * Lecturas programadas, contadas desde la siembra. Sin cronograma, una sola lectura
+     * (la primera del protocolo); las reincubaciones se suman aparte.
+     *
+     * @return non-empty-list<array{min_hours: int, due_hours: int}>
+     */
+    public function readingSchedule(): array
+    {
+        $schedule = array_map(
+            fn (array $step) => ['min_hours' => (int) $step['min_hours'], 'due_hours' => (int) $step['due_hours']],
+            $this->reading_schedule ?? [],
+        );
+
+        return $schedule === [] ? [['min_hours' => $this->first_read_min_hours, 'due_hours' => $this->first_read_due_hours]] : $schedule;
+    }
+
+    public function directExamSettings(): ?DirectExamSettings
+    {
+        return $this->direct_exam_settings === null ? null : DirectExamSettings::fromArray($this->direct_exam_settings);
     }
 
     /**

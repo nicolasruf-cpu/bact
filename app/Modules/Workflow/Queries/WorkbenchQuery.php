@@ -4,6 +4,7 @@ namespace App\Modules\Workflow\Queries;
 
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
+use App\Modules\Cultures\Models\Plate;
 use App\Modules\Orders\Enums\Priority;
 use App\Modules\Samples\Models\SampleStudy;
 use App\Modules\Susceptibility\Models\SusceptibilityTest;
@@ -87,6 +88,14 @@ class WorkbenchQuery
         $subject = $activity->subject;
 
         [$detail, $url] = match (true) {
+            $activity->type === ActivityType::DirectExam && $subject instanceof SampleStudy => [
+                $subject->study->name,
+                route('direct-exams.show', $subject->id),
+            ],
+            $subject instanceof Plate => [
+                'Caldo '.$subject->medium->name.' · sembrado '.$subject->culture->inoculated_at->diffForHumans(),
+                route('enrichments.show', $subject->culture),
+            ],
             $subject instanceof Culture => [
                 "Lectura n.º {$activity->attempt} · sembrado ".$subject->inoculated_at->diffForHumans(),
                 route('readings.create', $subject),

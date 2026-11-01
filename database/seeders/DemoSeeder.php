@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Modules\Configuration\Database\Seeders\BloodCultureTemplateSeeder;
+use App\Modules\Configuration\Database\Seeders\PlateCultureTemplateSeeder;
 use App\Modules\Configuration\Database\Seeders\ReferenceCatalogSeeder;
 use App\Modules\Configuration\Database\Seeders\SyntheticBreakpointSeeder;
 use App\Modules\Configuration\Database\Seeders\UrineCultureTemplateSeeder;
@@ -45,6 +46,7 @@ class DemoSeeder extends Seeder
         // con datos sintéticos. En producción se carga en borrador (D-0008).
         $this->callWith(UrineCultureTemplateSeeder::class, ['status' => ProtocolVersionStatus::Active]);
         $this->callWith(BloodCultureTemplateSeeder::class, ['status' => ProtocolVersionStatus::Active]);
+        $this->callWith(PlateCultureTemplateSeeder::class, ['status' => ProtocolVersionStatus::Active]);
         $this->call(ReferenceCatalogSeeder::class);
         // Puntos de corte FICTICIOS (no clínicos) solo para probar la interpretación.
         $this->call(SyntheticBreakpointSeeder::class);

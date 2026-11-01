@@ -2,6 +2,7 @@
 
 namespace App\Modules\Workflow\Listeners;
 
+use App\Modules\Configuration\Models\ProtocolVersionMedium;
 use App\Modules\Cultures\Events\CultureInoculated;
 use App\Modules\Samples\Models\Sample;
 use App\Modules\Workflow\Enums\ActivityType;
@@ -10,8 +11,8 @@ use App\Modules\Workflow\Services\ActivityScheduler;
 
 /**
  * Política: CultureInoculated → completa la siembra y programa la primera lectura
- * con los tiempos de la versión de protocolo congelada (disponible desde el mínimo,
- * vence en el máximo).
+ * del cronograma de la versión de protocolo congelada (disponible desde el mínimo,
+ * vence en el máximo), y el repique de cada caldo de enriquecimiento.
  */
 class ScheduleCultureReading
 {
@@ -32,6 +33,7 @@ class ScheduleCultureReading
             : Sample::query()->with('labOrder')->findOrFail($study->sample_id)->labOrder->priority;
 
         $inoculatedAt = $event->culture->inoculated_at;
+        $first = $version->readingSchedule()[0];
 
         $this->scheduler->schedule(
             type: ActivityType::ReadCulture,
@@ -39,9 +41,25 @@ class ScheduleCultureReading
             sampleId: $study->sample_id,
             siteId: $study->processing_site_id,
             priority: $priority,
-            availableAt: $inoculatedAt->copy()->addHours($version->first_read_min_hours),
-            dueAt: $inoculatedAt->copy()->addHours($version->first_read_due_hours),
+            availableAt: $inoculatedAt->copy()->addHours($first['min_hours']),
+            dueAt: $inoculatedAt->copy()->addHours($first['due_hours']),
             causedByActivityId: $inoculation?->id,
         );
+
+        $media = $version->media->keyBy('medium_id');
+        foreach ($event->culture->plates()->where('is_enrichment', true)->get() as $broth) {
+            /** @var ProtocolVersionMedium|null $setting */
+            $setting = $media->get($broth->medium_id);
+            $this->scheduler->schedule(
+                type: ActivityType::SubcultureEnrichment,
+                subject: $broth,
+                sampleId: $study->sample_id,
+                siteId: $study->processing_site_id,
+                priority: $priority,
+                availableAt: $inoculatedAt->copy()->addHours((int) $setting?->enrichment_subculture_min_hours),
+                dueAt: $setting?->enrichment_subculture_due_hours !== null ? $inoculatedAt->copy()->addHours($setting->enrichment_subculture_due_hours) : null,
+                causedByActivityId: $inoculation?->id,
+            );
+        }
     }
 }

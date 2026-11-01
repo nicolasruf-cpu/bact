@@ -37,6 +37,13 @@ Columnas comunes:
 | Roles | Auxiliar, Bioquímico |
 
 ### DIRECT_EXAM — Examen directo / Gram de la muestra
+**Implementado (2026-11-01, D-0018).**
+- Se crea al recibir la muestra si el protocolo tiene `direct_exam_settings`; es inmediato si el protocolo lo marca urgente (LCR).
+- Se hace en la mesada de procesamiento.
+- Uno por estudio.
+- El LCR con microorganismos abre `COMMUNICATE_CRITICAL`.
+- Habilita el informe preliminar una vez sembrada la muestra.
+
 | | |
 |---|---|
 | Sujeto | SampleStudy |
@@ -56,6 +63,21 @@ Columnas comunes:
 | En tanda | Sí |
 | Confirmación múltiple | Solo para "sin desarrollo" **y** si el protocolo lo permite explícitamente (Q-F1: configurable por protocolo, desactivado por defecto). Nunca cuando hay desarrollo |
 | Roles | Bioquímico (el Auxiliar no hace lecturas — Q-S1) |
+
+### Cronograma de lecturas (implementado 2026-11-01, D-0017)
+- `READ_CULTURE` se repite según el cronograma del protocolo (p. ej., 24, 48 y 72 h desde la siembra).
+- Sin desarrollo antes de la última lectura → se programa la siguiente (`attempt + 1`).
+- Con desarrollo → aislamientos e identificación, y siguen las lecturas programadas (desarrollo nuevo o sin desarrollo nuevo).
+- El cultivo cierra al terminar las lecturas y resolver los aislamientos.
+
+### SUBCULTURE_ENRICHMENT — Repique de caldo de enriquecimiento (implementado 2026-11-01)
+| | |
+|---|---|
+| Sujeto | Plate (caldo) |
+| Disponible | Siembra + horas del caldo ⚙ config (selenito: 18–24 h en la plantilla) |
+| Registra | Placas nuevas del mismo cultivo, en los medios del protocolo |
+| Resultado | Las placas se leen en las lecturas programadas; la última lectura exige el repique |
+| Mesada | Procesamiento · Roles: Auxiliar, Bioquímico (`cultures.inoculate`) |
 
 ### REINCUBATE_READ — Lectura de reincubación
 Igual que READ_CULTURE, con `attempt + 1` y `available_at` = ahora + reincubación ⚙ config. El protocolo puede fijar un máximo de reincubaciones.

@@ -25,4 +25,5 @@ export type OpenCriticalAlert = {
     opened_at: string;
     sample_study_id: number;
     attempts: number;
+    url: string;
 };

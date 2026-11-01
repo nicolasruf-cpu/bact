@@ -20,6 +20,8 @@ enum ActivityType: string
     case GramStain = 'gram_stain';
     case SubcultureBottle = 'subculture_bottle';
     case CommunicateCritical = 'communicate_critical';
+    case DirectExam = 'direct_exam';
+    case SubcultureEnrichment = 'subculture_enrichment';
 
     public function label(): string
     {
@@ -37,6 +39,8 @@ enum ActivityType: string
             self::GramStain => 'Gram de frasco positivo',
             self::SubcultureBottle => 'Subcultivo de frasco positivo',
             self::CommunicateCritical => 'Comunicación de resultado crítico',
+            self::DirectExam => 'Examen directo',
+            self::SubcultureEnrichment => 'Repique de caldo de enriquecimiento',
         };
     }
 }

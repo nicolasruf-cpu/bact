@@ -34,7 +34,7 @@ arch('los módulos base no dependen de módulos clínicos')
     ]);
 
 arch('los módulos clínicos no conocen a Workflow: emiten eventos (ARCHITECTURE §3)')
-    ->expect(['App\Modules\Patients', 'App\Modules\Orders', 'App\Modules\Samples', 'App\Modules\BloodCultures', 'App\Modules\CriticalResults'])
+    ->expect(['App\Modules\Patients', 'App\Modules\Orders', 'App\Modules\Samples', 'App\Modules\Cultures', 'App\Modules\BloodCultures', 'App\Modules\CriticalResults'])
     ->not->toUse(['App\Modules\Workflow', 'App\Modules\WorkBatches']);
 
 arch('los eventos de dominio son inmutables')

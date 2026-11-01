@@ -6,7 +6,9 @@ use App\Modules\BloodCultures\Enums\BottleStatus;
 use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\Cultures\Enums\CultureStatus;
+use App\Modules\Cultures\Enums\PlateStatus;
 use App\Modules\Cultures\Models\Culture;
+use App\Modules\Cultures\Models\Plate;
 use App\Modules\Cultures\Models\Reading;
 use App\Modules\Susceptibility\Enums\SusceptibilityTestStatus;
 use App\Modules\Susceptibility\Models\SusceptibilityTest;
@@ -45,8 +47,11 @@ class AdvanceDemoClock extends Command
 
             Culture::query()->whereIn('status', [CultureStatus::Incubating->value, CultureStatus::Workup->value])
                 ->each(fn (Culture $c) => $shift($c, 'inoculated_at'));
-            Reading::query()->whereHas('culture', fn ($q) => $q->where('status', CultureStatus::Incubating->value))
+            Reading::query()->whereHas('culture', fn ($q) => $q->whereIn('status', [CultureStatus::Incubating->value, CultureStatus::Workup->value]))
                 ->each(fn (Reading $r) => DB::table('readings')->where('id', $r->id)->update(['read_at' => $r->read_at->copy()->subHours($hours)]));
+            // Placas repicadas de un caldo de enriquecimiento.
+            Plate::query()->whereNotNull('inoculated_at')->where('status', PlateStatus::Incubating->value)
+                ->each(fn (Plate $p) => $shift($p, 'inoculated_at'));
             BloodCultureBottle::query()->where('status', BottleStatus::Incubating->value)
                 ->each(fn (BloodCultureBottle $b) => $shift($b, 'loaded_at', 'incubation_ends_at'));
             BlindSubculture::query()->whereNull('result')

@@ -4,6 +4,8 @@ use App\Http\Controllers\DashboardController;
 use App\Modules\Audit\Http\Controllers\AuditLogController;
 use App\Modules\BloodCultures\Http\Controllers\BloodCultureController;
 use App\Modules\CriticalResults\Http\Controllers\CriticalCommunicationController;
+use App\Modules\Cultures\Http\Controllers\DirectExamController;
+use App\Modules\Cultures\Http\Controllers\EnrichmentController;
 use App\Modules\Cultures\Http\Controllers\InoculationController;
 use App\Modules\Cultures\Http\Controllers\ReadingController;
 use App\Modules\Identification\Http\Controllers\IdentificationController;
@@ -37,6 +39,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Siembra (individual o en bloque con protocolo estándar).
     Route::post('sample-studies/{sampleStudy}/inoculation', [InoculationController::class, 'store'])->name('inoculations.store');
     Route::post('inoculations/bulk', [InoculationController::class, 'bulk'])->name('inoculations.bulk');
+
+    // Examen directo y caldos de enriquecimiento.
+    Route::get('sample-studies/{sampleStudy}/direct-exam', [DirectExamController::class, 'show'])->name('direct-exams.show');
+    Route::post('sample-studies/{sampleStudy}/direct-exam', [DirectExamController::class, 'store'])->name('direct-exams.store');
+    Route::get('cultures/{culture}/enrichment', [EnrichmentController::class, 'show'])->name('enrichments.show');
+    Route::post('plates/{plate}/enrichment-subculture', [EnrichmentController::class, 'store'])->name('enrichments.store');
 
     // Tandas de trabajo.
     Route::post('batches', [WorkBatchController::class, 'store'])->name('batches.store');

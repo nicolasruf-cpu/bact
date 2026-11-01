@@ -4,6 +4,7 @@ import {
     BarChart3,
     Dna,
     Droplets,
+    FlaskConical,
     LayoutGrid,
     Microscope,
     Pill,
@@ -61,6 +62,15 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: 'Hemocultivos',
                   href: bloodCultures(),
                   icon: Droplets,
+              },
+          ]
+        : []),
+    ...(can('direct_exams.perform') || can('cultures.inoculate')
+        ? [
+              {
+                  title: 'Procesamiento',
+                  href: workbench('processing'),
+                  icon: FlaskConical,
               },
           ]
         : []),

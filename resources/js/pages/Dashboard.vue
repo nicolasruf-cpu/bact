@@ -5,6 +5,7 @@ import {
     BarChart3,
     Dna,
     Droplets,
+    FlaskConical,
     Microscope,
     Pill,
     ScanLine,
@@ -99,6 +100,13 @@ const tiles = computed<Tile[]>(() => {
         'Carga, positivos, Gram, repiques y negativos',
         Droplets,
         bloodCultures().url,
+    );
+    workbench(
+        'processing',
+        'Procesamiento',
+        'Exámenes directos y repique de caldos',
+        FlaskConical,
+        workbenchRoute('processing').url,
     );
     workbench(
         'reading',

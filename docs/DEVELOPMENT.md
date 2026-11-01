@@ -66,6 +66,17 @@ Si aparecen errores de permisos en `storage/` o `node_modules/`:
 6. Negativo: `./sail artisan demo:advance 120` (5 días) → "Descarga de frasco negativo" en la mesada → Validación.
 7. Manual: `demo:advance 24` → "Registrar repique" (Auxiliar) → `demo:advance 18` → lectura del repique (Bioquímica).
 
+## Recorrer el resto de los cultivos en la demo
+1. **Recepción:** una muestra "Líquido cefalorraquídeo · Cultivo de LCR" y otra "Materia fecal · Coprocultivo".
+2. `bioquimica@bactruf.test` → **Procesamiento**: el directo del LCR aparece como inmediato.
+   - Elegí "Diplococos gram negativos": se abre la barra roja.
+   - Registrá la comunicación.
+3. **Siembra** de las dos muestras. Después, en la pantalla del directo, "Emitir informe preliminar".
+4. `./sail artisan demo:advance 18` → **Procesamiento** → "Repique de caldo" del coprocultivo (también lo puede hacer el Auxiliar).
+5. **Lectura** de las 24 h "Sin desarrollo": queda programada la de las 48 h.
+6. `demo:advance 24` → lectura de las 48 h. En el coprocultivo, las placas del caldo necesitan 18 h desde el repique: si la lectura todavía no está disponible, `demo:advance 18`. Después, Validación.
+7. Herida: con "Desarrollo" a las 24 h, la lectura de las 48 h pide "desarrollo nuevo" o "sin desarrollo nuevo".
+
 ## Estructura
 - Módulos en `app/Modules/<Modulo>/` (ver ARCHITECTURE.md). Hoy: `Organization` (sedes) e `Identity` (roles, permisos, sede activa).
 - Tests: `tests/Arch` (límites entre módulos), `tests/Feature`, `tests/Unit`. Las pruebas corren contra MariaDB (base `testing`).

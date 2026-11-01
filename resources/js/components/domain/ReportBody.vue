@@ -51,6 +51,21 @@ defineProps<{ content: ReportContent }>();
             </div>
         </header>
 
+        <section
+            v-if="content.direct_exam"
+            class="grid gap-1"
+            data-test="report-direct-exam"
+        >
+            <h3 class="font-semibold">{{ content.direct_exam.label }}</h3>
+            <p v-for="line in content.direct_exam.lines" :key="line.field">
+                <span class="text-muted-foreground">{{ line.field }}:</span>
+                {{ line.values.join(', ') }}
+            </p>
+            <p v-if="content.direct_exam.description">
+                {{ content.direct_exam.description }}
+            </p>
+        </section>
+
         <section class="grid gap-1">
             <h3 class="font-semibold">Resultado</h3>
             <p class="text-base" data-test="report-result">

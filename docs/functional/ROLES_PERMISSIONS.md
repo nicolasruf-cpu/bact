@@ -1,6 +1,8 @@
 # Roles y permisos (Fase 1 — propuesta)
 
 Leyenda: ✅ permitido · — no permitido · ❓ pendiente de definición (default propuesto entre paréntesis).
+Examen directo (2026-11-01): `direct_exams.perform` para el Bioquímico (y el Director técnico). El repique de caldos usa `cultures.inoculate`.
+
 Permisos de hemocultivo (2026-11-01, Q-S5):
 - `blood_cultures.load` y `blood_cultures.signal_positive`: Auxiliar y Bioquímico.
 - `blood_cultures.confirm_negative` y `gram.perform`: Bioquímico.

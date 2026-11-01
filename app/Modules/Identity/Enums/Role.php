@@ -53,6 +53,7 @@ enum Role: string
                 Permission::BloodCulturesSignalPositive,
                 Permission::BloodCulturesConfirmNegative,
                 Permission::GramPerform,
+                Permission::DirectExamsPerform,
                 Permission::IsolatesCreate,
                 Permission::IdentificationBiochemSetup,
                 Permission::IdentificationBiochemRead,

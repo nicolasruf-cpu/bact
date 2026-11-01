@@ -30,4 +30,4 @@ A pedido del laboratorio, los catálogos de **protocolos, opciones de lectura y 
 - **No puede usarse con pacientes** hasta que el Director técnico la revise, la ajuste si hace falta y la apruebe (`draft → approved → active`), con auditoría.
 - **Excluidos de la plantilla:** puntos de corte CLSI (derechos de autor; los carga el laboratorio), reglas expertas, lista de resultados críticos y criterios de rechazo, salvo que el laboratorio pida otra cosa.
 - Las plantillas viven como datos (seeders/importación), nunca como lógica en el código.
-- Plantillas disponibles: [urocultivo](templates/UROCULTIVO.md), [hemocultivo y retrocultivo](templates/HEMOCULTIVO.md).
+- Plantillas disponibles: [urocultivo](templates/UROCULTIVO.md), [hemocultivo y retrocultivo](templates/HEMOCULTIVO.md), [resto de los cultivos en placa](templates/CULTIVOS.md).

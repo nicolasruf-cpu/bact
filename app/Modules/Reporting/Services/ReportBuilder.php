@@ -5,9 +5,11 @@ namespace App\Modules\Reporting\Services;
 use App\Modules\BloodCultures\Enums\BottleStatus;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\BloodCultures\Queries\OrderBloodCultureSummary;
+use App\Modules\Configuration\Enums\ReadingOutcome;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Reading;
+use App\Modules\Cultures\Queries\DirectExamQuery;
 use App\Modules\Identification\Enums\IdentificationLevel;
 use App\Modules\Identification\Models\Identification;
 use App\Modules\Samples\Models\SampleStudy;
@@ -20,7 +22,10 @@ use App\Modules\Susceptibility\Models\SusceptibilityTest;
  */
 class ReportBuilder
 {
-    public function __construct(private readonly OrderBloodCultureSummary $bloodSummary) {}
+    public function __construct(
+        private readonly OrderBloodCultureSummary $bloodSummary,
+        private readonly DirectExamQuery $directExam,
+    ) {}
 
     /**
      * @return array<string, mixed>
@@ -41,12 +46,19 @@ class ReportBuilder
             ->with(['readings', 'isolates.organism', 'isolates.plate.medium'])
             ->first();
 
+        // Resultado: la lectura con desarrollo si la hubo (las siguientes registran "sin desarrollo
+        // nuevo", D-0017); si no, la última lectura.
         /** @var Reading|null $finalReading */
-        $finalReading = $culture?->readings->last();
+        $finalReading = $culture?->readings->first(fn (Reading $r) => $r->outcome === ReadingOutcome::Growth)
+            ?? $culture?->readings->last();
         $options = collect($version->reading_options ?? [])->keyBy('code');
         $counts = collect($version->count_categories ?? [])->keyBy('code');
 
         $result = $finalReading ? ($options[$finalReading->option_code]['label'] ?? $finalReading->option_code) : null;
+        // Preliminar con el cultivo abierto y sin desarrollo todavía: no se adelanta un negativo.
+        if (! $version->isBloodCulture() && $culture !== null && ! $culture->status->isClosed() && $finalReading?->outcome !== ReadingOutcome::Growth) {
+            $result = 'Cultivo en curso';
+        }
         $bloodCulture = $version->isBloodCulture() ? $this->bloodCulture($study, $order->id) : null;
         if ($bloodCulture !== null && $result === null) {
             $result = $bloodCulture['result'];
@@ -79,6 +91,7 @@ class ReportBuilder
                 'version' => $version->version,
                 'is_reference_template' => $version->is_reference_template,
             ],
+            'direct_exam' => $this->directExam->forStudy($study),
             'result' => $result,
             'blood_culture' => $bloodCulture,
             'reading_notes' => $finalReading?->notes,

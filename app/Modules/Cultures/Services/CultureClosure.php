@@ -18,7 +18,10 @@ use App\Modules\Samples\Enums\SampleStudyStatus;
  */
 class CultureClosure
 {
-    public function __construct(private readonly Auditor $auditor) {}
+    public function __construct(
+        private readonly Auditor $auditor,
+        private readonly ReadingSchedule $schedule,
+    ) {}
 
     public function close(Culture $culture, CultureStatus $status): void
     {
@@ -35,7 +38,7 @@ class CultureClosure
 
     /**
      * Marca un aislamiento como resuelto (identificado y, si correspondía, con antibiograma)
-     * y cierra el cultivo como positivo si ya no queda ninguno pendiente.
+     * y cierra el cultivo como positivo si ya no queda ninguno pendiente ni lecturas programadas.
      *
      * @param  array<string, mixed>  $attributes
      */
@@ -43,10 +46,19 @@ class CultureClosure
     {
         $isolate->fill([...$attributes, 'status' => IsolateStatus::Resolved, 'lock_version' => $isolate->lock_version + 1])->save();
 
-        $culture = Culture::query()->lockForUpdate()->findOrFail($isolate->culture_id);
+        $this->closeIfResolved(Culture::query()->lockForUpdate()->findOrFail($isolate->culture_id));
+    }
+
+    /**
+     * Cultivo con aislamientos: se cierra como positivo cuando están todos resueltos
+     * y ya se hicieron todas las lecturas del cronograma (D-0017).
+     */
+    public function closeIfResolved(Culture $culture): void
+    {
+        $culture->load(['readings', 'sampleStudy.protocolVersion']);
         $pending = $culture->isolates()->get()->contains(fn (Isolate $i) => ! $i->status->isResolved());
 
-        if (! $pending && $culture->status === CultureStatus::Workup) {
+        if (! $pending && $culture->status === CultureStatus::Workup && $this->schedule->isComplete($culture)) {
             $this->close($culture, CultureStatus::ClosedPositive);
         }
     }

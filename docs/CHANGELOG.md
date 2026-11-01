@@ -1,6 +1,29 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-01 — Resto de los cultivos en placa
+- Plantillas de referencia (`docs/templates/CULTIVOS.md`): en producción, en borrador; en demo, vigentes.
+  - Secreción y herida, y líquidos de punción.
+  - LCR.
+  - Respiratorias.
+  - Coprocultivo.
+  - Genitales y exudado de fauces.
+- Cronograma de lecturas por protocolo (D-0017):
+  - sin desarrollo antes de la última lectura programa la siguiente;
+  - después de un desarrollo siguen las lecturas, con desarrollo nuevo o sin desarrollo nuevo;
+  - el cultivo cierra al terminar las lecturas y resolver los aislamientos.
+- Caldos de enriquecimiento (selenito): repique a placas del mismo cultivo. Sin el repique no se registra la última lectura.
+- Examen directo por protocolo (D-0018), con opciones y descripción; sale en el informe y habilita el preliminar.
+  - El directo de LCR con microorganismos abre un resultado crítico.
+  - La barra roja lleva a la pantalla de cada crítico.
+- Mesada de procesamiento (exámenes directos y repique de caldos) en el inicio y en el menú lateral.
+- Tarjeta del resultado crítico reutilizable (frasco y examen directo).
+- Informe:
+  - el resultado toma la lectura con desarrollo;
+  - un preliminar con el cultivo abierto dice "Cultivo en curso".
+- `demo:advance` también adelanta las placas de los caldos repicados y las lecturas de cultivos con aislamientos.
+- Pruebas: 144 en verde.
+
 ### 2026-11-01 — Hemocultivo y retrocultivo de punta a punta
 - Plantilla de referencia de hemocultivo y retrocultivo (`docs/templates/HEMOCULTIVO.md`): en producción, en borrador; en demo, vigente.
 - Módulo `BloodCultures`:

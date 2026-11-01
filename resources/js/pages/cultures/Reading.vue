@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Microscope, Plus, Trash2 } from '@lucide/vue';
 import { computed, onMounted, onUnmounted } from 'vue';
 import SampleHeaderCard from '@/components/domain/SampleHeaderCard.vue';
@@ -25,7 +25,19 @@ const props = defineProps<{
         inoculated_at: string;
         available_at: string;
         attempt: number;
+        step: number;
+        steps: number;
+        step_hours: number;
+        is_last: boolean;
+        in_workup: boolean;
+        pending_enrichments: string[];
+        enrichment_url: string | null;
         plates: Plate[];
+        isolates: {
+            number: number;
+            morphotype: string;
+            is_significant: boolean;
+        }[];
         readings: {
             attempt: number;
             label: string;
@@ -132,10 +144,55 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
                 class="grid content-start gap-5 rounded-lg border p-4"
                 @submit.prevent="submit"
             >
-                <h1 class="flex items-center gap-2 text-xl font-semibold">
-                    <Microscope class="size-5" /> Lectura n.º
-                    {{ props.culture.attempt }}
-                </h1>
+                <div>
+                    <h1 class="flex items-center gap-2 text-xl font-semibold">
+                        <Microscope class="size-5" /> Lectura n.º
+                        {{ props.culture.attempt }}
+                    </h1>
+                    <p
+                        v-if="props.culture.steps > 1"
+                        class="text-sm text-muted-foreground"
+                        data-test="reading-step"
+                    >
+                        Lectura programada {{ props.culture.step }} de
+                        {{ props.culture.steps }} (a las
+                        {{ props.culture.step_hours }} h de la siembra).
+                        <template v-if="!props.culture.is_last"
+                            >Sin desarrollo programa la siguiente.</template
+                        >
+                        <template v-else>Es la última del protocolo.</template>
+                    </p>
+                </div>
+
+                <p
+                    v-if="props.culture.in_workup"
+                    class="rounded-md border bg-muted/40 p-3 text-sm"
+                    data-test="workup-notice"
+                >
+                    El cultivo ya tiene
+                    {{ props.culture.isolates.length }} aislamiento(s) en
+                    estudio. Registrá si hay desarrollo nuevo o sin desarrollo
+                    nuevo.
+                </p>
+
+                <p
+                    v-if="
+                        props.culture.is_last &&
+                        props.culture.pending_enrichments.length
+                    "
+                    class="rounded-md border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+                    data-test="pending-enrichment"
+                >
+                    Falta repicar el caldo ({{
+                        props.culture.pending_enrichments.join(', ')
+                    }}) antes de la última lectura.
+                    <Link
+                        v-if="props.culture.enrichment_url"
+                        :href="props.culture.enrichment_url"
+                        class="font-medium underline"
+                        >Ir al repique</Link
+                    >
+                </p>
 
                 <p
                     v-if="!available"
@@ -192,7 +249,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
                     >
                         <div class="flex items-center justify-between">
                             <span class="font-medium"
-                                >Aislamiento {{ index + 1 }}</span
+                                >Aislamiento
+                                {{
+                                    props.culture.isolates.length + index + 1
+                                }}</span
                             >
                             <Button
                                 type="button"
@@ -319,6 +379,22 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
                         {{ plate.medium }} · {{ plate.inoculum }}
                     </li>
                 </ul>
+                <template v-if="props.culture.isolates.length">
+                    <h2 class="font-medium">Aislamientos</h2>
+                    <ul class="grid gap-1">
+                        <li
+                            v-for="isolate in props.culture.isolates"
+                            :key="isolate.number"
+                        >
+                            {{ isolate.number }}. {{ isolate.morphotype }}
+                            <span
+                                v-if="!isolate.is_significant"
+                                class="text-xs text-muted-foreground"
+                                >(no significativo)</span
+                            >
+                        </li>
+                    </ul>
+                </template>
                 <template v-if="props.culture.readings.length">
                     <h2 class="font-medium">Lecturas anteriores</h2>
                     <ul class="grid gap-1">
