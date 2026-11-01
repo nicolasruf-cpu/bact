@@ -1,29 +1,32 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-10-31
-**Fase actual:** 1 — Diseño funcional (borrador completo, **pendiente de revisión del usuario y de respuestas clínicas**)
+**Última actualización:** 2026-11-01
+**Fase actual:** 3 — Base técnica (parte 1 hecha) → siguiente: primer circuito de urocultivo (Fase 4a, con datos sintéticos)
 
 ## Terminado
-- **Fase 0:** análisis, versiones verificadas, arquitectura y ADR 0001–0007 (**aceptados** el 2026-10-30).
-- **Fase 1 (borrador):** `docs/functional/`
-  - ACTIVITY_CATALOG.md — 18 tipos de actividad: datos, resultados, tanda y confirmación múltiple
-  - STATE_MACHINES.md — muestra, estudio, cultivo, placa, aislamiento, identificación, antibiograma, informe, alerta
-  - EXCEPTIONS.md — 19 flujos de excepción
-  - ROLES_PERMISSIONS.md — matriz rol × permiso (propuesta, con ❓)
-  - WORKBENCHES.md — definición de cada mesada y de la pantalla de tanda
+- **Fase 0:** análisis, versiones, arquitectura y ADR 0001–0008 (aceptados).
+- **Fase 1 (borrador):** `docs/functional/` (actividades, máquinas de estado, excepciones, roles, mesadas). Respuestas del laboratorio incorporadas el 2026-10-31.
+- **Fase 3, parte 1 (2026-11-01):**
+  - Proyecto Laravel 13 + Inertia 3 + Vue/TS + Tailwind 4 + shadcn-vue corriendo en Docker (PHP 8.5, MariaDB 12.3). Ver `DEVELOPMENT.md`.
+  - Sedes (`Organization`), roles y permisos por sede, sede activa y selector (`Identity`).
+  - Interfaz en español; login sin autorregistro; pantalla de inicio con las mesadas previstas.
+  - Tests de arquitectura de módulos.
+  - **Pruebas:** `./sail composer test` → 53 en verde, Larastan sin errores; frontend sin errores de tipos ni de lint.
 
 ## En desarrollo
-- Nada en código todavía.
+- Nada a medio hacer.
 
 ## Bloqueos
-- Ninguno técnico: Docker Desktop operativo (resuelto 2026-10-31).
-- Clínicos: se avanza con plantillas de referencia (D-0008); siguen abiertas Q-C4 (edición CLSI y quién carga los puntos de corte) y las parciales de `OPEN_QUESTIONS.md`.
+- Ninguno técnico.
+- Clínicos: se avanza con plantillas de referencia (D-0008). Sigue abierto Q-C4 (edición CLSI; quién confirma los puntos de corte).
 
 ## Próximos pasos
-1. Usuario: aprobar ADR-0008 (multisede) y responder lo que falta de Q-C4.
-2. Commit inicial + crear el proyecto Laravel 13 con Sail (Fase 3, parte técnica base).
-3. Redactar la plantilla de referencia de urocultivo (protocolo, lectura, paneles) para revisión del Director técnico.
-4. Fase 2: design system + prototipos navegables con datos sintéticos.
+1. **Auditoría base** (ADR-0006: append-only con hash encadenado), necesaria antes de cualquier operación clínica.
+2. **Primer circuito de urocultivo** (datos sintéticos, plantilla de referencia en `draft`): catálogos mínimos (tipo de muestra, estudio, medios, protocolo) → recepción manual escaneando la etiqueta → actividad de siembra → mesada de siembra → siembra en tanda → lectura programada.
+3. Administración de usuarios (alta, asignación de roles por sede, desactivación).
+4. CI (pendiente Q-T3: repositorio remoto).
 
 ## Problemas conocidos
-- PHP local 7.1 (Laragon): no se usa; todo corre en contenedores (Sail).
+- El script oficial `vendor/bin/sail` no funciona en Git Bash: usar `./sail` (atajo propio).
+- VS Code marca errores PHP falsos si usa el PHP 7.1 de Laragon (ver `DEVELOPMENT.md`).
+- La primera compilación del frontend tarda (~1,5 min) por el disco de Windows montado en Docker.

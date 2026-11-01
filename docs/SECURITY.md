@@ -2,7 +2,7 @@
 
 ## Autenticación
 - Laravel Fortify: inicio de sesión, políticas de contraseña, bloqueo por intentos fallidos, 2FA (TOTP) opcional por rol (se recomienda obligatorio para Administrador y Director técnico).
-- Sesiones en Redis/BD, cookies `Secure`, `HttpOnly`, `SameSite=Lax`; expiración por inactividad configurable (equipos compartidos en el laboratorio).
+- Sesiones en BD (D-0010), cookies `Secure`, `HttpOnly`, `SameSite=Lax`; expiración por inactividad configurable (equipos compartidos en el laboratorio).
 - **Firma de validación**: al validar un informe se reingresa la contraseña o PIN (a definir, ver OPEN_QUESTIONS Q-S2).
 
 ## Autorización

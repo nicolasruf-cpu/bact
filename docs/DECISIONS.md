@@ -12,5 +12,8 @@
 | D-0008 | 2026-10-31 | Contenido clínico inicial a partir de plantillas genéricas aceptadas por la industria, en `draft` hasta aprobación del Director técnico; puntos de corte CLSI excluidos | Aceptada (pedido del usuario) | [MICROBIOLOGY_RULES §6](MICROBIOLOGY_RULES.md) |
 | D-0009 | 2026-10-31 | Entorno de desarrollo: Docker Desktop + Laravel Sail (Q-T1) | Aceptada | [OPEN_QUESTIONS](OPEN_QUESTIONS.md) |
 | ADR-0008 | 2026-10-31 | Multisede: una instalación, entidad `Site`, sede de origen vs. de procesamiento, configuración clínica compartida, la sede de origen valida | Aceptada | [adr/0008](adr/0008-multisede.md) |
+| D-0010 | 2026-10-31 | Sin Redis: colas, caché, sesiones y bloqueos en MariaDB (modifica ADR-0002) | Aceptada | [adr/0002](adr/0002-stack-y-versiones.md) |
+| D-0011 | 2026-11-01 | Sin autorregistro ni autoeliminación de cuentas: las crea y desactiva el Administrador (la auditoría debe conservar al autor de cada acción) | Aceptada (seguridad, alineada con SECURITY.md) | — |
+| D-0012 | 2026-11-01 | Roles por sede con la función *teams* de spatie/laravel-permission (team = `Site`); roles definidos una vez, asignados por sede | Aceptada (implementa ADR-0008) | [ADR-0008](adr/0008-multisede.md) |
 
 ADR-0001 a 0007 aprobadas por el usuario el 2026-10-30 ("avancemos"). D-0008, D-0009 y ADR-0008 decididas por el usuario el 2026-10-31.

@@ -37,7 +37,8 @@ resources/js/
 
 | Módulo | Responsabilidad |
 |---|---|
-| **Identity** | Usuarios, autenticación (Fortify), roles/permisos, turnos |
+| **Organization** | Sedes (ADR-0008); más adelante equipos e impresoras por sede |
+| **Identity** | Usuarios, autenticación (Fortify), roles/permisos por sede, sede activa, turnos |
 | **Patients** | Pacientes (datos mínimos necesarios) |
 | **Orders** | Solicitudes y estudios solicitados (se usa "Orders" para no chocar con `Request` de HTTP) |
 | **Samples** | Recepción, código de barras, rechazo, estado de muestra |
@@ -56,7 +57,7 @@ resources/js/
 
 ### Dependencias permitidas (dirigidas, sin ciclos)
 ```
-Configuration, Identity, Audit         ← base; no dependen de módulos clínicos
+Organization, Configuration, Identity, Audit   ← base; no dependen de módulos clínicos (Identity → Organization)
 Patients → Orders → Samples → Cultures → Isolates → Identification / Susceptibility
 Workflow    depende de los módulos clínicos solo mediante eventos y contratos (interfaces)
 WorkBatches → Workflow
@@ -75,7 +76,7 @@ Los módulos clínicos **no conocen** a Workflow: emiten eventos de dominio (`Cu
 - Etapa 1: *polling* de Inertia (`usePoll`, cada 15–30 s) y recargas parciales solo de los contadores. Es simple y robusto.
 - Etapa 2 (si hace falta): Laravel Reverb (WebSockets) para alertas críticas instantáneas. Ver ADR-0005.
 
-## 6. Procesamiento asíncrono (colas Redis)
+## 6. Procesamiento asíncrono (colas en base de datos)
 Solo para lo que **no** es parte de la consistencia clínica: generación de PDF, envío y recepción de integraciones (LIS/VITEK), notificaciones, recálculo de estadísticas y el *job* periódico que marca actividades demoradas.
 
 ## 7. Integraciones
@@ -84,6 +85,6 @@ Adaptadores detrás de interfaces (`LisGateway`, `VitekGateway`, `LabelPrinter`)
 ## 8. Entornos
 | Entorno | Descripción |
 |---|---|
-| Desarrollo | Docker (Laravel Sail sobre WSL2) **o** Laravel Herd para Windows — decisión pendiente (OPEN_QUESTIONS Q-T1) |
+| Desarrollo | Docker Desktop + Laravel Sail (D-0009): contenedores de la app y MariaDB |
 | Pruebas/QA | Servidor Ubuntu con datos sintéticos, igual a producción |
-| Producción | Ubuntu Server LTS · Nginx · PHP-FPM 8.5 · MariaDB 12.3 · Redis · systemd (workers, scheduler) · HTTPS |
+| Producción | Ubuntu Server LTS · Nginx · PHP-FPM 8.5 · MariaDB 12.3 · systemd (workers, scheduler) · HTTPS |

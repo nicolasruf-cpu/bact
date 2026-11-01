@@ -18,7 +18,7 @@ Al cerrar una etapa: actualizar `docs/PROJECT_STATUS.md` y `docs/CHANGELOG.md`; 
 Fases 0 y 1 (borrador) hechas; ADR aceptados. Ver `docs/PROJECT_STATUS.md` para bloqueos y próximos pasos.
 
 ## Stack (ver ADR-0002)
-PHP 8.5 · Laravel 13 · MariaDB 12.3 LTS (InnoDB, utf8mb4) · Redis · Inertia 3 + Vue 3 + TypeScript · Tailwind 4 · shadcn-vue (Reka UI) · Pest · Larastan · Pint.
+PHP 8.5 · Laravel 13 · MariaDB 12.3 LTS (InnoDB, utf8mb4) · colas/caché/sesiones en BD (sin Redis, D-0010) · Inertia 3 + Vue 3 + TypeScript · Tailwind 4 · shadcn-vue (Reka UI) · Pest · Larastan · Pint.
 
 ## Arquitectura (ver docs/ARCHITECTURE.md)
 Monolito modular Laravel. Módulos en `app/Modules/<Modulo>/`. Lógica clínica en Actions/Services del backend, **nunca en el frontend ni en controladores**. Límites entre módulos verificados con tests de arquitectura de Pest.
@@ -37,10 +37,11 @@ Monolito modular Laravel. Módulos en `app/Modules/<Modulo>/`. Lógica clínica 
 - Pedir aprobación antes de: cambios de arquitectura, procesos microbiológicos, criterios de validación, cambios destructivos de datos, despliegue a producción.
 - Una funcionalidad está terminada solo si cumple la Definición de Terminado (`docs/ROADMAP.md`).
 
-## Comandos (se completarán al crear el proyecto Laravel)
-- `composer test` — Pest
-- `composer lint` — Pint + Larastan
-- `npm run dev` / `npm run build` / `npm run test` (Vitest) / `npm run typecheck`
+## Comandos (desde Git Bash, ver docs/DEVELOPMENT.md)
+- `./sail up` / `./sail down` — contenedores (app + MariaDB)
+- `./sail composer test` — Pint (estilo) + Larastan + Pest. **Correr antes de cada commit.**
+- `./sail composer lint` — corrige estilo PHP
+- `./sail npm run build` / `./sail npm run types:check` / `./sail npm run check` (formato + lint del frontend)
 
 ## Documentación
 `docs/functional/` — catálogo de actividades, estados, excepciones, roles, mesadas.
