@@ -18,3 +18,11 @@ export type OpenBatch = {
     items: number;
     done: number;
 };
+
+export type OpenCriticalAlert = {
+    ulid: string;
+    summary: string;
+    opened_at: string;
+    sample_study_id: number;
+    attempts: number;
+};

@@ -1,6 +1,25 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-01 — Hemocultivo y retrocultivo de punta a punta
+- Plantilla de referencia de hemocultivo y retrocultivo (`docs/templates/HEMOCULTIVO.md`): en producción, en borrador; en demo, vigente.
+- Módulo `BloodCultures`:
+  - un frasco por muestra; carga en el equipo (equipo, posición y hora) o manual;
+  - alarma de positivo con la hora del equipo y tiempo hasta la positividad;
+  - descarga del negativo al cumplirse los días;
+  - repique diario a placa en el procesamiento manual: el desarrollo vuelve positivo al frasco, y el último repique sin desarrollo lo cierra negativo;
+  - Gram con opciones del protocolo;
+  - subcultivo en los medios del protocolo, que continúa en el circuito común (lectura, aislamientos, identificación, antibiograma y validación).
+- Resumen de la orden por estudio: "Hemocultivo: 1 de 2 positivos · Retrocultivo: 0 de 1 positivo".
+- Módulo `CriticalResults`: el Gram de un frasco positivo abre un resultado crítico.
+  - Cada intento de comunicación queda registrado (a quién, medio, éxito, relectura); es idempotente y auditado.
+  - Hay una barra roja persistente hasta que se comunica.
+- Informe preliminar con el Gram y el resumen de la orden; el definitivo lo reemplaza.
+- Mesada de hemocultivos (trabajo disponible y frascos en incubación), tarjetas en el inicio y menú lateral.
+- `demo:advance` también adelanta frascos y repiques.
+- Corregido: la programación de la lectura fallaba si el cultivo no venía de una siembra previa.
+- Pruebas: 136 en verde.
+
 ### 2026-11-03 — Urocultivo de punta a punta
 - Lectura: opciones del protocolo (teclas 1–5), aislamientos con recuento, placa de origen y significancia (la marca el bacteriólogo); reincubación limitada; cierre automático según la opción.
 - Identificación: preliminar o definitiva (bioquímicas, VITEK manual, otro); antibiograma solo si hay panel para el grupo; sin ATB con motivo.

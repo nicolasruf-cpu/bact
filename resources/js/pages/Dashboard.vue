@@ -4,6 +4,7 @@ import {
     AlertTriangle,
     BarChart3,
     Dna,
+    Droplets,
     Microscope,
     Pill,
     ScanLine,
@@ -23,7 +24,11 @@ import { usePermissions } from '@/composables/usePermissions';
 import { dashboard } from '@/routes';
 import { create as receptionCreate } from '@/routes/reception';
 import { susceptibility as profileRoute } from '@/routes/statistics';
-import { inoculation, show as workbenchRoute } from '@/routes/workbenches';
+import {
+    bloodCultures,
+    inoculation,
+    show as workbenchRoute,
+} from '@/routes/workbenches';
 
 type Counter = {
     ready: number;
@@ -89,6 +94,13 @@ const tiles = computed<Tile[]>(() => {
         inoculation().url,
     );
     workbench(
+        'blood_cultures',
+        'Hemocultivos',
+        'Carga, positivos, Gram, repiques y negativos',
+        Droplets,
+        bloodCultures().url,
+    );
+    workbench(
         'reading',
         'Lectura',
         'Cultivos que cumplieron la incubación',
@@ -124,11 +136,18 @@ const tiles = computed<Tile[]>(() => {
             href: profileRoute().url,
         });
     }
-    list.push({
-        title: 'Urgencias y críticos',
-        description: 'Próximamente (hemocultivo)',
-        icon: AlertTriangle,
-    });
+    const critical = page.props.criticalAlerts ?? [];
+    if (can('critical.communicate')) {
+        list.push({
+            title: 'Resultados críticos',
+            description: critical.length
+                ? `${critical.length} sin comunicar`
+                : 'Ninguno sin comunicar',
+            icon: AlertTriangle,
+            href: bloodCultures().url,
+            counter: { ready: critical.length, urgent: critical.length },
+        });
+    }
 
     return list;
 });

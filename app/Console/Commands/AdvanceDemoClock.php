@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Modules\BloodCultures\Enums\BottleStatus;
+use App\Modules\BloodCultures\Models\BlindSubculture;
+use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\Cultures\Enums\CultureStatus;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Reading;
@@ -15,7 +18,7 @@ use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 
 /**
- * SOLO DEMO/DESARROLLO: simula el paso de N horas (siembras, lecturas, antibiogramas y
+ * SOLO DEMO/DESARROLLO: simula el paso de N horas (siembras, lecturas, frascos de hemocultivo, antibiogramas y
  * actividades en curso), para probar el circuito sin esperar la incubación real.
  * Nunca corre en producción. No toca la auditoría.
  */
@@ -44,6 +47,10 @@ class AdvanceDemoClock extends Command
                 ->each(fn (Culture $c) => $shift($c, 'inoculated_at'));
             Reading::query()->whereHas('culture', fn ($q) => $q->where('status', CultureStatus::Incubating->value))
                 ->each(fn (Reading $r) => DB::table('readings')->where('id', $r->id)->update(['read_at' => $r->read_at->copy()->subHours($hours)]));
+            BloodCultureBottle::query()->where('status', BottleStatus::Incubating->value)
+                ->each(fn (BloodCultureBottle $b) => $shift($b, 'loaded_at', 'incubation_ends_at'));
+            BlindSubculture::query()->whereNull('result')
+                ->each(fn (BlindSubculture $s) => $shift($s, 'subcultured_at'));
             SusceptibilityTest::query()->where('status', SusceptibilityTestStatus::SetUp->value)
                 ->each(fn (SusceptibilityTest $t) => $shift($t, 'set_up_at'));
 

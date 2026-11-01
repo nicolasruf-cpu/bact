@@ -6,10 +6,8 @@ use App\Models\User;
 use App\Modules\Audit\Services\Auditor;
 use App\Modules\Configuration\Models\ProtocolVersionMedium;
 use App\Modules\Cultures\Enums\CultureAuditAction;
-use App\Modules\Cultures\Enums\CultureStatus;
-use App\Modules\Cultures\Enums\PlateStatus;
-use App\Modules\Cultures\Events\CultureInoculated;
 use App\Modules\Cultures\Models\Culture;
+use App\Modules\Cultures\Services\CultureStarter;
 use App\Modules\Samples\Enums\SampleStatus;
 use App\Modules\Samples\Enums\SampleStudyStatus;
 use App\Modules\Samples\Models\SampleStudy;
@@ -24,7 +22,10 @@ use Illuminate\Validation\ValidationException;
  */
 class InoculateSampleStudy
 {
-    public function __construct(private readonly Auditor $auditor) {}
+    public function __construct(
+        private readonly Auditor $auditor,
+        private readonly CultureStarter $starter,
+    ) {}
 
     /**
      * @param  list<int>|null  $mediumIds  medios efectivamente sembrados (null = todos los del protocolo)
@@ -41,6 +42,10 @@ class InoculateSampleStudy
             $existing = Culture::query()->where('sample_study_id', $study->id)->where('attempt', 1)->first();
             if ($existing !== null) {
                 return $existing;
+            }
+
+            if ($study->protocolVersion->isBloodCulture()) {
+                throw ValidationException::withMessages(['study' => 'Los hemocultivos no se siembran en placa: se cargan como frasco.']);
             }
 
             if ($study->status !== SampleStudyStatus::Pending) {
@@ -61,24 +66,18 @@ class InoculateSampleStudy
                 throw ValidationException::withMessages(['reason' => 'Si no se siembran todos los medios del protocolo, indicá el motivo.']);
             }
 
-            $culture = Culture::create([
-                'sample_study_id' => $study->id,
-                'attempt' => 1,
-                'status' => CultureStatus::Incubating,
-                'inoculated_at' => Date::now(),
-                'inoculated_by' => $user->id,
-                'notes' => $reason,
-            ]);
-
-            foreach ($selected as $medium) {
-                $culture->plates()->create([
-                    'medium_id' => $medium->medium_id,
-                    'inoculum' => $medium->inoculum,
-                    'incubation_temperature' => $medium->incubation_temperature,
-                    'atmosphere' => $medium->atmosphere,
-                    'status' => PlateStatus::Incubating,
-                ]);
-            }
+            $culture = $this->starter->start(
+                $study,
+                $selected->map(fn (ProtocolVersionMedium $m) => [
+                    'medium_id' => $m->medium_id,
+                    'inoculum' => $m->inoculum,
+                    'incubation_temperature' => $m->incubation_temperature,
+                    'atmosphere' => $m->atmosphere,
+                ])->all(),
+                Date::now(),
+                $user->id,
+                $reason,
+            );
 
             $study->update(['status' => SampleStudyStatus::InProcess, 'lock_version' => $study->lock_version + 1]);
             if ($study->sample->status === SampleStatus::Received) {
@@ -97,8 +96,6 @@ class InoculateSampleStudy
                 reason: $modified ? $reason : null,
                 context: $context,
             );
-
-            event(new CultureInoculated($culture, $study, $user->id));
 
             return $culture;
         });

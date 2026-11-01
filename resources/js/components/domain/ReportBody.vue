@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import InterpretationBadge from '@/components/domain/InterpretationBadge.vue';
 import { formatDateTime } from '@/lib/datetime';
+import { formatMinutes } from '@/lib/elapsed';
 import type { ReportContent } from '@/types/clinical';
 
 defineProps<{ content: ReportContent }>();
@@ -58,6 +59,67 @@ defineProps<{ content: ReportContent }>();
             <p v-if="content.reading_notes" class="text-muted-foreground">
                 {{ content.reading_notes }}
             </p>
+        </section>
+
+        <section
+            v-if="content.blood_culture"
+            class="grid gap-1"
+            data-test="report-blood-culture"
+        >
+            <h3 class="font-semibold">Frasco</h3>
+            <p>
+                {{ content.blood_culture.bottle_type }} ·
+                {{ content.blood_culture.method }}
+                <template v-if="content.blood_culture.instrument">
+                    ({{ content.blood_culture.instrument }})</template
+                >
+                · cargado {{ formatDateTime(content.blood_culture.loaded_at) }}
+            </p>
+            <p v-if="content.blood_culture.positive_at">
+                Positivo {{ formatDateTime(content.blood_culture.positive_at) }}
+                <template
+                    v-if="content.blood_culture.minutes_to_positivity !== null"
+                >
+                    · tiempo hasta la positividad:
+                    {{
+                        formatMinutes(
+                            content.blood_culture.minutes_to_positivity,
+                        )
+                    }}</template
+                >
+                <template v-else-if="content.blood_culture.positivity_source">
+                    · {{ content.blood_culture.positivity_source }}</template
+                >
+            </p>
+            <p v-if="content.blood_culture.gram" class="text-base">
+                <span class="text-muted-foreground">Gram:</span>
+                {{ content.blood_culture.gram.result }}
+                <template v-if="content.blood_culture.gram.description">
+                    — {{ content.blood_culture.gram.description }}</template
+                >
+            </p>
+            <div
+                v-if="content.blood_culture.order_summary.length"
+                class="mt-1 rounded-md border p-2"
+            >
+                <p class="text-xs text-muted-foreground">
+                    Hemocultivos de la orden al emitir este informe:
+                </p>
+                <p
+                    v-for="group in content.blood_culture.order_summary"
+                    :key="group.study"
+                    class="font-medium"
+                >
+                    {{ group.text }}
+                    <span
+                        v-if="group.incubating || group.pending"
+                        class="font-normal text-muted-foreground"
+                    >
+                        ({{ group.incubating + group.pending }} sin resultado
+                        todavía)</span
+                    >
+                </p>
+            </div>
         </section>
 
         <section

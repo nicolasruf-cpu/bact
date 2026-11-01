@@ -5,6 +5,7 @@ namespace App\Modules\Reporting\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Identity\Enums\Permission;
+use App\Modules\Reporting\Actions\IssuePreliminaryReport;
 use App\Modules\Reporting\Actions\ValidateReport;
 use App\Modules\Reporting\Models\Report;
 use App\Modules\Reporting\Services\ReportBuilder;
@@ -38,6 +39,19 @@ class ValidationController extends Controller
         $report = $validate->handle($user, $sampleStudy);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Informe validado y emitido.']);
+
+        return to_route('reports.show', $report);
+    }
+
+    public function preliminary(Request $request, SampleStudy $sampleStudy, IssuePreliminaryReport $issue): RedirectResponse
+    {
+        $this->authorizeFor($request, $sampleStudy);
+
+        /** @var User $user */
+        $user = $request->user();
+        $report = $issue->handle($user, $sampleStudy);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Informe preliminar emitido.']);
 
         return to_route('reports.show', $report);
     }

@@ -15,6 +15,10 @@ enum Permission: string
     case CulturesInoculate = 'cultures.inoculate';
     case CulturesReadNegative = 'cultures.read_negative';
     case CulturesReadPositive = 'cultures.read_positive';
+    case BloodCulturesLoad = 'blood_cultures.load';
+    case BloodCulturesSignalPositive = 'blood_cultures.signal_positive';
+    case BloodCulturesConfirmNegative = 'blood_cultures.confirm_negative';
+    case GramPerform = 'gram.perform';
     case IsolatesCreate = 'isolates.create';
     case IdentificationBiochemSetup = 'identification.biochem.setup';
     case IdentificationBiochemRead = 'identification.biochem.read';

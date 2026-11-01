@@ -1,6 +1,12 @@
 # Roles y permisos (Fase 1 — propuesta)
 
 Leyenda: ✅ permitido · — no permitido · ❓ pendiente de definición (default propuesto entre paréntesis).
+Permisos de hemocultivo (2026-11-01, Q-S5):
+- `blood_cultures.load` y `blood_cultures.signal_positive`: Auxiliar y Bioquímico.
+- `blood_cultures.confirm_negative` y `gram.perform`: Bioquímico.
+- El Director técnico tiene todos.
+- El repique usa `cultures.inoculate`; su lectura, `cultures.read_negative` o `cultures.read_positive`; la comunicación, `critical.communicate`.
+
 Los permisos son granulares (spatie/laravel-permission); los roles son agrupaciones editables por el Administrador, salvo los permisos clínicos críticos, que además requieren al Director técnico.
 
 | Permiso | Admin | Director técnico | Bioquímico | Auxiliar | Consulta |

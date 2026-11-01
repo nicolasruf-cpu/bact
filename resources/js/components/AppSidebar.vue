@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3';
 import {
     BarChart3,
     Dna,
+    Droplets,
     LayoutGrid,
     Microscope,
     Pill,
@@ -30,7 +31,11 @@ import { dashboard } from '@/routes';
 import { index as auditIndex } from '@/routes/audit';
 import { create as receptionCreate } from '@/routes/reception';
 import { susceptibility as profile } from '@/routes/statistics';
-import { inoculation, show as workbench } from '@/routes/workbenches';
+import {
+    bloodCultures,
+    inoculation,
+    show as workbench,
+} from '@/routes/workbenches';
 import type { NavItem } from '@/types';
 
 const { can } = usePermissions();
@@ -46,6 +51,18 @@ const mainNavItems = computed<NavItem[]>(() => [
         : []),
     ...(can('cultures.inoculate')
         ? [{ title: 'Siembra', href: inoculation(), icon: TestTubes }]
+        : []),
+    ...(can('blood_cultures.load') ||
+    can('blood_cultures.signal_positive') ||
+    can('blood_cultures.confirm_negative') ||
+    can('gram.perform')
+        ? [
+              {
+                  title: 'Hemocultivos',
+                  href: bloodCultures(),
+                  icon: Droplets,
+              },
+          ]
         : []),
     ...(can('cultures.read_negative') || can('cultures.read_positive')
         ? [{ title: 'Lectura', href: workbench('reading'), icon: Microscope }]

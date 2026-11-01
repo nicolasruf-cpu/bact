@@ -1,6 +1,8 @@
 <?php
 
 use App\Modules\Audit\AuditServiceProvider;
+use App\Modules\BloodCultures\BloodCulturesServiceProvider;
+use App\Modules\CriticalResults\CriticalResultsServiceProvider;
 use App\Modules\Cultures\CulturesServiceProvider;
 use App\Modules\Identification\IdentificationServiceProvider;
 use App\Modules\Identity\IdentityServiceProvider;
@@ -23,6 +25,8 @@ return [
     OrdersServiceProvider::class,
     SamplesServiceProvider::class,
     CulturesServiceProvider::class,
+    BloodCulturesServiceProvider::class,
+    CriticalResultsServiceProvider::class,
     IdentificationServiceProvider::class,
     SusceptibilityServiceProvider::class,
     ReportingServiceProvider::class,

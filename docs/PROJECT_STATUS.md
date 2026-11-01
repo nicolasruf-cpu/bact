@@ -1,7 +1,7 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-11-03
-**Fase actual:** 4a — MVP urocultivo: circuito de punta a punta funcionando con datos sintéticos; pendiente revisión del usuario y validación clínica
+**Última actualización:** 2026-11-01
+**Fase actual:** 4b — Hemocultivo y retrocultivo de punta a punta con datos sintéticos (se suma al urocultivo, fase 4a); pendiente revisión del usuario y validación clínica
 
 ## Terminado
 - **Fase 0:** análisis, versiones, arquitectura y ADR 0001–0008 (aceptados).
@@ -17,19 +17,20 @@
 - **Recepción por orden (2026-11-02, Q-F8):** una orden con varias muestras; muestras posteriores se suman a la orden.
 - **Tanda de siembra (2026-11-03):** cultivos y placas según protocolo; lectura programada.
 - **Urocultivo de punta a punta (2026-11-03):** tanda de siembra → lectura → aislamientos → identificación → antibiograma → validación → informe → perfil de sensibilidad. 128 pruebas en verde.
+- **Hemocultivo y retrocultivo de punta a punta (2026-11-01):** carga del frasco (equipo o manual) → alarma de positivo o repiques diarios → Gram → resultado crítico comunicado → informe preliminar → subcultivo → circuito común → informe definitivo; negativo a los días del protocolo. Resumen "X de N positivos" por estudio en la orden. 136 pruebas en verde.
 
 ## En desarrollo
 - Nada a medio hacer.
 
 ## Bloqueos
 - Ninguno técnico.
-- Clínicos: la plantilla de urocultivo (docs/templates/UROCULTIVO.md) debe revisarla el Director técnico responsable; puntos de corte reales (Q-C4); metodología del perfil (Q-C9).
+- Clínicos: las plantillas de urocultivo y hemocultivo (`docs/templates/`) debe revisarlas el Director técnico responsable; puntos de corte reales (Q-C4); metodología del perfil (Q-C9); lista de críticos y plazos (Q-C5); tiempo diferencial de positividad (Q-C10); permisos del Auxiliar en hemocultivo (Q-S5).
 
 ## Próximos pasos
-1. Usuario: recorrer el circuito en la demo y revisar la plantilla con el Director técnico.
+1. Usuario: recorrer los circuitos de urocultivo y hemocultivo en la demo y revisar las plantillas con el Director técnico.
 2. Administración de usuarios y de configuración clínica (aprobar protocolos y cargar puntos de corte por CSV, Fase 4d).
 3. Corrección de informes (nueva versión con motivo), PDF.
-4. Tandas de lectura (Q-F9), hemocultivo y resultados críticos (Fase 4b).
+4. Tandas de lectura (Q-F9); escalamiento de críticos por plazo (Q-C5); integración con BacT/ALERT y VITEK (Q-B2, Q-B3).
 5. CI (Q-T3).
 
 ## Problemas conocidos

@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Modules\CriticalResults\Queries\OpenCriticalAlertsQuery;
+use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Enums\Role;
 use App\Modules\Identity\Services\ActiveSite;
 use App\Modules\Organization\Models\Site;
@@ -61,6 +63,10 @@ class HandleInertiaRequests extends Middleware
             // "Mis tandas abiertas": siempre visibles para retomar después de una interrupción.
             'openBatches' => $user instanceof User && $activeSite instanceof Site
                 ? app(WorkBatchQuery::class)->openFor($user->id, $activeSite->id)
+                : [],
+            // Resultados críticos sin comunicar: barra persistente para quien puede comunicarlos.
+            'criticalAlerts' => $user instanceof User && $activeSite instanceof Site && $user->can(Permission::CriticalCommunicate->value)
+                ? app(OpenCriticalAlertsQuery::class)->forSite($activeSite->id)
                 : [],
             'site' => [
                 'active' => $activeSite instanceof Site ? $activeSite->only(['id', 'code', 'name']) : null,

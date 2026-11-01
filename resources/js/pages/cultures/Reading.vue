@@ -218,7 +218,10 @@ onUnmounted(() => window.removeEventListener('keydown', onKey));
                             />
                         </div>
                         <div class="grid gap-3 sm:grid-cols-2">
-                            <div class="grid gap-1">
+                            <div
+                                v-if="props.countCategories.length"
+                                class="grid gap-1"
+                            >
                                 <Label :for="`count-${index}`">Recuento</Label>
                                 <select
                                     :id="`count-${index}`"

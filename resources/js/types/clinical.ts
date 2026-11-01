@@ -42,7 +42,32 @@ export type ReportIsolate = {
     } | null;
 };
 
+export type BloodCultureReport = {
+    method: string;
+    bottle_type: string;
+    instrument: string | null;
+    loaded_at: string;
+    incubation_days: number;
+    status: string;
+    positive_at: string | null;
+    positivity_source: string | null;
+    minutes_to_positivity: number | null;
+    gram: {
+        result: string;
+        description: string | null;
+        performed_at: string;
+    } | null;
+    result: string;
+    order_summary: {
+        study: string;
+        text: string;
+        incubating: number;
+        pending: number;
+    }[];
+};
+
 export type ReportContent = {
+    kind?: string;
     site: string;
     patient: {
         name: string;
@@ -66,5 +91,6 @@ export type ReportContent = {
     protocol: { name: string; version: number; is_reference_template: boolean };
     result: string | null;
     reading_notes: string | null;
+    blood_culture?: BloodCultureReport | null;
     isolates: ReportIsolate[];
 };

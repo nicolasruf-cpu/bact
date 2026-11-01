@@ -7,7 +7,8 @@ use App\Modules\Workflow\Enums\ActivityType;
 use App\Modules\Workflow\Services\ActivityScheduler;
 
 /**
- * Política: SampleReceived → una siembra (INOCULATE) por estudio, lista de inmediato,
+ * Política: SampleReceived → una siembra (INOCULATE) por estudio, o la carga del frasco
+ * (LOAD_BOTTLE) si es un hemocultivo, lista de inmediato,
  * en la sede que procesa el estudio. Corre en la misma transacción que la recepción.
  * Sin vencimiento hasta que el laboratorio defina tiempos objetivo (Q-C6).
  */
@@ -19,9 +20,10 @@ class CreateInoculationActivities
     {
         $sample = $event->sample;
 
-        foreach ($sample->studies()->get() as $study) {
+        foreach ($sample->studies()->with('protocolVersion')->get() as $study) {
             $this->scheduler->schedule(
-                type: ActivityType::Inoculate,
+                // Los hemocultivos no se siembran: se cargan como frasco.
+                type: $study->protocolVersion->isBloodCulture() ? ActivityType::LoadBottle : ActivityType::Inoculate,
                 subject: $study,
                 sampleId: $sample->id,
                 siteId: $study->processing_site_id,

@@ -3,9 +3,8 @@
 namespace App\Modules\Workflow\Listeners;
 
 use App\Modules\Cultures\Events\CultureInoculated;
-use App\Modules\Orders\Enums\Priority;
+use App\Modules\Samples\Models\Sample;
 use App\Modules\Workflow\Enums\ActivityType;
-use App\Modules\Workflow\Models\Activity;
 use App\Modules\Workflow\Services\ActivityLifecycle;
 use App\Modules\Workflow\Services\ActivityScheduler;
 
@@ -27,9 +26,10 @@ class ScheduleCultureReading
         $version = $study->protocolVersion;
 
         $inoculation = $this->lifecycle->completeFor($study, ActivityType::Inoculate, $event->userId);
+        // Sin siembra previa (p. ej., subcultivo de un hemocultivo): la prioridad de la orden.
         $priority = $inoculation !== null
             ? $inoculation->priority
-            : (Priority::tryFrom((string) Activity::query()->where('sample_id', $study->sample_id)->value('priority')) ?? Priority::Routine);
+            : Sample::query()->with('labOrder')->findOrFail($study->sample_id)->labOrder->priority;
 
         $inoculatedAt = $event->culture->inoculated_at;
 

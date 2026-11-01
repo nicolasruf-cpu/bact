@@ -2,6 +2,9 @@
 
 namespace App\Modules\Reporting\Services;
 
+use App\Modules\BloodCultures\Enums\BottleStatus;
+use App\Modules\BloodCultures\Models\BloodCultureBottle;
+use App\Modules\BloodCultures\Queries\OrderBloodCultureSummary;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Reading;
@@ -17,6 +20,8 @@ use App\Modules\Susceptibility\Models\SusceptibilityTest;
  */
 class ReportBuilder
 {
+    public function __construct(private readonly OrderBloodCultureSummary $bloodSummary) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -41,7 +46,14 @@ class ReportBuilder
         $options = collect($version->reading_options ?? [])->keyBy('code');
         $counts = collect($version->count_categories ?? [])->keyBy('code');
 
+        $result = $finalReading ? ($options[$finalReading->option_code]['label'] ?? $finalReading->option_code) : null;
+        $bloodCulture = $version->isBloodCulture() ? $this->bloodCulture($study, $order->id) : null;
+        if ($bloodCulture !== null && $result === null) {
+            $result = $bloodCulture['result'];
+        }
+
         return [
+            'kind' => $version->processing_kind->value,
             'site' => $sample->originSite->name,
             'patient' => [
                 'name' => $patient->fullName(),
@@ -67,13 +79,54 @@ class ReportBuilder
                 'version' => $version->version,
                 'is_reference_template' => $version->is_reference_template,
             ],
-            'result' => $finalReading ? ($options[$finalReading->option_code]['label'] ?? $finalReading->option_code) : null,
+            'result' => $result,
+            'blood_culture' => $bloodCulture,
             'reading_notes' => $finalReading?->notes,
             'isolates' => ($culture === null ? collect() : $culture->isolates)
                 ->filter(fn (Isolate $i) => $i->is_significant)
                 ->map(fn (Isolate $isolate) => $this->isolate($isolate, $counts->all()))
                 ->values()
                 ->all(),
+        ];
+    }
+
+    /**
+     * Frasco, Gram y resumen de los hemocultivos de la orden al momento del informe.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function bloodCulture(SampleStudy $study, int $orderId): ?array
+    {
+        /** @var BloodCultureBottle|null $bottle */
+        $bottle = BloodCultureBottle::query()->where('sample_study_id', $study->id)->with(['gramStain', 'sampleStudy.protocolVersion'])->first();
+        if ($bottle === null) {
+            return null;
+        }
+
+        $settings = $bottle->settings();
+        $gram = $bottle->gramStain;
+
+        return [
+            'method' => $bottle->method->label(),
+            'bottle_type' => $settings->bottleTypeLabel($bottle->bottle_type),
+            'instrument' => $bottle->instrument,
+            'loaded_at' => $bottle->loaded_at->toIso8601String(),
+            'incubation_days' => $bottle->incubationDays(),
+            'status' => $bottle->status->label(),
+            'positive_at' => $bottle->positive_at?->toIso8601String(),
+            'positivity_source' => $bottle->positivity_source?->label(),
+            'minutes_to_positivity' => $bottle->minutesToPositivity(),
+            'gram' => $gram === null ? null : [
+                'result' => $settings->gramLabel($gram->option_code),
+                'description' => $gram->description,
+                'performed_at' => $gram->performed_at->toIso8601String(),
+            ],
+            'result' => match ($bottle->status) {
+                BottleStatus::Negative => $settings->negativeResult($bottle->incubationDays()),
+                BottleStatus::Positive => 'Frasco positivo: estudio en curso',
+                BottleStatus::Incubating => 'En incubación',
+            },
+            'order_summary' => $this->bloodSummary->forOrder($orderId),
         ];
     }
 

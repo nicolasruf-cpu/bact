@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Modules\BloodCultures\Models\BlindSubculture;
+use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\Configuration\Models\ProtocolVersion;
+use App\Modules\CriticalResults\Models\CriticalAlert;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Plate;
@@ -89,6 +92,9 @@ class AppServiceProvider extends ServiceProvider
             'report' => Report::class,
             'activity' => Activity::class,
             'work_batch' => WorkBatch::class,
+            'blood_culture_bottle' => BloodCultureBottle::class,
+            'blind_subculture' => BlindSubculture::class,
+            'critical_alert' => CriticalAlert::class,
         ]);
     }
 }

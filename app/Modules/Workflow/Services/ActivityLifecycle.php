@@ -42,6 +42,24 @@ class ActivityLifecycle
         return $activity;
     }
 
+    /**
+     * Cancela las actividades abiertas de ciertos tipos sobre un sujeto (p. ej., los repiques
+     * pendientes de un frasco que dio positivo), con el motivo.
+     *
+     * @param  list<ActivityType>  $types
+     */
+    public function cancelOpenFor(Model $subject, array $types, string $reason): void
+    {
+        Activity::query()
+            ->where('subject_type', $subject->getMorphClass())
+            ->where('subject_id', $subject->getKey())
+            ->whereIn('type', array_map(fn (ActivityType $t) => $t->value, $types))
+            ->whereNotIn('status', [ActivityStatus::Completed->value, ActivityStatus::Cancelled->value])
+            ->lockForUpdate()
+            ->get()
+            ->each(fn (Activity $activity) => $this->transition($activity, ActivityStatus::Cancelled, ['cancellation_reason' => $reason]));
+    }
+
     public function claim(Activity $activity, int $userId): void
     {
         $this->transition($activity, ActivityStatus::InProgress, [

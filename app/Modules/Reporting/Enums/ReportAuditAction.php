@@ -7,6 +7,7 @@ use App\Modules\Audit\Contracts\AuditAction;
 enum ReportAuditAction: string implements AuditAction
 {
     case Validated = 'report.validated';
+    case PreliminaryIssued = 'report.preliminary_issued';
 
     public function auditName(): string
     {
@@ -17,6 +18,7 @@ enum ReportAuditAction: string implements AuditAction
     {
         return match ($this) {
             self::Validated => 'Validó un informe',
+            self::PreliminaryIssued => 'Emitió un informe preliminar',
         };
     }
 }

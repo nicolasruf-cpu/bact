@@ -2,6 +2,15 @@
 
 namespace App\Modules\Workflow;
 
+use App\Modules\BloodCultures\Events\BlindSubcultureDone;
+use App\Modules\BloodCultures\Events\BlindSubcultureRead;
+use App\Modules\BloodCultures\Events\BottleLoaded;
+use App\Modules\BloodCultures\Events\BottleNegative;
+use App\Modules\BloodCultures\Events\BottlePositive;
+use App\Modules\BloodCultures\Events\BottleSubcultured;
+use App\Modules\BloodCultures\Events\GramStainRecorded;
+use App\Modules\CriticalResults\Events\CriticalAlertOpened;
+use App\Modules\CriticalResults\Events\CriticalCommunicationRecorded;
 use App\Modules\Cultures\Events\CultureCompleted;
 use App\Modules\Cultures\Events\CultureInoculated;
 use App\Modules\Cultures\Events\CultureRead;
@@ -11,6 +20,7 @@ use App\Modules\Samples\Events\SampleReceived;
 use App\Modules\Susceptibility\Events\SusceptibilityTestRead;
 use App\Modules\Susceptibility\Events\SusceptibilityTestSetUp;
 use App\Modules\Workflow\Console\ReleaseDueActivities;
+use App\Modules\Workflow\Listeners\BloodCultureFlowPolicy;
 use App\Modules\Workflow\Listeners\ClinicalFlowPolicy;
 use App\Modules\Workflow\Listeners\CreateInoculationActivities;
 use App\Modules\Workflow\Listeners\ScheduleCultureReading;
@@ -33,6 +43,17 @@ class WorkflowServiceProvider extends ServiceProvider
         Event::listen(SusceptibilityTestRead::class, [ClinicalFlowPolicy::class, 'onSusceptibilityRead']);
         Event::listen(CultureCompleted::class, [ClinicalFlowPolicy::class, 'onCultureCompleted']);
         Event::listen(ReportValidated::class, [ClinicalFlowPolicy::class, 'onReportValidated']);
+
+        // Hemocultivo y resultados críticos.
+        Event::listen(BottleLoaded::class, [BloodCultureFlowPolicy::class, 'onBottleLoaded']);
+        Event::listen(BlindSubcultureDone::class, [BloodCultureFlowPolicy::class, 'onBlindSubcultureDone']);
+        Event::listen(BlindSubcultureRead::class, [BloodCultureFlowPolicy::class, 'onBlindSubcultureRead']);
+        Event::listen(BottlePositive::class, [BloodCultureFlowPolicy::class, 'onBottlePositive']);
+        Event::listen(BottleSubcultured::class, [BloodCultureFlowPolicy::class, 'onBottleSubcultured']);
+        Event::listen(GramStainRecorded::class, [BloodCultureFlowPolicy::class, 'onGramStainRecorded']);
+        Event::listen(BottleNegative::class, [BloodCultureFlowPolicy::class, 'onBottleNegative']);
+        Event::listen(CriticalAlertOpened::class, [BloodCultureFlowPolicy::class, 'onCriticalAlertOpened']);
+        Event::listen(CriticalCommunicationRecorded::class, [BloodCultureFlowPolicy::class, 'onCriticalCommunicationRecorded']);
 
         if ($this->app->runningInConsole()) {
             $this->commands([ReleaseDueActivities::class]);

@@ -42,7 +42,10 @@ class ValidateReport
             /** @var SampleStudy $study */
             $study = SampleStudy::query()->lockForUpdate()->with('sample')->findOrFail($study->id);
 
-            $existing = Report::query()->where('sample_study_id', $study->id)->where('status', ReportStatus::Issued->value)->first();
+            $existing = Report::query()->where('sample_study_id', $study->id)
+                ->where('type', ReportType::Final->value)
+                ->where('status', ReportStatus::Issued->value)
+                ->first();
             if ($existing !== null && $study->status === SampleStudyStatus::FinalReported) {
                 return $existing;
             }
@@ -62,6 +65,14 @@ class ValidateReport
                 'validated_by' => $user->id,
                 'validated_at' => Date::now(),
             ]);
+
+            // El definitivo reemplaza a los preliminares emitidos.
+            Report::query()
+                ->where('sample_study_id', $study->id)
+                ->where('type', ReportType::Preliminary->value)
+                ->where('status', ReportStatus::Issued->value)
+                ->where('id', '!=', $report->id)
+                ->update(['status' => ReportStatus::Superseded->value]);
 
             $study->update(['status' => SampleStudyStatus::FinalReported, 'lock_version' => $study->lock_version + 1]);
 

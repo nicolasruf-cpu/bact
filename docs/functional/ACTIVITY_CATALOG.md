@@ -152,5 +152,22 @@ Abre una nueva versión del informe a partir del definitivo, con motivo obligato
 ### REQUEST_NEW_SAMPLE — Solicitud de nueva muestra
 Se crea por rechazo o contaminación, si el protocolo lo indica. Registra a quién se pidió y cuándo.
 
-## F. Hemocultivo (fase 4b, a detallar)
-La positividad de un frasco (manual o por integración ❓ Q-B3) genera: `DIRECT_EXAM` (Gram del frasco, **urgente**) + `INOCULATE` del frasco positivo + evaluación de regla crítica. El cronograma de frascos negativos (días de incubación) se toma de ⚙ config.
+## F. Hemocultivo y retrocultivo (implementado 2026-11-01)
+Un frasco por muestra. Los tiempos salen del protocolo congelado (⚙ [plantilla](../templates/HEMOCULTIVO.md)).
+
+| Actividad | Se crea cuando | Sujeto | Quién (plantilla) |
+|---|---|---|---|
+| `LOAD_BOTTLE` Carga de frasco | Se recibe la muestra | Estudio | Auxiliar, Bioquímico |
+| `CONFIRM_NEGATIVE_BOTTLE` Descarga del negativo | Equipo: carga + días de incubación | Frasco | Bioquímico |
+| `BLIND_SUBCULTURE` Repique | Manual: cada 24 h desde la carga, hasta completar los días | Frasco | Auxiliar, Bioquímico |
+| `READ_BLIND_SUBCULTURE` Lectura de repique | Repique + 18 h (vence a las 24 h) | Repique | Bioquímico |
+| `GRAM_STAIN` Gram (**inmediata**) | El frasco da positivo | Frasco | Bioquímico |
+| `SUBCULTURE_BOTTLE` Subcultivo (**inmediata**) | Positivo por alarma o por signos visibles | Frasco | Auxiliar, Bioquímico |
+| `COMMUNICATE_CRITICAL` (**inmediata**) | Se registra el Gram (Q-C5) | Resultado crítico | Bioquímico |
+
+- Cuando el frasco da positivo, se cancelan sus repiques, sus lecturas pendientes y la descarga del negativo.
+- Si el positivo sale de un repique, esa placa pasa a ser el cultivo (sin subcultivo aparte).
+- Desde el subcultivo sigue el circuito común: `READ_CULTURE`, `IDENTIFY`, antibiograma y `VALIDATE_REPORT`.
+- Un frasco negativo pasa directo a `VALIDATE_REPORT`.
+
+Diseño original (Fase 1): La positividad de un frasco (manual o por integración ❓ Q-B3) genera: `DIRECT_EXAM` (Gram del frasco, **urgente**) + `INOCULATE` del frasco positivo + evaluación de regla crítica. El cronograma de frascos negativos (días de incubación) se toma de ⚙ config.

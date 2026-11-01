@@ -57,6 +57,15 @@ Si aparecen errores de permisos en `storage/` o `node_modules/`:
 
 `DemoSeeder` nunca corre en producción.
 
+## Recorrer el hemocultivo en la demo
+1. `auxiliar@bactruf.test` → **Recepción**: una orden con dos muestras "Sangre periférica · Hemocultivo" y una "Sangre por catéter · Retrocultivo", cada una con su código.
+2. **Hemocultivos** → abrí cada "Carga de frasco" y elegí "Equipo automatizado" (o "Manual").
+3. Equipo: en "Frascos en incubación", abrí un frasco → "Registrar positivo" (con la hora que informa el equipo).
+4. `bioquimica@bactruf.test` → Gram → se abre la barra roja del resultado crítico → registrá la comunicación → "Emitir informe preliminar".
+5. "Registrar subcultivo" → `./sail artisan demo:advance 18` → Lectura → Identificación → Antibiogramas (`demo:advance 16`) → Validación.
+6. Negativo: `./sail artisan demo:advance 120` (5 días) → "Descarga de frasco negativo" en la mesada → Validación.
+7. Manual: `demo:advance 24` → "Registrar repique" (Auxiliar) → `demo:advance 18` → lectura del repique (Bioquímica).
+
 ## Estructura
 - Módulos en `app/Modules/<Modulo>/` (ver ARCHITECTURE.md). Hoy: `Organization` (sedes) e `Identity` (roles, permisos, sede activa).
 - Tests: `tests/Arch` (límites entre módulos), `tests/Feature`, `tests/Unit`. Las pruebas corren contra MariaDB (base `testing`).

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Modules\Audit\Http\Controllers\AuditLogController;
+use App\Modules\BloodCultures\Http\Controllers\BloodCultureController;
+use App\Modules\CriticalResults\Http\Controllers\CriticalCommunicationController;
 use App\Modules\Cultures\Http\Controllers\InoculationController;
 use App\Modules\Cultures\Http\Controllers\ReadingController;
 use App\Modules\Identification\Http\Controllers\IdentificationController;
@@ -12,6 +14,7 @@ use App\Modules\Samples\Http\Controllers\ReceptionController;
 use App\Modules\Statistics\Http\Controllers\SusceptibilityProfileController;
 use App\Modules\Susceptibility\Http\Controllers\SusceptibilityController;
 use App\Modules\WorkBatches\Http\Controllers\WorkBatchController;
+use App\Modules\Workflow\Http\Controllers\BloodCultureWorkbenchController;
 use App\Modules\Workflow\Http\Controllers\InoculationWorkbenchController;
 use App\Modules\Workflow\Http\Controllers\WorkbenchController;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +46,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('batches/{batch}/finish', [WorkBatchController::class, 'finish'])->name('batches.finish');
     Route::post('batches/{batch}/items/{item}/remove', [WorkBatchController::class, 'removeItem'])->name('batches.items.remove');
 
+    // Hemocultivos y retrocultivos: un frasco por muestra.
+    Route::get('workbenches/blood-cultures', [BloodCultureWorkbenchController::class, 'index'])->name('workbenches.blood-cultures');
+    Route::get('blood-cultures/{sampleStudy}', [BloodCultureController::class, 'show'])->name('blood-cultures.show');
+    Route::post('blood-cultures/{sampleStudy}/load', [BloodCultureController::class, 'load'])->name('blood-cultures.load');
+    Route::post('bottles/{bottle}/positive', [BloodCultureController::class, 'positive'])->name('bottles.positive');
+    Route::post('bottles/{bottle}/negative', [BloodCultureController::class, 'negative'])->name('bottles.negative');
+    Route::post('bottles/{bottle}/blind-subcultures', [BloodCultureController::class, 'blindSubculture'])->name('bottles.blind-subcultures.store');
+    Route::post('blind-subcultures/{subculture}/reading', [BloodCultureController::class, 'readBlindSubculture'])->name('blind-subcultures.read');
+    Route::post('bottles/{bottle}/gram', [BloodCultureController::class, 'gram'])->name('bottles.gram');
+    Route::post('bottles/{bottle}/subculture', [BloodCultureController::class, 'subculture'])->name('bottles.subculture');
+
+    // Resultados críticos.
+    Route::post('critical-alerts/{alert}/communications', [CriticalCommunicationController::class, 'store'])->name('critical-alerts.communications.store');
+
     // Mesadas de lectura, identificación, antibiogramas y validación.
     Route::get('workbenches/{workbench}', [WorkbenchController::class, 'show'])->name('workbenches.show');
 
@@ -62,6 +79,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Validación e informes.
     Route::get('sample-studies/{sampleStudy}/validation', [ValidationController::class, 'create'])->name('validations.create');
     Route::post('sample-studies/{sampleStudy}/validation', [ValidationController::class, 'store'])->name('validations.store');
+    Route::post('sample-studies/{sampleStudy}/preliminary-report', [ValidationController::class, 'preliminary'])->name('reports.preliminary');
     Route::get('reports/{report}', [ValidationController::class, 'show'])->name('reports.show');
 
     // Estadísticas.
