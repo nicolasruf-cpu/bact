@@ -13,7 +13,7 @@
 Sin Redis: colas, caché y sesiones usan MariaDB (D-0010).
 
 ## Atajo `./sail`
-El script oficial `vendor/bin/sail` no funciona en Git Bash, así que el repo trae `./sail`, que llama a `docker compose`:
+El script oficial `vendor/bin/sail` no funciona en Git Bash, así que el repo trae `./sail`, que llama a `docker compose`. Desde PowerShell o cmd, el mismo `./sail` ejecuta `sail.cmd` (equivalente):
 
 ```bash
 ./sail up                      # levantar contenedores
