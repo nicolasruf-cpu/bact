@@ -2,16 +2,20 @@
 import { Link } from '@inertiajs/vue3';
 import {
     BarChart3,
+    ClipboardList,
     Dna,
     Droplets,
     FlaskConical,
     LayoutGrid,
+    Library,
     Microscope,
     Pill,
     ScanLine,
     ScrollText,
     ShieldCheck,
+    SlidersHorizontal,
     TestTubes,
+    Users,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
@@ -29,6 +33,10 @@ import {
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
 import { dashboard } from '@/routes';
+import { index as breakpointsIndex } from '@/routes/admin/breakpoint-sets';
+import { index as catalogsIndex } from '@/routes/admin/catalogs';
+import { index as protocolsIndex } from '@/routes/admin/protocols';
+import { index as usersIndex } from '@/routes/admin/users';
 import { index as auditIndex } from '@/routes/audit';
 import { create as receptionCreate } from '@/routes/reception';
 import { susceptibility as profile } from '@/routes/statistics';
@@ -113,6 +121,29 @@ const mainNavItems = computed<NavItem[]>(() => [
               },
           ]
         : []),
+]);
+
+const adminNavItems = computed<NavItem[]>(() => [
+    ...(can('users.manage')
+        ? [{ title: 'Usuarios', href: usersIndex(), icon: Users }]
+        : []),
+    ...(can('config.catalogs.edit')
+        ? [{ title: 'Catálogos', href: catalogsIndex(), icon: Library }]
+        : []),
+    ...(can('config.clinical.view')
+        ? [
+              {
+                  title: 'Protocolos',
+                  href: protocolsIndex(),
+                  icon: ClipboardList,
+              },
+              {
+                  title: 'Puntos de corte',
+                  href: breakpointsIndex(),
+                  icon: SlidersHorizontal,
+              },
+          ]
+        : []),
     ...(can('audit.view')
         ? [{ title: 'Auditoría', href: auditIndex(), icon: ScrollText }]
         : []),
@@ -136,6 +167,11 @@ const mainNavItems = computed<NavItem[]>(() => [
 
         <SidebarContent>
             <NavMain :items="mainNavItems" />
+            <NavMain
+                v-if="adminNavItems.length"
+                :items="adminNavItems"
+                label="Administración"
+            />
         </SidebarContent>
 
         <SidebarFooter>

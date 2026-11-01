@@ -1,6 +1,14 @@
 # Roles y permisos (Fase 1 — propuesta)
 
 Leyenda: ✅ permitido · — no permitido · ❓ pendiente de definición (default propuesto entre paréntesis).
+Administración (2026-11-01, D-0019):
+- `users.manage`: altas, perfiles y bajas de usuarios, solo en las sedes donde la persona tiene ese permiso. Nadie cambia sus propios perfiles ni se da de baja.
+- `config.clinical.approve` se implementa como una habilidad global (`users.is_clinical_approver`), no como un permiso de sede.
+  - La designa el Administrador.
+  - Tiene que recaer en un Director técnico activo.
+  - `config.clinical.draft` (Bioquímico y Director técnico) prepara borradores y puede descartarlos.
+- `config.catalogs.edit`: tipos de muestra, estudios, medios, microorganismos, antibióticos y sedes.
+
 Examen directo (2026-11-01): `direct_exams.perform` para el Bioquímico (y el Director técnico). El repique de caldos usa `cultures.inoculate`.
 
 Permisos de hemocultivo (2026-11-01, Q-S5):

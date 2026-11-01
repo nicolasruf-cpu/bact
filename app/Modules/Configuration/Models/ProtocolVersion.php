@@ -37,6 +37,10 @@ use Illuminate\Support\Carbon;
  * @property int|null $ast_read_due_hours
  * @property Carbon|null $approved_at
  * @property Carbon|null $activated_at
+ * @property Carbon|null $retired_at
+ * @property int|null $approved_by
+ * @property int|null $created_by
+ * @property int $lock_version
  * @property-read Protocol $protocol
  * @property-read Collection<int, ProtocolVersionMedium> $media
  */
@@ -58,6 +62,8 @@ class ProtocolVersion extends Model
             'direct_exam_settings' => 'array',
             'approved_at' => 'datetime',
             'activated_at' => 'datetime',
+            'retired_at' => 'datetime',
+            'lock_version' => 'integer',
         ];
     }
 

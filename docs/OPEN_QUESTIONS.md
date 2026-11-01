@@ -15,6 +15,13 @@ Las respondidas se marcan **[RESPONDIDA aaaa-mm-dd]** y conservan la respuesta; 
 - **Q-A6 [RESPONDIDA 2026-10-31]** El informe de un caso derivado lo **valida y firma la sede de origen**.
 - **Q-A7 [RESPONDIDA 2026-10-31]** **Cada sede tiene su Director técnico.** Algunas personas trabajan en más de una sede. La configuración clínica es **una sola, compartida** por las 3 sedes.
 - **Q-A8 [RESPONDIDA 2026-10-31]** La configuración clínica compartida la aprueba **un Director técnico designado como responsable**. Implementación: permiso `config.clinical.approve`, global (no por sede), asignado a esa persona; la designación se puede cambiar y queda auditada.
+  - **Implementado (2026-11-01, D-0019):** el Administrador designa al responsable en la pantalla de usuarios; tiene que ser Director técnico en alguna sede. La baja del usuario o la pérdida del perfil le quitan la designación.
+- **Q-A9** Altas de usuarios: hoy el Administrador pone una contraseña inicial y el email queda verificado.
+  - ¿Prefieren una invitación por email para que cada persona elija su contraseña? Hace falta un servidor de correo.
+  - ¿Se obliga a cambiar la contraseña en el primer ingreso? ¿Se exige segundo factor a algún perfil (por ejemplo, Director técnico)?
+- **Q-A10** El grupo de un microorganismo (define panel y puntos de corte) se fija en el alta y no se cambia, para no alterar interpretaciones. ¿Está bien, o el Director técnico tiene que poder cambiarlo con una versión nueva?
+- **Q-A11** ¿El responsable puede aprobar un borrador que preparó él mismo, o hace falta que lo prepare otra persona (doble control)? Hoy puede.
+- **Q-A12** Faltan los editores de paneles de antibiograma, reglas expertas, reglas de críticos y plantillas de informe (Fase 4d). ¿Cuál necesitan primero?
 
 ## B. Integraciones
 - **Q-B1 ★ [PARCIAL 2026-10-31]** LIS: **LABWIN**. Hasta tener la interfaz: recepción manual escaneando la etiqueta del LIS.
@@ -32,6 +39,8 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-C3 ★ [PARCIAL 2026-10-31] [PLANTILLA]** Antibiogramas: **algunos manuales (difusión) y otros por VITEK**, con **panel según el germen identificado**. Falta: qué grupos van por cada método y la composición de cada panel (se parte de la plantilla).
 - **Q-C4 ★ [PARCIAL 2026-10-31]** Puntos de corte: **módulo de carga** (carga asistida + importación CSV) → el bacteriólogo **revisa, ajusta y confirma**. Coincide con el flujo `draft → approved → active` de MICROBIOLOGY_RULES §3.
   - Falta: ¿qué edición del M100 usan? ¿Confirma cualquier Bioquímico o solo el Director técnico? ¿Se aplican recomendaciones locales (SADEBAC / INEI-ANLIS)? **Los puntos de corte no tienen plantilla** (derechos de autor de CLSI): los datos salen de la edición licenciada del laboratorio.
+  - **Implementado (2026-11-01, D-0019):** sets en borrador → aprobado → vigente, con importación CSV (plantilla descargable sin valores), carga en la tabla y copia de un set anterior. Prepara el Bioquímico o el Director técnico; aprueba y pone vigente el responsable (Q-A8).
+  - Falta definir: puntos de corte con solo S (sin R), categoría SDD, notas por punto de corte y puntos de corte que dependen del tipo de muestra o del sitio (p. ej., meningitis / no meningitis). Hoy cada punto de corte tiene un valor S y uno R por grupo, antibiótico y método.
 - **Q-C5 [PARCIAL 2026-11-01]** El **Gram de un frasco de hemocultivo positivo se comunica** (decisión del laboratorio). Se registra a quién, por qué medio, si fue exitoso y si hubo relectura; un intento fallido deja el crítico abierto.
   - **Directo de LCR con microorganismos: también se comunica** (decisión del laboratorio, 2026-11-01). Los directos de otras muestras se registran sin abrir un crítico.
   - Falta: el resto de la lista de críticos; plazos y escalamiento; si la relectura es obligatoria; si se comunica también un Gram de frasco sin microorganismos observados (hoy se comunica).

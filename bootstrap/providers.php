@@ -2,6 +2,7 @@
 
 use App\Modules\Audit\AuditServiceProvider;
 use App\Modules\BloodCultures\BloodCulturesServiceProvider;
+use App\Modules\Configuration\ConfigurationServiceProvider;
 use App\Modules\CriticalResults\CriticalResultsServiceProvider;
 use App\Modules\Cultures\CulturesServiceProvider;
 use App\Modules\Identification\IdentificationServiceProvider;
@@ -21,6 +22,7 @@ return [
     FortifyServiceProvider::class,
     AuditServiceProvider::class,
     IdentityServiceProvider::class,
+    ConfigurationServiceProvider::class,
     PatientsServiceProvider::class,
     OrdersServiceProvider::class,
     SamplesServiceProvider::class,

@@ -57,7 +57,10 @@ class HandleInertiaRequests extends Middleware
                 // Permisos en la sede activa: el frontend solo los usa para mostrar u ocultar;
                 // la autorización real se hace siempre en el servidor.
                 'permissions' => $user instanceof User
-                    ? $user->getAllPermissions()->pluck('name')->values()
+                    ? $user->getAllPermissions()->pluck('name')
+                        ->when($user->can(Permission::CLINICAL_APPROVE), fn ($names) => $names->push(Permission::CLINICAL_APPROVE))
+                        ->when($user->can(Permission::CLINICAL_VIEW), fn ($names) => $names->push(Permission::CLINICAL_VIEW))
+                        ->values()
                     : [],
             ],
             // "Mis tandas abiertas": siempre visibles para retomar después de una interrupción.

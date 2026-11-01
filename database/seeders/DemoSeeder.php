@@ -42,6 +42,12 @@ class DemoSeeder extends Seeder
         $this->user('auxiliar@bactruf.test', 'Andrés Auxiliar', [[$central, Role::Assistant]]);
         $this->user('consulta@bactruf.test', 'Carla Consulta', [[$central, Role::Viewer]]);
 
+        // Responsable de aprobar la configuración clínica (Q-A8). En producción lo designa
+        // el Administrador desde la pantalla de usuarios.
+        if (! User::where('is_clinical_approver', true)->exists()) {
+            User::where('email', 'director.central@bactruf.test')->update(['is_clinical_approver' => true]);
+        }
+
         // Solo en demo: la plantilla de referencia queda vigente para probar el circuito
         // con datos sintéticos. En producción se carga en borrador (D-0008).
         $this->callWith(UrineCultureTemplateSeeder::class, ['status' => ProtocolVersionStatus::Active]);

@@ -3,6 +3,7 @@
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Audit\Http\Middleware\AssignRequestId;
+use App\Modules\Identity\Http\Middleware\EnsureUserIsActive;
 use App\Modules\Identity\Http\Middleware\SetActiveSite;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -23,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             HandleAppearance::class,
+            EnsureUserIsActive::class,
             SetActiveSite::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,

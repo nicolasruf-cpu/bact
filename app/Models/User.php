@@ -21,6 +21,9 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $email
  * @property Carbon|null $email_verified_at
  * @property string $password
+ * @property bool $is_active
+ * @property bool $is_clinical_approver
+ * @property int $lock_version
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -36,6 +39,17 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
+     * Los mismos valores por defecto que la tabla, para los modelos recién creados.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_active' => true,
+        'is_clinical_approver' => false,
+        'lock_version' => 0,
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -46,6 +60,9 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_active' => 'boolean',
+            'is_clinical_approver' => 'boolean',
+            'lock_version' => 'integer',
         ];
     }
 }

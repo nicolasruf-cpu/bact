@@ -41,6 +41,13 @@ enum Permission: string
     case AuditView = 'audit.view';
     case StatisticsView = 'statistics.view';
 
-    // `config.clinical.approve` no es un permiso por sede: lo tiene un único
-    // Director técnico designado como responsable (Q-A8). Se implementa en la Fase 4d.
+    /**
+     * Aprobar y poner vigente la configuración clínica compartida. No es un permiso por
+     * sede: lo tiene un único Director técnico designado como responsable (Q-A8,
+     * `users.is_clinical_approver`). Es una habilidad del Gate, no un permiso de spatie.
+     */
+    public const CLINICAL_APPROVE = 'config.clinical.approve';
+
+    /** Ver la configuración clínica: quien la prepara o quien la aprueba. */
+    public const CLINICAL_VIEW = 'config.clinical.view';
 }

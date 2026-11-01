@@ -3,6 +3,9 @@
 use App\Http\Controllers\DashboardController;
 use App\Modules\Audit\Http\Controllers\AuditLogController;
 use App\Modules\BloodCultures\Http\Controllers\BloodCultureController;
+use App\Modules\Configuration\Http\Controllers\BreakpointSetController;
+use App\Modules\Configuration\Http\Controllers\CatalogController;
+use App\Modules\Configuration\Http\Controllers\ProtocolController;
 use App\Modules\CriticalResults\Http\Controllers\CriticalCommunicationController;
 use App\Modules\Cultures\Http\Controllers\DirectExamController;
 use App\Modules\Cultures\Http\Controllers\EnrichmentController;
@@ -11,6 +14,7 @@ use App\Modules\Cultures\Http\Controllers\ReadingController;
 use App\Modules\Identification\Http\Controllers\IdentificationController;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Http\Controllers\ActiveSiteController;
+use App\Modules\Identity\Http\Controllers\UserController;
 use App\Modules\Reporting\Http\Controllers\ValidationController;
 use App\Modules\Samples\Http\Controllers\ReceptionController;
 use App\Modules\Statistics\Http\Controllers\SusceptibilityProfileController;
@@ -98,6 +102,44 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('audit', [AuditLogController::class, 'index'])
         ->middleware('can:'.Permission::AuditView->value)
         ->name('audit.index');
+
+    // Administración: usuarios.
+    Route::middleware('can:'.Permission::UsersManage->value)->prefix('admin')->name('admin.')->group(function () {
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::post('users/{user}/active', [UserController::class, 'setActive'])->name('users.active');
+        Route::post('clinical-approver', [UserController::class, 'designateApprover'])->name('clinical-approver.update');
+    });
+
+    // Administración: catálogos generales.
+    Route::middleware('can:'.Permission::ConfigCatalogsEdit->value)->prefix('admin')->name('admin.')->group(function () {
+        Route::get('catalogs/{catalog?}', [CatalogController::class, 'index'])->name('catalogs.index');
+        Route::post('catalogs/{catalog}', [CatalogController::class, 'store'])->name('catalogs.store');
+    });
+
+    // Configuración clínica: la preparan quienes tienen config.clinical.draft; aprueba el responsable (Q-A8).
+    Route::middleware('can:'.Permission::CLINICAL_VIEW)->prefix('admin')->name('admin.')->group(function () {
+        Route::get('protocols', [ProtocolController::class, 'index'])->name('protocols.index');
+        Route::post('protocols', [ProtocolController::class, 'store'])->name('protocols.store');
+        Route::get('protocol-versions/{version}', [ProtocolController::class, 'show'])->name('protocol-versions.show');
+        Route::post('protocol-versions/{version}/draft', [ProtocolController::class, 'draft'])->name('protocol-versions.draft');
+        Route::put('protocol-versions/{version}', [ProtocolController::class, 'update'])->name('protocol-versions.update');
+        Route::post('protocol-versions/{version}/approve', [ProtocolController::class, 'approve'])->name('protocol-versions.approve');
+        Route::post('protocol-versions/{version}/activate', [ProtocolController::class, 'activate'])->name('protocol-versions.activate');
+        Route::post('protocol-versions/{version}/retire', [ProtocolController::class, 'retire'])->name('protocol-versions.retire');
+
+        Route::get('breakpoint-sets', [BreakpointSetController::class, 'index'])->name('breakpoint-sets.index');
+        Route::post('breakpoint-sets', [BreakpointSetController::class, 'store'])->name('breakpoint-sets.store');
+        Route::get('breakpoint-sets/template', [BreakpointSetController::class, 'template'])->name('breakpoint-sets.template');
+        Route::get('breakpoint-sets/{set}', [BreakpointSetController::class, 'show'])->name('breakpoint-sets.show');
+        Route::get('breakpoint-sets/{set}/export', [BreakpointSetController::class, 'export'])->name('breakpoint-sets.export');
+        Route::post('breakpoint-sets/{set}/import', [BreakpointSetController::class, 'import'])->name('breakpoint-sets.import');
+        Route::put('breakpoint-sets/{set}/breakpoints', [BreakpointSetController::class, 'save'])->name('breakpoint-sets.save');
+        Route::post('breakpoint-sets/{set}/status', [BreakpointSetController::class, 'status'])->name('breakpoint-sets.status');
+    });
 });
 
 require __DIR__.'/settings.php';

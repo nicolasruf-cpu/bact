@@ -1,6 +1,21 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-01 — Administración y configuración clínica (D-0019)
+- **Usuarios:**
+  - alta con contraseña inicial, perfiles por sede y baja sin borrado;
+  - un usuario dado de baja no ingresa y pierde la sesión abierta;
+  - designación auditada del Director técnico responsable de la configuración clínica (Q-A8).
+- **Catálogos:** tipos de muestra, estudios, medios, microorganismos, antibióticos y sedes. El código queda fijo y nada se borra.
+- **Protocolos versionados:** editor de lecturas, opciones, recuentos, medios y caldos, examen directo y frasco de hemocultivo.
+  - Flujo: borrador → aprobado → vigente → retirado. Poner vigente una versión retira la anterior.
+  - Las muestras recibidas conservan su versión.
+- **Puntos de corte:** sets versionados con importación CSV (plantilla sin valores) y carga en la tabla.
+  - Se aprueban y se ponen vigentes; el set ficticio de demo no se toca.
+- Menú "Administración" en la barra lateral.
+- Demo: `director.central@bactruf.test` es el responsable de la configuración clínica.
+- Pruebas: 167 en verde.
+
 ### 2026-11-01 — Resto de los cultivos en placa
 - Plantillas de referencia (`docs/templates/CULTIVOS.md`): en producción, en borrador; en demo, vigentes.
   - Secreción y herida, y líquidos de punción.

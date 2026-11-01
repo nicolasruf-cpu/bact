@@ -6,6 +6,7 @@ use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Conjunto de puntos de corte (una edición del M100 cargada por el laboratorio).
@@ -16,6 +17,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $edition
  * @property ProtocolVersionStatus $status
  * @property bool $is_synthetic
+ * @property string|null $notes
+ * @property int|null $created_by
+ * @property int|null $approved_by
+ * @property Carbon|null $approved_at
+ * @property Carbon|null $activated_at
+ * @property Carbon|null $retired_at
+ * @property int $lock_version
  * @property-read Collection<int, Breakpoint> $breakpoints
  */
 class BreakpointSet extends Model
@@ -27,6 +35,10 @@ class BreakpointSet extends Model
         return [
             'status' => ProtocolVersionStatus::class,
             'is_synthetic' => 'boolean',
+            'approved_at' => 'datetime',
+            'activated_at' => 'datetime',
+            'retired_at' => 'datetime',
+            'lock_version' => 'integer',
         ];
     }
 

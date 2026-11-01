@@ -24,6 +24,12 @@
   - Mesada de procesamiento.
   - 144 pruebas en verde.
 
+- **Administración y configuración clínica (2026-11-01, D-0019):**
+  - usuarios y perfiles por sede, con bajas y responsable de la configuración clínica;
+  - catálogos;
+  - protocolos versionados con editor y aprobación;
+  - puntos de corte con importación CSV.
+
 ## En desarrollo
 - Nada a medio hacer.
 
@@ -33,7 +39,7 @@
 
 ## Próximos pasos
 1. Usuario: recorrer los circuitos en la demo (urocultivo, hemocultivo, LCR, herida, coprocultivo) y revisar las plantillas con el Director técnico.
-2. Administración de usuarios y de configuración clínica (aprobar protocolos y cargar puntos de corte por CSV, Fase 4d).
+2. Resto de la Fase 4d: paneles de antibiograma, reglas expertas, reglas de críticos y plantillas de informe (Q-A12).
 3. Corrección de informes (nueva versión con motivo), PDF.
 4. Tandas de lectura (Q-F9); escalamiento de críticos por plazo (Q-C5); integración con BacT/ALERT y VITEK (Q-B2, Q-B3).
 5. CI (Q-T3).

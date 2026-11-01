@@ -5,7 +5,14 @@ namespace App\Providers;
 use App\Models\User;
 use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
+use App\Modules\Configuration\Models\Antibiotic;
+use App\Modules\Configuration\Models\BreakpointSet;
+use App\Modules\Configuration\Models\Medium;
+use App\Modules\Configuration\Models\Organism;
+use App\Modules\Configuration\Models\Protocol;
 use App\Modules\Configuration\Models\ProtocolVersion;
+use App\Modules\Configuration\Models\SampleType;
+use App\Modules\Configuration\Models\Study;
 use App\Modules\CriticalResults\Models\CriticalAlert;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\DirectExam;
@@ -97,6 +104,13 @@ class AppServiceProvider extends ServiceProvider
             'blind_subculture' => BlindSubculture::class,
             'critical_alert' => CriticalAlert::class,
             'direct_exam' => DirectExam::class,
+            'protocol' => Protocol::class,
+            'breakpoint_set' => BreakpointSet::class,
+            'sample_type' => SampleType::class,
+            'study' => Study::class,
+            'medium' => Medium::class,
+            'organism' => Organism::class,
+            'antibiotic' => Antibiotic::class,
         ]);
     }
 }
