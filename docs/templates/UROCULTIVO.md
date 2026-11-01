@@ -33,9 +33,34 @@ Otros tipos (punción suprapúbica, bolsa recolectora, sonda permanente, nefrost
 | Máximo de reincubaciones | 1 |
 | Confirmación en bloque de "sin desarrollo" | **Desactivada** (Q-F1) |
 
-## 4. Pendiente para la entrega de lectura (no incluido todavía)
-- Opciones de lectura y su redacción (sin desarrollo, desarrollo, flora mixta, etc.).
-- Recuentos (UFC/mL) y criterios de significancia por tipo de muestra (Q-C2).
-- Cuándo se identifica y cuándo se hace antibiograma (Q-C3).
+## 4. Opciones de lectura (Q-C2)
+El bacteriólogo elige una opción por lectura. El sistema **no decide la significancia**: la marca el bacteriólogo en cada aislamiento.
 
-Estos puntos se agregarán a esta plantilla, con su fuente, antes de construir la lectura.
+| Código | Opción | Qué hace el sistema |
+|---|---|---|
+| `NEG` | Sin desarrollo | Cierra el cultivo como negativo → listo para validar |
+| `POS` | Desarrollo (se cargan aislamientos) | Cada aislamiento significativo pasa a identificación |
+| `MIX` | Flora mixta (≥ 3 morfotipos sin predominio), probable contaminación | Cierra el cultivo como contaminado → listo para validar (el informe sugiere nueva muestra) |
+| `NS` | Desarrollo no significativo | Cierra el cultivo como no significativo → listo para validar |
+| `REI` | Reincubar | Programa una nueva lectura a las +24 h (máximo 1 vez) |
+
+## 5. Categorías de recuento (UFC/mL)
+`< 10³` · `10³–10⁴` · `10⁴–10⁵` · `≥ 10⁵`
+
+Referencia (a validar): en chorro medio el criterio clásico de significancia es ≥ 10⁵ UFC/mL, y se aceptan recuentos menores en pacientes sintomáticos o con ciertos organismos; en sonda vesical se consideran recuentos desde 10³ UFC/mL (guía IDSA de infección urinaria asociada a catéter, 2009). **La significancia la decide el bacteriólogo; el sistema solo registra.**
+
+## 6. Identificación y antibiograma (Q-C3)
+- Se identifica cada aislamiento marcado como significativo.
+- Se hace antibiograma a los aislamientos significativos con identificación definitiva cuyo grupo de organismo tenga panel. El bacteriólogo puede indicar "no requiere antibiograma" con motivo (p. ej., *Staphylococcus saprophyticus*, flora habitual).
+- Lectura del antibiograma: disponible a las 16 h de la preparación, vence a las 24 h.
+
+## 7. Paneles de antibióticos (plantilla, a validar)
+| Grupo | Antibióticos |
+|---|---|
+| Enterobacterales (orina) | Ampicilina, amoxicilina-clavulánico, cefalotina, cefuroxima, ceftriaxona, ceftazidima, cefepime, imipenem, gentamicina, amikacina, ciprofloxacina, trimetoprima-sulfametoxazol, nitrofurantoína, fosfomicina |
+| *Pseudomonas aeruginosa* | Ceftazidima, cefepime, piperacilina-tazobactam, imipenem, meropenem, gentamicina, amikacina, ciprofloxacina |
+| *Enterococcus* spp. (orina) | Ampicilina, vancomicina, nitrofurantoína, ciprofloxacina, fosfomicina |
+| *Staphylococcus* spp. (orina) | Oxacilina (cefoxitina), trimetoprima-sulfametoxazol, nitrofurantoína, ciprofloxacina, vancomicina |
+
+## 8. Puntos de corte
+**No se incluyen** (derechos de autor de CLSI; Q-C4). El laboratorio los carga desde su edición del M100 y el responsable los aprueba. En demo se usa un set **FICTICIO**, con valores uniformes sin significado clínico, rotulado "NO CLÍNICO".

@@ -24,6 +24,23 @@ class UrineCultureTemplateSeeder extends Seeder
         .'Basada en: Clinical Microbiology Procedures Handbook (ASM), "Urine Cultures"; '
         .'IDSA/ASM Guide to Utilization of the Microbiology Laboratory (2024). Ver docs/templates/UROCULTIVO.md.';
 
+    /** Opciones de lectura (UROCULTIVO.md §4). */
+    public const READING_OPTIONS = [
+        ['code' => 'NEG', 'label' => 'Sin desarrollo', 'outcome' => 'no_growth'],
+        ['code' => 'POS', 'label' => 'Desarrollo', 'outcome' => 'growth'],
+        ['code' => 'MIX', 'label' => 'Flora mixta (≥ 3 morfotipos), probable contaminación', 'outcome' => 'mixed_flora'],
+        ['code' => 'NS', 'label' => 'Desarrollo no significativo', 'outcome' => 'not_significant'],
+        ['code' => 'REI', 'label' => 'Reincubar', 'outcome' => 'reincubate'],
+    ];
+
+    /** Categorías de recuento en UFC/mL (UROCULTIVO.md §5). */
+    public const COUNT_CATEGORIES = [
+        ['code' => 'LT3', 'label' => '< 10³ UFC/mL'],
+        ['code' => '3-4', 'label' => '10³–10⁴ UFC/mL'],
+        ['code' => '4-5', 'label' => '10⁴–10⁵ UFC/mL'],
+        ['code' => 'GE5', 'label' => '≥ 10⁵ UFC/mL'],
+    ];
+
     public function run(ProtocolVersionStatus $status = ProtocolVersionStatus::Draft): void
     {
         $study = Study::firstOrCreate(['code' => 'URO'], ['name' => 'Urocultivo']);
@@ -59,6 +76,10 @@ class UrineCultureTemplateSeeder extends Seeder
                 'reincubation_hours' => 24,
                 'max_reincubations' => 1,
                 'allow_bulk_negative_confirmation' => false,
+                'reading_options' => self::READING_OPTIONS,
+                'count_categories' => self::COUNT_CATEGORIES,
+                'ast_read_min_hours' => 16,
+                'ast_read_due_hours' => 24,
                 'activated_at' => $status === ProtocolVersionStatus::Active ? Date::now() : null,
             ]);
 

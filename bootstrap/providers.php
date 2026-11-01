@@ -2,10 +2,13 @@
 
 use App\Modules\Audit\AuditServiceProvider;
 use App\Modules\Cultures\CulturesServiceProvider;
+use App\Modules\Identification\IdentificationServiceProvider;
 use App\Modules\Identity\IdentityServiceProvider;
 use App\Modules\Orders\OrdersServiceProvider;
 use App\Modules\Patients\PatientsServiceProvider;
+use App\Modules\Reporting\ReportingServiceProvider;
 use App\Modules\Samples\SamplesServiceProvider;
+use App\Modules\Susceptibility\SusceptibilityServiceProvider;
 use App\Modules\WorkBatches\WorkBatchesServiceProvider;
 use App\Modules\Workflow\WorkflowServiceProvider;
 use App\Providers\AppServiceProvider;
@@ -20,6 +23,9 @@ return [
     OrdersServiceProvider::class,
     SamplesServiceProvider::class,
     CulturesServiceProvider::class,
+    IdentificationServiceProvider::class,
+    SusceptibilityServiceProvider::class,
+    ReportingServiceProvider::class,
     WorkflowServiceProvider::class,
     WorkBatchesServiceProvider::class,
 ];

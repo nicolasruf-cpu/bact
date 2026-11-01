@@ -63,6 +63,12 @@ class ActivityLifecycle
      */
     private function transition(Activity $activity, ActivityStatus $target, array $attributes = []): void
     {
+        // Una actividad programada cuya hora ya llegó está lista, aunque el liberador
+        // (activities:release, cada minuto) todavía no la haya marcado.
+        if ($activity->status === ActivityStatus::Scheduled && $activity->available_at->lessThanOrEqualTo(Date::now())) {
+            $activity->status = ActivityStatus::Ready;
+        }
+
         // Completar desde READY es válido (actividad individual, fuera de tanda).
         $allowed = $activity->status->canTransitionTo($target)
             || ($activity->status === ActivityStatus::Ready && $target === ActivityStatus::Completed);

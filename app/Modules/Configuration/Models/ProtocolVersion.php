@@ -24,6 +24,10 @@ use Illuminate\Support\Carbon;
  * @property int|null $reincubation_hours
  * @property int $max_reincubations
  * @property bool $allow_bulk_negative_confirmation
+ * @property list<array{code: string, label: string, outcome: string}>|null $reading_options
+ * @property list<array{code: string, label: string}>|null $count_categories
+ * @property int|null $ast_read_min_hours
+ * @property int|null $ast_read_due_hours
  * @property Carbon|null $approved_at
  * @property Carbon|null $activated_at
  * @property-read Protocol $protocol
@@ -39,6 +43,8 @@ class ProtocolVersion extends Model
             'status' => ProtocolVersionStatus::class,
             'is_reference_template' => 'boolean',
             'allow_bulk_negative_confirmation' => 'boolean',
+            'reading_options' => 'array',
+            'count_categories' => 'array',
             'approved_at' => 'datetime',
             'activated_at' => 'datetime',
         ];

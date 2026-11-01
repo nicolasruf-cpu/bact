@@ -60,6 +60,11 @@ return new class extends Migration
             $table->unsignedInteger('reincubation_hours')->nullable();
             $table->unsignedInteger('max_reincubations')->default(0);
             $table->boolean('allow_bulk_negative_confirmation')->default(false);
+            // Opciones de lectura [{code, label, outcome}] y categorías de recuento [{code, label}].
+            $table->json('reading_options')->nullable();
+            $table->json('count_categories')->nullable();
+            $table->unsignedInteger('ast_read_min_hours')->nullable();
+            $table->unsignedInteger('ast_read_due_hours')->nullable();
             $table->foreignId('approved_by')->nullable()->constrained('users')->restrictOnDelete();
             $table->dateTime('approved_at', 6)->nullable();
             $table->dateTime('activated_at', 6)->nullable();

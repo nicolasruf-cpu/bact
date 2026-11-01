@@ -5,13 +5,17 @@ namespace App\Providers;
 use App\Models\User;
 use App\Modules\Configuration\Models\ProtocolVersion;
 use App\Modules\Cultures\Models\Culture;
+use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Plate;
+use App\Modules\Cultures\Models\Reading;
 use App\Modules\Orders\Models\LabOrder;
 use App\Modules\Organization\Models\Site;
 use App\Modules\Patients\Models\Patient;
+use App\Modules\Reporting\Models\Report;
 use App\Modules\Samples\Models\Reception;
 use App\Modules\Samples\Models\Sample;
 use App\Modules\Samples\Models\SampleStudy;
+use App\Modules\Susceptibility\Models\SusceptibilityTest;
 use App\Modules\WorkBatches\Models\WorkBatch;
 use App\Modules\Workflow\Models\Activity;
 use Carbon\CarbonImmutable;
@@ -79,6 +83,10 @@ class AppServiceProvider extends ServiceProvider
             'protocol_version' => ProtocolVersion::class,
             'culture' => Culture::class,
             'plate' => Plate::class,
+            'reading' => Reading::class,
+            'isolate' => Isolate::class,
+            'susceptibility_test' => SusceptibilityTest::class,
+            'report' => Report::class,
             'activity' => Activity::class,
             'work_batch' => WorkBatch::class,
         ]);

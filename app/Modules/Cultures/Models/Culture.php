@@ -23,6 +23,8 @@ use Illuminate\Support\Carbon;
  * @property int $lock_version
  * @property-read SampleStudy $sampleStudy
  * @property-read Collection<int, Plate> $plates
+ * @property-read Collection<int, Reading> $readings
+ * @property-read Collection<int, Isolate> $isolates
  */
 class Culture extends Model
 {
@@ -65,5 +67,21 @@ class Culture extends Model
     public function plates(): HasMany
     {
         return $this->hasMany(Plate::class);
+    }
+
+    /**
+     * @return HasMany<Reading, $this>
+     */
+    public function readings(): HasMany
+    {
+        return $this->hasMany(Reading::class)->orderBy('attempt');
+    }
+
+    /**
+     * @return HasMany<Isolate, $this>
+     */
+    public function isolates(): HasMany
+    {
+        return $this->hasMany(Isolate::class)->orderBy('number');
     }
 }
