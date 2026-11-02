@@ -38,6 +38,7 @@ class ProtocolAdminQuery
                 'study' => $protocol->study->name,
                 'study_code' => $protocol->study->code,
                 'sample_type' => $protocol->sampleType->name,
+                'is_blood' => $protocol->versions->first()?->processing_kind === ProcessingKind::BloodBottle,
                 'versions' => $protocol->versions->map(fn (ProtocolVersion $v) => [
                     'id' => $v->id,
                     'version' => $v->version,
@@ -78,7 +79,7 @@ class ProtocolAdminQuery
             'activated_at' => $version->activated_at?->toIso8601String(),
             'retired_at' => $version->retired_at?->toIso8601String(),
             'samples_count' => DB::table('sample_studies')->where('protocol_version_id', $version->id)->count(),
-            'missing' => $version->status === ProtocolVersionStatus::Draft ? $this->rules->missingForApproval($version) : [],
+            'missing' => $version->status === ProtocolVersionStatus::Draft ? $this->rules->missingItems($version) : [],
             'content' => [
                 'notes' => $version->notes,
                 'source' => $version->source,
@@ -123,7 +124,11 @@ class ProtocolAdminQuery
                 ->map(fn (Medium $m) => ['id' => $m->id, 'code' => $m->code, 'name' => $m->name, 'is_active' => $m->is_active])
                 ->values()->all(),
             'atmospheres' => array_map(fn (Atmosphere $a) => ['value' => $a->value, 'label' => $a->label()], Atmosphere::cases()),
-            'outcomes' => array_map(fn (ReadingOutcome $o) => ['value' => $o->value, 'label' => $this->outcomeLabel($o)], ReadingOutcome::cases()),
+            'outcomes' => array_map(fn (ReadingOutcome $o) => [
+                'value' => $o->value,
+                'label' => $this->outcomeLabel($o),
+                'description' => $this->outcomeDescription($o),
+            ], ReadingOutcome::cases()),
         ];
     }
 
@@ -161,6 +166,20 @@ class ProtocolAdminQuery
             ReadingOutcome::MixedFlora => 'Flora mixta',
             ReadingOutcome::NotSignificant => 'No significativo',
             ReadingOutcome::Reincubate => 'Reincubar',
+        };
+    }
+
+    /**
+     * Qué hace el sistema al elegir la opción en la mesada (RecordReading).
+     */
+    private function outcomeDescription(ReadingOutcome $outcome): string
+    {
+        return match ($outcome) {
+            ReadingOutcome::NoGrowth => 'Si quedan lecturas, el cultivo espera la siguiente; en la última, se cierra como negativo.',
+            ReadingOutcome::Growth => 'Pide cargar los aislamientos con su recuento y los pasa a identificación.',
+            ReadingOutcome::MixedFlora => 'Cierra el cultivo como contaminado (flora mixta), sin cargar aislamientos.',
+            ReadingOutcome::NotSignificant => 'Cierra el cultivo como no significativo, sin cargar aislamientos.',
+            ReadingOutcome::Reincubate => 'Vuelve a programar la lectura según las horas de reincubación, hasta el máximo de veces indicado.',
         };
     }
 }

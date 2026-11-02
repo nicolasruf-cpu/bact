@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Plus } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ type Protocol = {
     study: string;
     study_code: string;
     sample_type: string;
+    is_blood: boolean;
     versions: {
         id: number;
         version: number;
@@ -49,6 +50,23 @@ const form = useForm({
 function submit() {
     form.post(store().url);
 }
+
+const search = ref('');
+const filtered = computed(() => {
+    const q = search.value.trim().toLowerCase();
+
+    return q === ''
+        ? props.protocols
+        : props.protocols.filter((p) =>
+              `${p.study} ${p.study_code} ${p.sample_type}`
+                  .toLowerCase()
+                  .includes(q),
+          );
+});
+const activeOf = (p: Protocol) => p.versions.find((v) => v.status === 'active');
+// Lo que está en camino: un borrador o una versión aprobada que todavía no está vigente.
+const pendingOf = (p: Protocol) =>
+    p.versions.find((v) => v.status === 'draft' || v.status === 'approved');
 </script>
 
 <template>
@@ -168,18 +186,36 @@ function submit() {
             </p>
         </form>
 
+        <Input
+            v-model="search"
+            class="max-w-sm"
+            placeholder="Buscar por estudio o tipo de muestra…"
+            aria-label="Buscar protocolo"
+        />
+
         <div class="overflow-x-auto rounded-lg border">
             <table class="w-full text-sm">
                 <thead class="bg-muted/50 text-left">
                     <tr>
                         <th class="px-3 py-2 font-medium">Estudio</th>
                         <th class="px-3 py-2 font-medium">Tipo de muestra</th>
-                        <th class="px-3 py-2 font-medium">Versiones</th>
+                        <th class="px-3 py-2 font-medium">Procesamiento</th>
+                        <th class="px-3 py-2 font-medium">En uso</th>
+                        <th class="px-3 py-2 font-medium">En preparación</th>
+                        <th class="px-3 py-2 font-medium">Historial</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <tr v-if="!filtered.length">
+                        <td
+                            colspan="6"
+                            class="px-3 py-6 text-center text-muted-foreground"
+                        >
+                            No hay protocolos que coincidan.
+                        </td>
+                    </tr>
                     <tr
-                        v-for="protocol in props.protocols"
+                        v-for="protocol in filtered"
                         :key="protocol.id"
                         class="border-t align-top"
                         data-test="protocol-row"
@@ -192,6 +228,36 @@ function submit() {
                             >
                         </td>
                         <td class="px-3 py-2">{{ protocol.sample_type }}</td>
+                        <td class="px-3 py-2 text-muted-foreground">
+                            {{ protocol.is_blood ? 'Frasco' : 'Placa' }}
+                        </td>
+                        <td class="px-3 py-2">
+                            <Link
+                                v-if="activeOf(protocol)"
+                                :href="showVersion(activeOf(protocol)!.id)"
+                                class="font-medium underline-offset-2 hover:underline"
+                                >Ver v{{ activeOf(protocol)!.version }}</Link
+                            >
+                            <span
+                                v-else
+                                class="text-amber-700 dark:text-amber-300"
+                                >Sin versión vigente: no se reciben
+                                muestras</span
+                            >
+                        </td>
+                        <td class="px-3 py-2">
+                            <Link
+                                v-if="pendingOf(protocol)"
+                                :href="showVersion(pendingOf(protocol)!.id)"
+                                class="rounded border px-2 py-0.5 text-xs"
+                                :class="
+                                    statusClass(pendingOf(protocol)!.status)
+                                "
+                                >v{{ pendingOf(protocol)!.version }} ·
+                                {{ pendingOf(protocol)!.status_label }}</Link
+                            >
+                            <span v-else class="text-muted-foreground">—</span>
+                        </td>
                         <td class="px-3 py-2">
                             <span class="flex flex-wrap gap-1">
                                 <Link

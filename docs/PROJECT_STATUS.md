@@ -33,6 +33,10 @@
 - **Casos publicados en la demo (2026-11-01):** 12 escenarios con fuente citada (`docs/demo/CASOS_PUBLICADOS.md`).
   - Huecos encontrados: Q-C16 a Q-C19.
 
+- **Editor de protocolos rediseñado (2026-11-01):** sigue el orden de la mesada, con un resumen en lenguaje de mesada, faltantes por sección y códigos automáticos.
+  - Falta recorrerlo en el navegador.
+  - La confirmación de negativos en bloque (Q-F1) se configura, pero ninguna mesada la usa todavía.
+
 ## En desarrollo
 - Nada a medio hacer.
 

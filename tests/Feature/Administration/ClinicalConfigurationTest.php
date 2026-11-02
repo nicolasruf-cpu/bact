@@ -168,6 +168,13 @@ test('un protocolo nuevo arranca vacío y no se aprueba hasta completarlo', func
     $this->actingAs($this->director)->post(route('admin.protocol-versions.approve', $version), ['lock_version' => 0])
         ->assertSessionHasErrors('version');
 
+    // El editor muestra cada faltante en su sección y explica qué hace cada opción de lectura.
+    $this->actingAs($this->biochemist)->get(route('admin.protocol-versions.show', $version))
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/protocols/Version')
+            ->where('version.missing', fn ($missing) => collect($missing)->pluck('section')->sort()->values()->all() === ['ast', 'media', 'results', 'results', 'schedule'])
+            ->where('outcomes', fn ($outcomes) => collect($outcomes)->every(fn ($o) => $o['description'] !== '')));
+
     // Repetido: ya existe.
     $this->actingAs($this->biochemist)->post(route('admin.protocols.store'), [
         'study_id' => $study->id, 'sample_type_id' => $type->id, 'processing_kind' => 'plate',

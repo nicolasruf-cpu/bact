@@ -1,6 +1,18 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-01 — Editor de protocolos más fácil de interpretar
+- Las secciones siguen el orden de la mesada: siembra, directo, lecturas, qué se informa, recuentos y antibiograma. En el hemocultivo, el frasco va primero.
+- Índice lateral que marca las secciones con faltantes o errores. Cada faltante para aprobar aparece en su sección (`ProtocolVersionRules::missingItems`).
+- Resumen del protocolo en lenguaje de mesada, que se actualiza mientras se edita.
+- Cada opción de lectura explica qué hace el sistema al elegirla.
+- Las horas se muestran también en días, y hay una línea de tiempo de las lecturas.
+- Los códigos internos quedan ocultos y se arman solos a partir del texto.
+- Los errores dicen en qué fila están.
+- Se indica qué sigue en el ciclo de la versión.
+- Listado de protocolos con buscador y columnas «En uso» y «En preparación».
+- La confirmación de negativos en bloque (Q-F1) figura como «todavía no tiene efecto»: se configura, pero ninguna mesada la usa todavía.
+
 ### 2026-11-01 — Casos publicados en la demo
 - `PublishedCaseSeeder`: 12 escenarios basados en casos clínicos publicados, con pacientes ficticios y la fuente citada (`docs/demo/CASOS_PUBLICADOS.md`).
   - Cubren urocultivo, hemocultivo, LCR, líquidos pleural y articular, BAL, coprocultivo, secreción uretral y fauces.

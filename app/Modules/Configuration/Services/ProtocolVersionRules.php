@@ -230,30 +230,41 @@ class ProtocolVersionRules
      */
     public function missingForApproval(ProtocolVersion $version): array
     {
+        return array_column($this->missingItems($version), 'message');
+    }
+
+    /**
+     * Lo mismo que missingForApproval, con la sección del editor a la que corresponde
+     * cada faltante (media, schedule, results, blood, ast).
+     *
+     * @return list<array{section: string, message: string}>
+     */
+    public function missingItems(ProtocolVersion $version): array
+    {
         $missing = [];
         $outcomes = array_column($version->reading_options ?? [], 'outcome');
         $plates = $version->media->where('is_enrichment', false);
 
         if ($plates->isEmpty()) {
-            $missing[] = 'Falta al menos un medio que se lea (no un caldo).';
+            $missing[] = ['section' => 'media', 'message' => 'Falta al menos un medio que se lea (no un caldo).'];
         }
         if ($version->reading_schedule === null || $version->reading_schedule === []) {
-            $missing[] = 'Falta el cronograma de lecturas.';
+            $missing[] = ['section' => 'schedule', 'message' => 'Falta el cronograma de lecturas.'];
         }
         if (! in_array(ReadingOutcome::Growth->value, $outcomes, true)) {
-            $missing[] = 'Falta una opción de lectura con resultado "desarrollo".';
+            $missing[] = ['section' => 'results', 'message' => 'Falta una opción de lectura con resultado "desarrollo".'];
         }
         if (! in_array(ReadingOutcome::NoGrowth->value, $outcomes, true)) {
-            $missing[] = 'Falta una opción de lectura con resultado "sin desarrollo".';
+            $missing[] = ['section' => 'results', 'message' => 'Falta una opción de lectura con resultado "sin desarrollo".'];
         }
         if (in_array(ReadingOutcome::Reincubate->value, $outcomes, true) && ($version->reincubation_hours === null || $version->max_reincubations < 1)) {
-            $missing[] = 'Hay una opción "reincubar" pero faltan las horas o la cantidad de reincubaciones.';
+            $missing[] = ['section' => 'results', 'message' => 'Hay una opción "reincubar" pero faltan las horas o la cantidad de reincubaciones.'];
         }
         if ($version->isBloodCulture() && $version->blood_culture_settings === null) {
-            $missing[] = 'Faltan los parámetros del frasco de hemocultivo.';
+            $missing[] = ['section' => 'blood', 'message' => 'Faltan los parámetros del frasco de hemocultivo.'];
         }
         if ($version->ast_read_min_hours === null) {
-            $missing[] = 'Faltan las horas de lectura del antibiograma.';
+            $missing[] = ['section' => 'ast', 'message' => 'Faltan las horas de lectura del antibiograma.'];
         }
 
         return $missing;
