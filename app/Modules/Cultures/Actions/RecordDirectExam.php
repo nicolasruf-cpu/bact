@@ -97,7 +97,7 @@ class RecordDirectExam
     /**
      * Solo campos y opciones del protocolo; un campo simple admite una opción.
      *
-     * @param  list<array{code: string, label: string, multiple?: bool, options: list<array{code: string, label: string, organisms?: bool}>}>  $fields
+     * @param  list<array{code: string, label: string, type?: string, unit?: string|null, multiple?: bool, options: list<array{code: string, label: string, organisms?: bool}>}>  $fields
      * @param  array<string, list<string>>  $results
      * @return array<string, list<string>>
      *
@@ -113,6 +113,19 @@ class RecordDirectExam
         $normalized = [];
         foreach ($fields as $field) {
             $codes = array_values(array_unique(array_map('strval', $results[$field['code']] ?? [])));
+            $type = $field['type'] ?? 'options';
+            if ($type !== 'options') {
+                $value = trim((string) ($codes[0] ?? ''));
+                if ($value === '') {
+                    continue;
+                }
+                if ($type === 'number' && ! is_numeric(str_replace(',', '.', $value))) {
+                    throw ValidationException::withMessages(["results.{$field['code']}" => "{$field['label']} lleva un número."]);
+                }
+                $normalized[$field['code']] = [$type === 'number' ? str_replace(',', '.', $value) : mb_substr($value, 0, 255)];
+
+                continue;
+            }
             $valid = array_column($field['options'], 'code');
             foreach ($codes as $code) {
                 if (! in_array($code, $valid, true)) {
@@ -128,7 +141,7 @@ class RecordDirectExam
         }
 
         if ($normalized === []) {
-            throw ValidationException::withMessages(['results' => 'Elegí al menos una opción.']);
+            throw ValidationException::withMessages(['results' => 'Elegí al menos una opción o cargá un valor.']);
         }
 
         return $normalized;

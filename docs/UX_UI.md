@@ -14,6 +14,7 @@ Ingreso → Mesada (¿qué hay para hacer?) → elige actividad → arma/retoma 
 |---|---|
 | Una pantalla, una actividad | Pantalla de tanda en dos paneles: lista compacta de ítems a la izquierda, formulario de la actividad a la derecha. Solo los datos necesarios. |
 | Mínimos clics | Valores por defecto según el protocolo; "Guardar y siguiente" (Enter); confirmación múltiple solo cuando es segura. |
+| Fechas a un clic | Todo campo de fecha tiene un botón **Hoy**, y todo campo de fecha y hora, un botón **Ahora** (componentes `DateInput` y `DateTimeInput`). No se usan `<input type="date">` ni `datetime-local` sueltos. |
 | Teclado | `Ctrl+K` paleta de comandos; `/` buscar; `J/K` navegar ítems; `Enter` guardar y avanzar; teclas numéricas para opciones de lectura; `Esc` pausa. Los atajos peligrosos (validar) siempre piden confirmación. |
 | Código de barras | Escucha global de lector tipo teclado (ráfaga rápida + Enter): en la mesada abre la muestra; en una tanda la agrega o selecciona. |
 | Trabajo continuo | Al guardar, el foco pasa al siguiente ítem pendiente; no se vuelve al menú. |

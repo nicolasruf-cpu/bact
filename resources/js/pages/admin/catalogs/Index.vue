@@ -14,6 +14,8 @@ type Entry = {
     name: string;
     is_active: boolean;
     organism_group: string | null;
+    disk_content: string | null;
+    reported_as_antibiotic_id: number | null;
     lock_version: number;
 };
 
@@ -23,7 +25,9 @@ const props = defineProps<{
         label: string;
         singular: string;
         has_organism_group: boolean;
+        has_antibiotic_fields: boolean;
     };
+    antibiotics: { id: number; code: string; name: string }[];
     types: { value: string; label: string; count: number }[];
     entries: Entry[];
     filters: { search: string | null };
@@ -51,7 +55,11 @@ const newForm = useForm({
     name: '',
     is_active: true,
     organism_group: '',
+    disk_content: '',
+    reported_as_antibiotic_id: null as number | null,
 });
+const antibioticName = (id: number | null) =>
+    props.antibiotics.find((a) => a.id === id)?.name ?? '';
 
 function create() {
     newForm.post(store(props.catalog.value).url, {
@@ -65,6 +73,8 @@ const editForm = useForm({
     id: 0,
     name: '',
     is_active: true,
+    disk_content: '',
+    reported_as_antibiotic_id: null as number | null,
     lock_version: 0,
 });
 
@@ -74,6 +84,8 @@ function startEdit(entry: Entry) {
         id: entry.id,
         name: entry.name,
         is_active: entry.is_active,
+        disk_content: entry.disk_content ?? '',
+        reported_as_antibiotic_id: entry.reported_as_antibiotic_id,
         lock_version: entry.lock_version,
     });
     editForm.reset();
@@ -153,7 +165,33 @@ function saveEdit() {
                     </option>
                 </select>
             </label>
-            <span v-else></span>
+            <span v-else-if="!props.catalog.has_antibiotic_fields"></span>
+            <div v-if="props.catalog.has_antibiotic_fields" class="flex gap-2">
+                <label class="grid gap-1 text-sm">
+                    Carga del disco
+                    <Input
+                        v-model="newForm.disk_content"
+                        class="w-28"
+                        placeholder="p. ej., 30 µg"
+                    />
+                </label>
+                <label class="grid gap-1 text-sm">
+                    Se informa como
+                    <select
+                        v-model="newForm.reported_as_antibiotic_id"
+                        class="h-9 rounded-md border bg-background px-2"
+                    >
+                        <option :value="null">Él mismo</option>
+                        <option
+                            v-for="a in props.antibiotics"
+                            :key="a.id"
+                            :value="a.id"
+                        >
+                            {{ a.name }}
+                        </option>
+                    </select>
+                </label>
+            </div>
             <Button
                 type="submit"
                 :disabled="newForm.processing"
@@ -175,6 +213,15 @@ function saveEdit() {
                 >
                     El grupo define el panel de antibiograma y los puntos de
                     corte que se aplican: se elige en el alta y no se cambia.
+                </p>
+                <p
+                    v-if="props.catalog.has_antibiotic_fields"
+                    class="text-xs text-muted-foreground"
+                >
+                    Un mismo antibiótico con otra carga (p. ej., gentamicina de
+                    alta carga) va con su propio código. «Se informa como» es
+                    para una prueba subrogante: p. ej., cefoxitina se ensaya y
+                    se informa como oxacilina.
                 </p>
             </div>
         </form>
@@ -199,6 +246,12 @@ function saveEdit() {
                             class="px-3 py-2 font-medium"
                         >
                             Grupo
+                        </th>
+                        <th
+                            v-if="props.catalog.has_antibiotic_fields"
+                            class="px-3 py-2 font-medium"
+                        >
+                            Carga · se informa como
                         </th>
                         <th class="px-3 py-2 font-medium">Estado</th>
                         <th class="px-3 py-2"></th>
@@ -233,6 +286,36 @@ function saveEdit() {
                             >
                                 {{ entry.organism_group }}
                             </td>
+                            <td
+                                v-if="props.catalog.has_antibiotic_fields"
+                                class="px-3 py-2"
+                            >
+                                <div class="flex gap-2">
+                                    <Input
+                                        v-model="editForm.disk_content"
+                                        class="w-24"
+                                        aria-label="Carga del disco"
+                                    />
+                                    <select
+                                        v-model="
+                                            editForm.reported_as_antibiotic_id
+                                        "
+                                        class="h-9 rounded-md border bg-background px-2"
+                                        aria-label="Se informa como"
+                                    >
+                                        <option :value="null">Él mismo</option>
+                                        <option
+                                            v-for="a in props.antibiotics.filter(
+                                                (x) => x.id !== entry.id,
+                                            )"
+                                            :key="a.id"
+                                            :value="a.id"
+                                        >
+                                            {{ a.name }}
+                                        </option>
+                                    </select>
+                                </div>
+                            </td>
                             <td class="px-3 py-2">
                                 <label class="flex items-center gap-2">
                                     <input
@@ -266,6 +349,22 @@ function saveEdit() {
                             >
                                 {{ entry.organism_group }}
                             </td>
+                            <td
+                                v-if="props.catalog.has_antibiotic_fields"
+                                class="px-3 py-2"
+                            >
+                                {{ entry.disk_content ?? '—' }}
+                                <template
+                                    v-if="entry.reported_as_antibiotic_id"
+                                >
+                                    ·
+                                    {{
+                                        antibioticName(
+                                            entry.reported_as_antibiotic_id,
+                                        )
+                                    }}</template
+                                >
+                            </td>
                             <td class="px-3 py-2">
                                 <Badge
                                     :variant="
@@ -290,7 +389,7 @@ function saveEdit() {
                     </tr>
                     <tr v-if="!props.entries.length">
                         <td
-                            colspan="5"
+                            colspan="6"
                             class="px-3 py-6 text-center text-muted-foreground"
                         >
                             Sin ítems.

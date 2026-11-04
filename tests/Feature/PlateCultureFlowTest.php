@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Audit\Models\AuditEvent;
 use App\Modules\Audit\Services\AuditChainVerifier;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\Configuration\Database\Seeders\PlateCultureTemplateSeeder;
 use App\Modules\Configuration\Database\Seeders\ReferenceCatalogSeeder;
 use App\Modules\Configuration\Enums\ProtocolVersionStatus;
@@ -337,4 +339,17 @@ test('processing workbench, direct exam and broth pages over HTTP', function () 
             ->where('culture.step', 1)
             ->where('culture.step_hours', 18)
             ->where('culture.plates', fn ($plates) => collect($plates)->doesntContain('code', 'SEL')));
+});
+
+test('the enrichment broth can be subcultured before its incubation, with confirmation', function () {
+    $study = receivePlateStudy($this->biochemist, 'COPRO', 'MF', 'C-2');
+    app(InoculateSampleStudy::class)->handle($this->biochemist, $study);
+    $broth = Plate::where('is_enrichment', true)->firstOrFail();
+
+    $plates = app(SubcultureEnrichmentBroth::class)->handle($this->assistant, $broth, new EarlyConfirmation(true, 'Hora de siembra mal cargada.'));
+
+    expect($plates)->toHaveCount(2)
+        ->and($broth->fresh()->status)->toBe(PlateStatus::Finished)
+        ->and(plateActivity(ActivityType::SubcultureEnrichment))->toBeNull()
+        ->and(AuditEvent::where('action', 'configuration.incubation_time_not_met')->sole()->reason)->toBe('Hora de siembra mal cargada.');
 });

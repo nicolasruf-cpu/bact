@@ -17,6 +17,7 @@ use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\BloodCultures\Queries\BottlePageQuery;
 use App\Modules\BloodCultures\Queries\OrderBloodCultureSummary;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\CriticalResults\Enums\CommunicationChannel;
 use App\Modules\CriticalResults\Queries\StudyCriticalAlertsQuery;
 use App\Modules\Identity\Enums\Permission;
@@ -137,7 +138,7 @@ class BloodCultureController extends Controller
     public function negative(Request $request, BloodCultureBottle $bottle, ConfirmNegativeBottle $confirm): RedirectResponse
     {
         $this->authorizeView($request, $bottle->sampleStudy);
-        $confirm->handle($this->user($request), $bottle);
+        $confirm->handle($this->user($request), $bottle, EarlyConfirmation::fromRequest($request));
 
         return $this->back($bottle->sampleStudy, 'Frasco cerrado como negativo: pasa a validación.');
     }
@@ -145,7 +146,7 @@ class BloodCultureController extends Controller
     public function blindSubculture(Request $request, BloodCultureBottle $bottle, PerformBlindSubculture $perform): RedirectResponse
     {
         $this->authorizeView($request, $bottle->sampleStudy);
-        $perform->handle($this->user($request), $bottle);
+        $perform->handle($this->user($request), $bottle, EarlyConfirmation::fromRequest($request));
 
         return $this->back($bottle->sampleStudy, 'Repique registrado.');
     }
@@ -160,7 +161,7 @@ class BloodCultureController extends Controller
             'notes' => ['nullable', 'string', 'max:1000'],
         ], [], ['result' => 'resultado']);
 
-        $read->handle($this->user($request), $subculture, BlindSubcultureResult::from($validated['result']), $validated['notes'] ?? null);
+        $read->handle($this->user($request), $subculture, BlindSubcultureResult::from($validated['result']), $validated['notes'] ?? null, EarlyConfirmation::fromRequest($request));
 
         return $this->back($study, 'Lectura del repique registrada.');
     }

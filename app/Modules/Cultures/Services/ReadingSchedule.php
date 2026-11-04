@@ -15,7 +15,8 @@ use Illuminate\Support\Collection;
  * Cronograma: cada lectura programada se cuenta desde la siembra (p. ej., 24, 48 y 72 h);
  * se hacen todas, aunque una intermedia tenga desarrollo (D-0017). Después de reincubar:
  * última lectura + reincubación. Las placas repicadas de un caldo necesitan, además,
- * la incubación mínima de la primera lectura desde su propio repique.
+ * la incubación mínima de la primera lectura desde su propio repique; lo mismo una placa
+ * resembrada porque se perdió la original (B7).
  */
 class ReadingSchedule
 {
@@ -76,7 +77,7 @@ class ReadingSchedule
         $availableAt = $culture->inoculated_at->copy()->addHours($version->readingSchedule()[$this->step($culture)]['min_hours']);
 
         /** @var Plate|null $latestSubculture */
-        $latestSubculture = $culture->plates->filter(fn (Plate $p) => $p->source_plate_id !== null && $p->inoculated_at !== null)
+        $latestSubculture = $culture->plates->filter(fn (Plate $p) => ($p->source_plate_id !== null || $p->replaces_plate_id !== null) && $p->inoculated_at !== null && $p->status !== PlateStatus::Lost)
             ->sortBy('inoculated_at')
             ->last();
         if ($latestSubculture !== null) {

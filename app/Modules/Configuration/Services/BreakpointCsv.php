@@ -3,6 +3,7 @@
 namespace App\Modules\Configuration\Services;
 
 use App\Modules\Configuration\Enums\AstMethod;
+use App\Modules\Configuration\Enums\OrganismGroup;
 use App\Modules\Configuration\Models\AstPanel;
 use App\Modules\Configuration\Models\BreakpointSet;
 use Illuminate\Validation\ValidationException;
@@ -74,17 +75,20 @@ class BreakpointCsv
 
         $out = [implode(';', self::HEADER)];
         $seen = [];
-        foreach (AstPanel::query()->with('antibiotics')->orderBy('organism_group')->get() as $panel) {
-            foreach ($panel->antibiotics as $antibiotic) {
-                foreach (AstMethod::cases() as $method) {
-                    $key = $panel->organism_group->value.'|'.$antibiotic->code.'|'.$method->value;
-                    if (isset($seen[$key])) {
-                        continue;
+        $panels = AstPanel::query()->with('antibiotics')->orderBy('code')->get();
+        foreach (OrganismGroup::cases() as $group) {
+            foreach ($panels->filter(fn (AstPanel $p) => $p->organism_groups->contains($group)) as $panel) {
+                foreach ($panel->antibiotics as $antibiotic) {
+                    foreach (AstMethod::cases() as $method) {
+                        $key = $group->value.'|'.$antibiotic->code.'|'.$method->value;
+                        if (isset($seen[$key])) {
+                            continue;
+                        }
+                        $seen[$key] = true;
+                        [$s, $r] = $values[$key] ?? ['', ''];
+                        $out[] = implode(';', [$group->value, $antibiotic->code, $method->value, $this->number($s), $this->number($r)]);
+                        unset($values[$key]);
                     }
-                    $seen[$key] = true;
-                    [$s, $r] = $values[$key] ?? ['', ''];
-                    $out[] = implode(';', [$panel->organism_group->value, $antibiotic->code, $method->value, $this->number($s), $this->number($r)]);
-                    unset($values[$key]);
                 }
             }
         }

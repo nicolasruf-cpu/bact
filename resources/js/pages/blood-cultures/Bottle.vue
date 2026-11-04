@@ -7,8 +7,10 @@ import {
     FlaskConical,
     Microscope,
 } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import CriticalAlertCard from '@/components/domain/CriticalAlertCard.vue';
+import EarlyTimeWarning from '@/components/domain/EarlyTimeWarning.vue';
+import DateTimeInput from '@/components/DateTimeInput.vue';
 import SampleHeaderCard from '@/components/domain/SampleHeaderCard.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { formatDateTime } from '@/lib/datetime';
+import { formatDateTime, localDateTimeInput } from '@/lib/datetime';
 import { formatMinutes } from '@/lib/elapsed';
 import { read as readSubculture } from '@/routes/blind-subcultures';
 import { load as loadRoute, show as showBottle } from '@/routes/blood-cultures';
@@ -152,13 +154,6 @@ defineOptions({
     },
 });
 
-/** Valor para <input type="datetime-local"> en la hora local del navegador. */
-function localInput(date: Date = new Date()): string {
-    const offset = date.getTimezoneOffset() * 60000;
-
-    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
 function toIso(local: string): string | null {
     return local ? new Date(local).toISOString() : null;
 }
@@ -169,7 +164,7 @@ const loadForm = useForm({
     bottle_type: props.settings?.bottle_types[0]?.code ?? '',
     instrument: props.settings?.instruments[0] ?? '',
     instrument_position: '',
-    loaded_at: localInput(),
+    loaded_at: localDateTimeInput(),
 });
 
 function submitLoad() {
@@ -193,7 +188,7 @@ const loadDays = computed(() =>
 );
 
 // --- Positivo / negativo -------------------------------------------------------
-const positiveForm = useForm({ positive_at: localInput(), notes: '' });
+const positiveForm = useForm({ positive_at: localDateTimeInput(), notes: '' });
 
 function submitPositive() {
     if (!props.bottle) {
@@ -208,7 +203,8 @@ function submitPositive() {
         .post(positiveRoute(props.bottle.ulid).url, { preserveScroll: true });
 }
 
-const negativeForm = useForm({});
+// Antes de tiempo, las acciones del frasco piden "registrar igual" (D-0020).
+const negativeForm = useForm({ early_confirmed: false, early_reason: '' });
 
 function submitNegative() {
     if (props.bottle) {
@@ -219,23 +215,43 @@ function submitNegative() {
 }
 
 // --- Repiques ------------------------------------------------------------------
-const subcultureForm = useForm({});
+const subcultureForm = useForm({ early_confirmed: false, early_reason: '' });
 
 function submitBlindSubculture() {
     if (props.bottle) {
         subcultureForm.post(storeSubculture(props.bottle.ulid).url, {
             preserveScroll: true,
+            onSuccess: () => subcultureForm.reset(),
         });
     }
 }
 
 const readForm = useForm({ result: '', notes: '' });
 
+// Confirmación de cada repique que se lee antes de la incubación mínima de la placa.
+const earlyRead = reactive<
+    Record<string, { confirmed: boolean; reason: string }>
+>({});
+watch(
+    () => props.bottle?.blind_subcultures ?? [],
+    (subcultures) =>
+        subcultures.forEach((s) => {
+            earlyRead[s.ulid] ??= { confirmed: false, reason: '' };
+        }),
+    { immediate: true },
+);
+
 function readBlind(subculture: BlindSubculture, result: string) {
     readForm.result = result;
-    readForm.post(readSubculture(subculture.ulid).url, {
-        preserveScroll: true,
-    });
+    readForm
+        .transform((data) => ({
+            ...data,
+            early_confirmed: earlyRead[subculture.ulid]?.confirmed ?? false,
+            early_reason: earlyRead[subculture.ulid]?.reason ?? '',
+        }))
+        .post(readSubculture(subculture.ulid).url, {
+            preserveScroll: true,
+        });
 }
 
 // --- Gram y subcultivo -----------------------------------------------------------
@@ -348,11 +364,9 @@ const statusClass: Record<string, string> = {
                             </div>
                             <div class="grid gap-1">
                                 <Label for="loaded_at">Hora de carga</Label>
-                                <input
+                                <DateTimeInput
                                     id="loaded_at"
                                     v-model="loadForm.loaded_at"
-                                    type="datetime-local"
-                                    class="h-9 rounded-md border bg-background px-2 text-sm"
                                 />
                                 <InputError
                                     :message="loadForm.errors.loaded_at"
@@ -534,11 +548,9 @@ const statusClass: Record<string, string> = {
                                         ? 'Hora que informa el equipo'
                                         : 'Hora'
                                 }}</Label>
-                                <input
+                                <DateTimeInput
                                     id="positive_at"
                                     v-model="positiveForm.positive_at"
-                                    type="datetime-local"
-                                    class="h-9 rounded-md border bg-background px-2 text-sm"
                                 />
                                 <InputError
                                     :message="positiveForm.errors.positive_at"
@@ -616,13 +628,25 @@ const statusClass: Record<string, string> = {
                             variant="outline"
                             :disabled="
                                 negativeForm.processing ||
-                                !props.bottle.can_confirm_negative_now
+                                (!props.bottle.can_confirm_negative_now &&
+                                    !negativeForm.early_confirmed)
                             "
                             data-test="confirm-negative"
                             @click="submitNegative"
                         >
                             Cerrar como negativo
                         </Button>
+                        <EarlyTimeWarning
+                            v-if="
+                                props.can.confirm_negative &&
+                                !props.bottle.can_confirm_negative_now
+                            "
+                            v-model:confirmed="negativeForm.early_confirmed"
+                            v-model:reason="negativeForm.early_reason"
+                            class="basis-full"
+                            :available-at="props.bottle.incubation_ends_at"
+                            :error="negativeForm.errors.early_confirmed"
+                        />
                     </div>
 
                     <!-- Repiques (manual) -->
@@ -677,46 +701,91 @@ const statusClass: Record<string, string> = {
                                             >—</template
                                         >
                                         <span
-                                            v-else-if="!s.readable"
+                                            v-else-if="
+                                                !s.readable &&
+                                                !props.can.read_negative &&
+                                                !props.can.read_positive
+                                            "
                                             class="text-muted-foreground"
                                             >Desde
                                             {{
                                                 formatDateTime(s.readable_at)
                                             }}</span
                                         >
-                                        <span v-else class="flex gap-2">
-                                            <Button
-                                                v-if="props.can.read_negative"
-                                                size="sm"
-                                                variant="outline"
-                                                :disabled="readForm.processing"
-                                                @click="
-                                                    readBlind(s, 'no_growth')
-                                                "
-                                                >Sin desarrollo</Button
-                                            >
-                                            <Button
-                                                v-if="props.can.read_positive"
-                                                size="sm"
-                                                variant="destructive"
-                                                :disabled="readForm.processing"
-                                                @click="readBlind(s, 'growth')"
-                                                >Desarrollo</Button
-                                            >
-                                            <span
+                                        <span v-else class="grid gap-2">
+                                            <EarlyTimeWarning
                                                 v-if="
-                                                    !props.can.read_negative &&
-                                                    !props.can.read_positive
+                                                    !s.readable &&
+                                                    earlyRead[s.ulid]
                                                 "
-                                                class="text-muted-foreground"
-                                                >Pendiente de lectura</span
-                                            >
+                                                v-model:confirmed="
+                                                    earlyRead[s.ulid].confirmed
+                                                "
+                                                v-model:reason="
+                                                    earlyRead[s.ulid].reason
+                                                "
+                                                :available-at="s.readable_at"
+                                            />
+                                            <span class="flex gap-2">
+                                                <Button
+                                                    v-if="
+                                                        props.can.read_negative
+                                                    "
+                                                    size="sm"
+                                                    variant="outline"
+                                                    :disabled="
+                                                        readForm.processing ||
+                                                        (!s.readable &&
+                                                            !earlyRead[s.ulid]
+                                                                ?.confirmed)
+                                                    "
+                                                    @click="
+                                                        readBlind(
+                                                            s,
+                                                            'no_growth',
+                                                        )
+                                                    "
+                                                    >Sin desarrollo</Button
+                                                >
+                                                <Button
+                                                    v-if="
+                                                        props.can.read_positive
+                                                    "
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    :disabled="
+                                                        readForm.processing ||
+                                                        (!s.readable &&
+                                                            !earlyRead[s.ulid]
+                                                                ?.confirmed)
+                                                    "
+                                                    @click="
+                                                        readBlind(s, 'growth')
+                                                    "
+                                                    >Desarrollo</Button
+                                                >
+                                                <span
+                                                    v-if="
+                                                        !props.can
+                                                            .read_negative &&
+                                                        !props.can.read_positive
+                                                    "
+                                                    class="text-muted-foreground"
+                                                    >Pendiente de lectura</span
+                                                >
+                                            </span>
                                         </span>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                         <InputError :message="readForm.errors.result" />
+                        <InputError
+                            :message="
+                                (readForm.errors as Record<string, string>)
+                                    .early_confirmed
+                            "
+                        />
                         <div
                             v-if="props.bottle.next_subculture"
                             class="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
@@ -744,12 +813,28 @@ const statusClass: Record<string, string> = {
                                 v-if="props.can.subculture"
                                 :disabled="
                                     subcultureForm.processing ||
-                                    !props.bottle.next_subculture.available
+                                    (!props.bottle.next_subculture.available &&
+                                        !subcultureForm.early_confirmed)
                                 "
                                 data-test="blind-subculture"
                                 @click="submitBlindSubculture"
                                 >Registrar repique</Button
                             >
+                            <EarlyTimeWarning
+                                v-if="
+                                    props.can.subculture &&
+                                    !props.bottle.next_subculture.available
+                                "
+                                v-model:confirmed="
+                                    subcultureForm.early_confirmed
+                                "
+                                v-model:reason="subcultureForm.early_reason"
+                                class="basis-full"
+                                :available-at="
+                                    props.bottle.next_subculture.available_at
+                                "
+                                :error="subcultureForm.errors.early_confirmed"
+                            />
                         </div>
                         <InputError
                             :message="

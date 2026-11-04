@@ -22,6 +22,10 @@ enum ActivityType: string
     case CommunicateCritical = 'communicate_critical';
     case DirectExam = 'direct_exam';
     case SubcultureEnrichment = 'subculture_enrichment';
+    case ReadIdentificationTests = 'read_identification_tests';
+    case InstrumentResult = 'instrument_result';
+    case ReadIsolateSubculture = 'read_isolate_subculture';
+    case ReferralResult = 'referral_result';
 
     public function label(): string
     {
@@ -41,6 +45,10 @@ enum ActivityType: string
             self::CommunicateCritical => 'Comunicación de resultado crítico',
             self::DirectExam => 'Examen directo',
             self::SubcultureEnrichment => 'Repique de caldo de enriquecimiento',
+            self::ReadIdentificationTests => 'Lectura de pruebas',
+            self::InstrumentResult => 'Resultado del equipo',
+            self::ReadIsolateSubculture => 'Lectura de repique del aislamiento',
+            self::ReferralResult => 'Resultado de derivación',
         };
     }
 }

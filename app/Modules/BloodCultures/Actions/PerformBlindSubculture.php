@@ -9,7 +9,9 @@ use App\Modules\BloodCultures\Enums\BottleStatus;
 use App\Modules\BloodCultures\Events\BlindSubcultureDone;
 use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\Configuration\Models\Medium;
+use App\Modules\Configuration\Services\IncubationTimeCheck;
 use App\Modules\Identity\Enums\Permission;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\Date;
@@ -19,21 +21,25 @@ use Illuminate\Validation\ValidationException;
 /**
  * Repique diario del frasco manual a una placa. Cada repique se habilita al cumplirse
  * su intervalo desde la carga, hasta completar los días de incubación del protocolo.
+ * Antes de tiempo se puede repicar igual, con confirmación (D-0020).
  */
 class PerformBlindSubculture
 {
-    public function __construct(private readonly Auditor $auditor) {}
+    public function __construct(
+        private readonly IncubationTimeCheck $timeCheck,
+        private readonly Auditor $auditor,
+    ) {}
 
     /**
      * @throws ValidationException|AuthorizationException
      */
-    public function handle(User $user, BloodCultureBottle $bottle): BlindSubculture
+    public function handle(User $user, BloodCultureBottle $bottle, EarlyConfirmation $early = new EarlyConfirmation): BlindSubculture
     {
         if (! $user->can(Permission::CulturesInoculate->value)) {
             throw new AuthorizationException('No tenés permiso para repicar frascos.');
         }
 
-        return DB::transaction(function () use ($user, $bottle) {
+        return DB::transaction(function () use ($user, $bottle, $early) {
             /** @var BloodCultureBottle $bottle */
             $bottle = BloodCultureBottle::query()->lockForUpdate()->with(['sampleStudy.protocolVersion', 'blindSubcultures'])->findOrFail($bottle->id);
 
@@ -54,9 +60,7 @@ class PerformBlindSubculture
             }
 
             $dueFrom = $bottle->loaded_at->copy()->addHours($number * $settings->blindSubcultureIntervalHours);
-            if ($dueFrom->isFuture()) {
-                throw ValidationException::withMessages(['bottle' => 'Todavía no corresponde el próximo repique.']);
-            }
+            $this->timeCheck->ensure($dueFrom, $early, $bottle, "Repique n.º {$number} del frasco");
 
             $medium = Medium::query()->where('code', $settings->blindSubcultureMediumCode)->firstOrFail();
             $now = Date::now();

@@ -5,6 +5,9 @@ namespace App\Modules\Workflow\Queries;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Plate;
+use App\Modules\Identification\Models\InstrumentRun;
+use App\Modules\Identification\Models\IsolateSubculture;
+use App\Modules\Identification\Models\Referral;
 use App\Modules\Orders\Enums\Priority;
 use App\Modules\Samples\Models\SampleStudy;
 use App\Modules\Susceptibility\Models\SusceptibilityTest;
@@ -102,9 +105,21 @@ class WorkbenchQuery
             ],
             $subject instanceof Isolate => [
                 "Aislamiento {$subject->number}: ".($subject->organism->name ?? $subject->morphotype),
-                $activity->type === ActivityType::Identify
-                    ? route('identifications.create', $subject)
-                    : route('susceptibility.show', $subject),
+                $activity->type === ActivityType::AstSetup
+                    ? route('susceptibility.show', $subject)
+                    : route('identifications.create', $subject),
+            ],
+            $subject instanceof InstrumentRun => [
+                "Aislamiento {$subject->isolate->number}: {$subject->instrument} ".trim(($subject->id_card_type ?? '').' '.($subject->ast_card_type ?? '')).' · cargado '.$subject->loaded_at->diffForHumans(),
+                route('identifications.create', $subject->isolate),
+            ],
+            $subject instanceof IsolateSubculture => [
+                "Aislamiento {$subject->isolate->number}: repique en {$subject->plate->medium->name}",
+                route('identifications.create', $subject->isolate),
+            ],
+            $subject instanceof Referral => [
+                "Aislamiento {$subject->isolate->number}: derivado a {$subject->destination}",
+                route('identifications.create', $subject->isolate),
             ],
             $subject instanceof SusceptibilityTest => [
                 "Aislamiento {$subject->isolate->number}: ".($subject->isolate->organism->name ?? '').' · '.$subject->method->label(),

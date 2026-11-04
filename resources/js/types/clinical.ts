@@ -19,9 +19,13 @@ export type SampleHeader = {
 
 export type ReportResult = {
     antibiotic: string;
+    /** Unidad del método de este antibiótico (informes anteriores a D-0022: no viene). */
+    unit?: string;
     value: string | null;
     interpretation: 'S' | 'I' | 'R' | null;
     interpretation_label: string | null;
+    /** Reglas del laboratorio aplicadas (comentario para el informe). */
+    comment?: string | null;
 };
 
 export type ReportIsolate = {
@@ -30,9 +34,19 @@ export type ReportIsolate = {
     count: string | null;
     identification_method: string | null;
     no_ast_reason: string | null;
+    /** Pruebas marcadas para informar (BLEE, carbapenemasa…). */
+    tests?: { name: string; result: string | null }[];
+    referrals?: {
+        destination: string;
+        reason: string;
+        result: string | null;
+        result_at: string | null;
+    }[];
     susceptibility: {
         method: string;
         unit: string;
+        /** Antibióticos que faltan leer (D-0022). */
+        pending?: number;
         breakpoints: {
             name: string;
             edition: string;
@@ -100,6 +114,20 @@ export type ReportContent = {
     protocol: { name: string; version: number; is_reference_template: boolean };
     result: string | null;
     reading_notes: string | null;
+    result_count?: string | null;
+    rejection?: {
+        reason: string;
+        new_sample_requested_to: string | null;
+        rejected_at: string;
+    } | null;
+    other_isolates?: {
+        number: number;
+        organism: string | null;
+        description: string | null;
+        count: string | null;
+        significance: string;
+        significance_label: string;
+    }[];
     blood_culture?: BloodCultureReport | null;
     direct_exam?: DirectExamReport | null;
     isolates: ReportIsolate[];

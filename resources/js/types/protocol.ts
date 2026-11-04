@@ -15,9 +15,15 @@ export type ProtocolMedium = {
     enrichment_subculture_min_hours: number | null;
     enrichment_subculture_due_hours: number | null;
     enrichment_subculture_media: SubcultureTarget[];
+    read_from_hours: number | null;
+    read_until_hours: number | null;
+    bottle_types: string[];
 };
 export type DirectField = CodeLabel & {
     multiple: boolean;
+    /** options (por defecto), number o text (B10). */
+    type?: 'options' | 'number' | 'text';
+    unit?: string | null;
     options: (CodeLabel & { organisms: boolean })[];
 };
 export type DirectExam = {
@@ -49,6 +55,10 @@ export type ProtocolContent = {
     count_categories: CodeLabel[];
     ast_read_min_hours: number | null;
     ast_read_due_hours: number | null;
+    allow_presumptive_ast: boolean;
+    report_non_significant: boolean;
+    no_new_growth_label: string | null;
+    intermediate_no_growth_label: string | null;
     media: ProtocolMedium[];
     direct_exam_settings: DirectExam | null;
     blood_culture_settings: BloodSettings | null;

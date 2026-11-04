@@ -80,4 +80,12 @@ enum CatalogType: string
     {
         return $this === self::Organisms;
     }
+
+    /**
+     * Carga del disco y antibiótico que se informa (prueba subrogante, A7). Se pueden cambiar.
+     */
+    public function hasAntibioticFields(): bool
+    {
+        return $this === self::Antibiotics;
+    }
 }

@@ -74,6 +74,8 @@ class InoculateSampleStudy
                     'incubation_temperature' => $m->incubation_temperature,
                     'atmosphere' => $m->atmosphere,
                     'is_enrichment' => $m->is_enrichment,
+                    'read_from_hours' => $m->read_from_hours,
+                    'read_until_hours' => $m->read_until_hours,
                 ])->all(),
                 Date::now(),
                 $user->id,

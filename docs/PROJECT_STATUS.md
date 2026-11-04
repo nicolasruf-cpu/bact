@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-11-01
+**Última actualización:** 2026-11-04
 **Fase actual:** 4b — Urocultivo, hemocultivo y el resto de los cultivos en placa de punta a punta con datos sintéticos; pendiente revisión del usuario y validación clínica
 
 ## Terminado
@@ -37,6 +37,14 @@
   - Falta recorrerlo en el navegador.
   - La confirmación de negativos en bloque (Q-F1) se configura, pero ninguna mesada la usa todavía.
 
+- **Hallazgos de la revisión de marchas corregidos (2026-11-04, D-0023 a D-0029):** pruebas de identificación estructuradas, antibiograma presuntivo e incubación por panel, significancia editable con probable contaminante, lectura por placa, VITEK, repique, no concluyente, placa perdida, muestra no apta, derivación, reglas de antibiograma, subrogantes, frascos del set y página «Marcha». Estado de cada hallazgo en `docs/revision/MARCHAS_2026-11-03.md`. 216 pruebas en verde.
+- **Antibióticos por fuera del panel (2026-11-03, D-0022):** al preparar o al leer el panel, cada uno con su método; los agregados al leer tienen su propia lectura; preliminar con lo leído. 187 pruebas en verde.
+- **Paneles de antibiograma (2026-11-03, D-0021):** pantalla en Administración; un panel por uno o más grupos y una o más muestras; marca VITEK (CIM); se propone el panel de la muestra; el resumen del protocolo dice qué panel le toca a cada grupo. 182 pruebas en verde.
+- **Tiempos de incubación sin bloqueo (2026-11-02, D-0020):**
+  - antes de la hora del protocolo, las seis acciones con tiempo se registran igual, tildando «Registrar igual» y con motivo opcional;
+  - queda auditado;
+  - 174 pruebas en verde.
+
 ## En desarrollo
 - Nada a medio hacer.
 
@@ -45,11 +53,13 @@
 - Clínicos: las plantillas de urocultivo, hemocultivo y el resto de los cultivos (`docs/templates/`) debe revisarlas el Director técnico responsable; puntos de corte reales (Q-C4); metodología del perfil (Q-C9); lista de críticos y plazos (Q-C5); tiempo diferencial de positividad (Q-C10); permisos del Auxiliar en hemocultivo (Q-S5); lecturas después de un desarrollo (Q-C12); medios, recuentos y directos de los estudios nuevos (Q-C13, Q-C14); estudios que faltan (Q-C15); antibiograma sin valor medido (Q-C16), pruebas complementarias (Q-C17), repique del caldo y primera lectura (Q-C18), directo no realizado (Q-C19); administración (Q-A9 a Q-A12).
 
 ## Próximos pasos
-1. Usuario: recorrer los circuitos en la demo (urocultivo, hemocultivo, LCR, herida, coprocultivo) y revisar las plantillas con el Director técnico.
-2. Resto de la Fase 4d: paneles de antibiograma, reglas expertas, reglas de críticos y plantillas de informe (Q-A12).
-3. Corrección de informes (nueva versión con motivo), PDF.
-4. Tandas de lectura (Q-F9); escalamiento de críticos por plazo (Q-C5); integración con BacT/ALERT y VITEK (Q-B2, Q-B3).
-5. CI (Q-T3).
+1. Usuario: recorrer en el navegador las pantallas nuevas (identificación, lectura por placa, antibiograma presuntivo, marcha, pruebas y reglas) y repetir las 20 marchas de la revisión.
+2. Al desplegar: correr las migraciones y `ReferenceCatalogSeeder` (catálogo de pruebas, paneles y antibióticos nuevos). Las versiones de protocolo ya vigentes no cambian: para usar el antibiograma presuntivo o las horas por placa hay que aprobar una versión nueva.
+3. Director técnico: validar los valores de referencia nuevos (Q-C27), cargar paneles reales y, si corresponde, reglas de antibiograma.
+4. Resto de la Fase 4d: reglas de críticos y plantillas de informe (Q-A12).
+5. Corrección de informes (nueva versión con motivo), PDF.
+6. Tandas de lectura (Q-F9); escalamiento de críticos por plazo (Q-C5); integración con BacT/ALERT y VITEK (Q-B2, Q-B3).
+7. CI (Q-T3).
 
 ## Problemas conocidos
 - El script oficial `vendor/bin/sail` no funciona en Git Bash: usar `./sail` (atajo propio).

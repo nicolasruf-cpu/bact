@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 import { FlaskConical } from '@lucide/vue';
+import { reactive } from 'vue';
+import EarlyTimeWarning from '@/components/domain/EarlyTimeWarning.vue';
 import SampleHeaderCard from '@/components/domain/SampleHeaderCard.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
@@ -40,8 +42,18 @@ defineOptions({
 
 const form = useForm({});
 
+// Confirmación "registrar igual" de cada caldo, si se repica antes de tiempo (D-0020).
+const early = reactive(
+    Object.fromEntries(
+        props.broths.map((b) => [b.id, { confirmed: false, reason: '' }]),
+    ),
+);
+
 function subculture(broth: Broth) {
-    form.post(storeEnrichment(broth.id).url, { preserveScroll: true });
+    form.transform(() => ({
+        early_confirmed: early[broth.id].confirmed,
+        early_reason: early[broth.id].reason,
+    })).post(storeEnrichment(broth.id).url, { preserveScroll: true });
 }
 </script>
 
@@ -100,17 +112,18 @@ function subculture(broth: Broth) {
                     <p class="text-sm">
                         Repicar a: {{ broth.targets.join(', ') }}
                     </p>
-                    <p
+                    <EarlyTimeWarning
                         v-if="!broth.available"
-                        class="text-sm text-amber-700 dark:text-amber-300"
-                    >
-                        Disponible desde
-                        {{ formatDateTime(broth.available_at) }} (incubación del
-                        caldo).
-                    </p>
+                        v-model:confirmed="early[broth.id].confirmed"
+                        v-model:reason="early[broth.id].reason"
+                        :available-at="broth.available_at"
+                    />
                     <Button
                         class="w-fit"
-                        :disabled="!broth.available || form.processing"
+                        :disabled="
+                            (!broth.available && !early[broth.id].confirmed) ||
+                            form.processing
+                        "
                         data-test="subculture-broth"
                         @click="subculture(broth)"
                     >
@@ -120,6 +133,11 @@ function subculture(broth: Broth) {
             </div>
             <InputError
                 :message="(form.errors as Record<string, string>).plate"
+            />
+            <InputError
+                :message="
+                    (form.errors as Record<string, string>).early_confirmed
+                "
             />
         </section>
     </div>

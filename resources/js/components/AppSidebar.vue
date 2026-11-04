@@ -9,6 +9,7 @@ import {
     LayoutGrid,
     Library,
     Microscope,
+    ListChecks,
     Pill,
     ScanLine,
     ScrollText,
@@ -33,8 +34,11 @@ import {
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
 import { dashboard } from '@/routes';
+import { index as astPanelsIndex } from '@/routes/admin/ast-panels';
+import { index as astRulesIndex } from '@/routes/admin/ast-rules';
 import { index as breakpointsIndex } from '@/routes/admin/breakpoint-sets';
 import { index as catalogsIndex } from '@/routes/admin/catalogs';
+import { index as identificationTestsIndex } from '@/routes/admin/identification-tests';
 import { index as protocolsIndex } from '@/routes/admin/protocols';
 import { index as usersIndex } from '@/routes/admin/users';
 import { index as auditIndex } from '@/routes/audit';
@@ -85,7 +89,7 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(can('cultures.read_negative') || can('cultures.read_positive')
         ? [{ title: 'Lectura', href: workbench('reading'), icon: Microscope }]
         : []),
-    ...(can('identification.perform')
+    ...(can('identification.perform') || can('identification.biochem.read')
         ? [
               {
                   title: 'Identificación',
@@ -136,6 +140,21 @@ const adminNavItems = computed<NavItem[]>(() => [
                   title: 'Protocolos',
                   href: protocolsIndex(),
                   icon: ClipboardList,
+              },
+              {
+                  title: 'Pruebas de identificación',
+                  href: identificationTestsIndex(),
+                  icon: FlaskConical,
+              },
+              {
+                  title: 'Paneles de antibiograma',
+                  href: astPanelsIndex(),
+                  icon: Pill,
+              },
+              {
+                  title: 'Reglas de antibiograma',
+                  href: astRulesIndex(),
+                  icon: ListChecks,
               },
               {
                   title: 'Puntos de corte',

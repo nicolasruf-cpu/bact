@@ -12,7 +12,9 @@ use App\Modules\BloodCultures\Events\BlindSubcultureRead;
 use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\BloodCultures\Services\BottleOutcome;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\Configuration\Models\ProtocolVersionMedium;
+use App\Modules\Configuration\Services\IncubationTimeCheck;
 use App\Modules\Cultures\Services\CultureStarter;
 use App\Modules\Identity\Enums\Permission;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -25,6 +27,7 @@ use Illuminate\Validation\ValidationException;
  * - Desarrollo: el frasco es positivo y la placa del repique pasa a ser el cultivo en estudio
  *   (se lee y se cargan aislamientos como cualquier cultivo).
  * - Sin desarrollo en el último repique (y todos leídos): el frasco se cierra como negativo.
+ * Antes de la incubación mínima de la placa se puede leer igual, con confirmación (D-0020).
  */
 class ReadBlindSubculture
 {
@@ -32,12 +35,13 @@ class ReadBlindSubculture
         private readonly Auditor $auditor,
         private readonly BottleOutcome $outcome,
         private readonly CultureStarter $starter,
+        private readonly IncubationTimeCheck $timeCheck,
     ) {}
 
     /**
      * @throws ValidationException|AuthorizationException
      */
-    public function handle(User $user, BlindSubculture $subculture, BlindSubcultureResult $result, ?string $notes = null): BlindSubculture
+    public function handle(User $user, BlindSubculture $subculture, BlindSubcultureResult $result, ?string $notes = null, EarlyConfirmation $early = new EarlyConfirmation): BlindSubculture
     {
         // Como en el cultivo: informar "sin desarrollo" y "desarrollo" son permisos distintos.
         $permission = $result === BlindSubcultureResult::NoGrowth ? Permission::CulturesReadNegative : Permission::CulturesReadPositive;
@@ -45,7 +49,7 @@ class ReadBlindSubculture
             throw new AuthorizationException('No tenés permiso para registrar esta lectura.');
         }
 
-        return DB::transaction(function () use ($user, $subculture, $result, $notes) {
+        return DB::transaction(function () use ($user, $subculture, $result, $notes, $early) {
             /** @var BloodCultureBottle $bottle */
             $bottle = BloodCultureBottle::query()->lockForUpdate()->with(['sampleStudy.protocolVersion.media', 'blindSubcultures'])
                 ->findOrFail($subculture->blood_culture_bottle_id);
@@ -60,9 +64,7 @@ class ReadBlindSubculture
             }
 
             $version = $bottle->sampleStudy->protocolVersion;
-            if ($subculture->subcultured_at->copy()->addHours($version->first_read_min_hours)->isFuture()) {
-                throw ValidationException::withMessages(['result' => 'La lectura del repique todavía no está disponible (incubación mínima del protocolo).']);
-            }
+            $this->timeCheck->ensure($subculture->subcultured_at->copy()->addHours($version->first_read_min_hours), $early, $bottle, "Lectura del repique n.º {$subculture->number}");
 
             $subculture->update([
                 'result' => $result,

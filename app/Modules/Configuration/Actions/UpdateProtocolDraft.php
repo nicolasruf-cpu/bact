@@ -81,6 +81,7 @@ class UpdateProtocolDraft
                 'notes', 'source', 'reading_schedule', 'reincubation_hours', 'max_reincubations',
                 'allow_bulk_negative_confirmation', 'reading_options', 'count_categories',
                 'ast_read_min_hours', 'ast_read_due_hours', 'direct_exam_settings', 'blood_culture_settings',
+                'allow_presumptive_ast', 'report_non_significant', 'no_new_growth_label', 'intermediate_no_growth_label',
             ]),
             'media' => $version->media->map(fn ($m) => [
                 'medium' => $m->medium->code,
@@ -91,6 +92,9 @@ class UpdateProtocolDraft
                 'enrichment_subculture_min_hours' => $m->enrichment_subculture_min_hours,
                 'enrichment_subculture_due_hours' => $m->enrichment_subculture_due_hours,
                 'enrichment_subculture_media' => $m->enrichment_subculture_media,
+                'read_from_hours' => $m->read_from_hours,
+                'read_until_hours' => $m->read_until_hours,
+                'bottle_types' => $m->bottle_types,
             ])->all(),
         ];
     }

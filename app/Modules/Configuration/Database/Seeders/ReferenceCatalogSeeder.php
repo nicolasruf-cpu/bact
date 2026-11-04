@@ -6,6 +6,7 @@ use App\Modules\Configuration\Enums\OrganismGroup;
 use App\Modules\Configuration\Models\Antibiotic;
 use App\Modules\Configuration\Models\AstPanel;
 use App\Modules\Configuration\Models\Organism;
+use App\Modules\Configuration\Models\SampleType;
 use Illuminate\Database\Seeder;
 
 /**
@@ -63,17 +64,55 @@ class ReferenceCatalogSeeder extends Seeder
         'FOS' => 'Fosfomicina',
         'VAN' => 'Vancomicina',
         'OXA' => 'Oxacilina (cefoxitina)',
+        // Agregados en la revisión de marchas (D): con la carga del disco y, si es prueba
+        // subrogante, el antibiótico que se informa.
+        'FOX' => 'Cefoxitina',
+        'PEN' => 'Penicilina',
+        'ERI' => 'Eritromicina',
+        'CLI' => 'Clindamicina',
+        'LZD' => 'Linezolid',
+        'GEH' => 'Gentamicina',
     ];
 
-    /** @var list<array{0: string, 1: string, 2: OrganismGroup, 3: list<string>}> */
+    /** @var array<string, array{0: string|null, 1: string|null}> carga del disco y código del antibiótico que se informa */
+    private const DISK = [
+        'FOX' => ['30 µg', 'OXA'],
+        'PEN' => ['10 U', null],
+        'ERI' => ['15 µg', null],
+        'CLI' => ['2 µg', null],
+        'LZD' => ['30 µg', null],
+        'GEH' => ['120 µg', null],
+    ];
+
+    /** Muestras no urinarias de las plantillas: los paneles generales valen para ellas. */
+    private const NON_URINE = ['SAN-PER', 'SAN-CAT', 'HER', 'ABS', 'LPL', 'LAS', 'LAR', 'LCR', 'ESP', 'ATQ', 'BAL'];
+
+    /**
+     * Paneles para muestras no urinarias y VITEK (revisión de marchas D). Plantilla a validar:
+     * el laboratorio carga sus paneles reales (D-0021). Se crean solo si existen las muestras.
+     *
+     * @var list<array{0: string, 1: string, 2: list<OrganismGroup>, 3: list<string>, 4: list<string>|null, 5: bool}>
+     */
+    private const SAMPLE_PANELS = [
+        ['GRAL-ENT', 'Enterobacterales — sangre, heridas y líquidos', [OrganismGroup::Enterobacterales],
+            ['AMP', 'AMC', 'CXM', 'CRO', 'CAZ', 'FEP', 'TZP', 'IPM', 'MEM', 'GEN', 'AMK', 'CIP', 'SXT'], self::NON_URINE, false],
+        ['COPRO-ENT', 'Enterobacterales — coprocultivo', [OrganismGroup::Enterobacterales],
+            ['AMP', 'CIP', 'SXT', 'CRO'], ['MF'], false],
+        ['GRAL-STA', 'Staphylococcus — sangre, heridas y líquidos', [OrganismGroup::Staphylococcus],
+            ['FOX', 'PEN', 'ERI', 'CLI', 'SXT', 'GEN', 'CIP', 'LZD', 'VAN'], self::NON_URINE, false],
+        ['VTK-REF-GN', 'VITEK — gram negativos', [OrganismGroup::Enterobacterales, OrganismGroup::Pseudomonas, OrganismGroup::Acinetobacter],
+            ['AMP', 'AMC', 'CXM', 'CRO', 'CAZ', 'FEP', 'TZP', 'IPM', 'MEM', 'GEN', 'AMK', 'CIP', 'SXT', 'NIT'], null, true],
+    ];
+
+    /** @var list<array{0: string, 1: string, 2: list<OrganismGroup>, 3: list<string>}> */
     private const PANELS = [
-        ['URO-ENT', 'Enterobacterales — orina', OrganismGroup::Enterobacterales,
+        ['URO-ENT', 'Enterobacterales — orina', [OrganismGroup::Enterobacterales],
             ['AMP', 'AMC', 'CEF', 'CXM', 'CRO', 'CAZ', 'FEP', 'IPM', 'GEN', 'AMK', 'CIP', 'SXT', 'NIT', 'FOS']],
-        ['URO-PSA', 'Pseudomonas aeruginosa', OrganismGroup::Pseudomonas,
+        ['URO-PSA', 'Pseudomonas aeruginosa', [OrganismGroup::Pseudomonas],
             ['CAZ', 'FEP', 'TZP', 'IPM', 'MEM', 'GEN', 'AMK', 'CIP']],
-        ['URO-ENC', 'Enterococcus — orina', OrganismGroup::Enterococcus,
+        ['URO-ENC', 'Enterococcus — orina', [OrganismGroup::Enterococcus],
             ['AMP', 'VAN', 'NIT', 'CIP', 'FOS']],
-        ['URO-STA', 'Staphylococcus — orina', OrganismGroup::Staphylococcus,
+        ['URO-STA', 'Staphylococcus — orina', [OrganismGroup::Staphylococcus],
             ['OXA', 'SXT', 'NIT', 'CIP', 'VAN']],
     ];
 
@@ -88,11 +127,21 @@ class ReferenceCatalogSeeder extends Seeder
         foreach (self::ANTIBIOTICS as $code => $name) {
             $antibiotics[$code] = Antibiotic::firstOrCreate(['code' => $code], ['name' => $name]);
         }
+        foreach (self::DISK as $code => [$disk, $reportedAs]) {
+            $antibiotic = $antibiotics[$code];
+            if ($antibiotic->disk_content === null) {
+                $antibiotic->update([
+                    'disk_content' => $disk,
+                    'reported_as_antibiotic_id' => $reportedAs === null ? null : $antibiotics[$reportedAs]->id,
+                ]);
+            }
+        }
 
-        foreach (self::PANELS as [$code, $name, $group, $codes]) {
+        // Sin muestras asociadas: valen para todas, como antes de D-0021.
+        foreach (self::PANELS as [$code, $name, $groups, $codes]) {
             $panel = AstPanel::firstOrCreate(
                 ['code' => $code],
-                ['name' => $name, 'organism_group' => $group, 'is_reference_template' => true],
+                ['name' => $name, 'organism_groups' => $groups, 'is_reference_template' => true],
             );
 
             if ($panel->antibiotics()->exists()) {
@@ -103,5 +152,32 @@ class ReferenceCatalogSeeder extends Seeder
                 $panel->antibiotics()->attach($antibiotics[$antibioticCode]->id, ['position' => $position + 1]);
             }
         }
+
+        foreach (self::SAMPLE_PANELS as [$code, $name, $groups, $codes, $sampleCodes, $vitek]) {
+            if (AstPanel::query()->where('code', $code)->exists()) {
+                continue;
+            }
+            $sampleTypeIds = $sampleCodes === null ? [] : SampleType::query()->whereIn('code', $sampleCodes)->pluck('id')->all();
+            // Sin las muestras cargadas, un panel general valdría también para orina: se crea después.
+            if ($sampleCodes !== null && $sampleTypeIds === []) {
+                continue;
+            }
+
+            $panel = AstPanel::create([
+                'code' => $code,
+                'name' => $name,
+                'organism_groups' => $groups,
+                'is_vitek' => $vitek,
+                // El VITEK avisa cuando termina: no se espera una incubación fija.
+                'read_min_hours' => $vitek ? 0 : null,
+                'is_reference_template' => true,
+            ]);
+            $panel->sampleTypes()->sync($sampleTypeIds);
+            foreach ($codes as $position => $antibioticCode) {
+                $panel->antibiotics()->attach($antibiotics[$antibioticCode]->id, ['position' => $position + 1]);
+            }
+        }
+
+        $this->call(IdentificationTestSeeder::class);
     }
 }

@@ -66,8 +66,11 @@ class BloodCultureTemplateSeeder extends Seeder
             Medium::firstOrCreate(['code' => 'AS'], ['name' => 'Agar sangre']),
             Medium::firstOrCreate(['code' => 'CHOC'], ['name' => 'Agar chocolate']),
             Medium::firstOrCreate(['code' => 'MAC'], ['name' => 'Agar MacConkey']),
+            Medium::firstOrCreate(['code' => 'BRU'], ['name' => 'Agar Brucella con sangre']),
         ];
-        $atmospheres = [Atmosphere::Co2, Atmosphere::Co2, Atmosphere::Aerobic];
+        $atmospheres = [Atmosphere::Co2, Atmosphere::Co2, Atmosphere::Aerobic, Atmosphere::Anaerobic];
+        // La placa en anaerobiosis es solo para el frasco anaerobio (revisión de marchas A5).
+        $bottleTypes = [null, null, null, ['ANA']];
 
         $protocols = [
             ['study' => ['HEMO', 'Hemocultivo'], 'type' => ['SAN-PER', 'Sangre periférica']],
@@ -105,6 +108,7 @@ class BloodCultureTemplateSeeder extends Seeder
                 'blood_culture_settings' => self::SETTINGS,
                 'ast_read_min_hours' => 16,
                 'ast_read_due_hours' => 24,
+                'allow_presumptive_ast' => true,
                 'activated_at' => $status === ProtocolVersionStatus::Active ? Date::now() : null,
             ]);
 
@@ -116,6 +120,7 @@ class BloodCultureTemplateSeeder extends Seeder
                     'inoculum' => 'Gota del frasco',
                     'incubation_temperature' => '35 ± 2 °C',
                     'atmosphere' => $atmospheres[$position],
+                    'bottle_types' => $bottleTypes[$position],
                 ]);
             }
         }

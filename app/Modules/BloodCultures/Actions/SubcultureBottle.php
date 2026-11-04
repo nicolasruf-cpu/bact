@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Subcultivo del frasco positivo en los medios del protocolo. Desde acá sigue el circuito
+ * Subcultivo del frasco positivo en los medios del protocolo que corresponden a su tipo de frasco. Desde acá sigue el circuito
  * común del cultivo: lectura, aislamientos, identificación y antibiograma.
  * Idempotente: si el frasco ya tiene cultivo, lo devuelve.
  */
@@ -51,7 +51,11 @@ class SubcultureBottle
                 throw ValidationException::withMessages(['bottle' => 'Solo se subcultiva un frasco positivo.']);
             }
 
-            $media = $study->protocolVersion->media;
+            // Cada medio puede ser solo para ciertos tipos de frasco (p. ej., la placa en anaerobiosis
+            // para el frasco anaerobio, revisión de marchas A5).
+            $media = $study->protocolVersion->media
+                ->filter(fn (ProtocolVersionMedium $m) => $m->bottle_types === null || $m->bottle_types === [] || in_array($bottle->bottle_type, $m->bottle_types, true))
+                ->values();
             $culture = $this->starter->start(
                 $study,
                 $media->map(fn (ProtocolVersionMedium $m) => [
@@ -59,6 +63,8 @@ class SubcultureBottle
                     'inoculum' => $m->inoculum,
                     'incubation_temperature' => $m->incubation_temperature,
                     'atmosphere' => $m->atmosphere,
+                    'read_from_hours' => $m->read_from_hours,
+                    'read_until_hours' => $m->read_until_hours,
                 ])->all(),
                 Date::now(),
                 $user->id,

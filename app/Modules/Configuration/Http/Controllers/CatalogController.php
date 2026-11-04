@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Modules\Configuration\Actions\SaveCatalogEntry;
 use App\Modules\Configuration\Enums\CatalogType;
 use App\Modules\Configuration\Enums\OrganismGroup;
+use App\Modules\Configuration\Models\Antibiotic;
 use App\Modules\Configuration\Queries\CatalogQuery;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +31,11 @@ class CatalogController extends Controller
                 'label' => $type->label(),
                 'singular' => $type->singular(),
                 'has_organism_group' => $type->hasOrganismGroup(),
+                'has_antibiotic_fields' => $type->hasAntibioticFields(),
             ],
+            'antibiotics' => $type->hasAntibioticFields()
+                ? Antibiotic::query()->orderBy('name')->get(['id', 'code', 'name'])->values()
+                : [],
             'types' => $query->types(),
             'entries' => $query->list($type, $search),
             'filters' => ['search' => $search],
@@ -52,6 +57,8 @@ class CatalogController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'is_active' => ['required', 'boolean'],
             'organism_group' => ['nullable', 'string'],
+            'disk_content' => ['nullable', 'string', 'max:20'],
+            'reported_as_antibiotic_id' => ['nullable', 'integer'],
             'lock_version' => ['nullable', 'integer'],
         ], [], ['code' => 'código', 'name' => 'nombre', 'organism_group' => 'grupo']);
 
@@ -66,6 +73,8 @@ class CatalogController extends Controller
                 'name' => (string) $validated['name'],
                 'is_active' => (bool) $validated['is_active'],
                 'organism_group' => $validated['organism_group'] ?? null,
+                'disk_content' => $validated['disk_content'] ?? null,
+                'reported_as_antibiotic_id' => isset($validated['reported_as_antibiotic_id']) ? (int) $validated['reported_as_antibiotic_id'] : null,
             ],
             isset($validated['lock_version']) ? (int) $validated['lock_version'] : null,
         );

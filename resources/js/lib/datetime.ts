@@ -26,3 +26,15 @@ export function formatDateTime(iso: string | null | undefined): string {
 export function formatTime(iso: string | null | undefined): string {
     return iso ? timeFormat.format(new Date(iso)) : '—';
 }
+
+/** Valor para <input type="datetime-local"> en la hora local del navegador ("ahora" por defecto). */
+export function localDateTimeInput(date: Date = new Date()): string {
+    const offset = date.getTimezoneOffset() * 60000;
+
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+/** Valor para <input type="date"> en la fecha local del navegador ("hoy" por defecto). */
+export function localDateInput(date: Date = new Date()): string {
+    return localDateTimeInput(date).slice(0, 10);
+}

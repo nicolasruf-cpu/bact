@@ -22,6 +22,8 @@ type Field = {
     code: string;
     label: string;
     multiple?: boolean;
+    type?: 'options' | 'number' | 'text';
+    unit?: string | null;
     options: { code: string; label: string; organisms?: boolean }[];
 };
 
@@ -180,7 +182,36 @@ function issuePreliminary() {
                                 >(una o más)</span
                             >
                         </legend>
-                        <div class="flex flex-wrap gap-2">
+                        <div
+                            v-if="
+                                field.type === 'number' || field.type === 'text'
+                            "
+                            class="flex items-center gap-2"
+                        >
+                            <input
+                                type="text"
+                                :inputmode="
+                                    field.type === 'number' ? 'decimal' : 'text'
+                                "
+                                class="h-9 w-40 rounded-md border bg-background px-2 text-sm"
+                                :value="
+                                    (form.results[field.code] ?? [])[0] ?? ''
+                                "
+                                :data-test="`value-${field.code}`"
+                                @input="
+                                    form.results[field.code] = [
+                                        ($event.target as HTMLInputElement)
+                                            .value,
+                                    ].filter((v) => v !== '')
+                                "
+                            />
+                            <span
+                                v-if="field.unit"
+                                class="text-sm text-muted-foreground"
+                                >{{ field.unit }}</span
+                            >
+                        </div>
+                        <div v-else class="flex flex-wrap gap-2">
                             <button
                                 v-for="option in field.options"
                                 :key="option.code"

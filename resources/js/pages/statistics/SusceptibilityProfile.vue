@@ -2,8 +2,8 @@
 import { Head, router } from '@inertiajs/vue3';
 import { BarChart3, TriangleAlert } from '@lucide/vue';
 import { reactive } from 'vue';
+import DateInput from '@/components/DateInput.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { susceptibility } from '@/routes/statistics';
 
@@ -80,11 +80,11 @@ function tone(percent: number | null): string {
         <form class="flex flex-wrap items-end gap-3" @submit.prevent="apply">
             <div class="grid gap-1">
                 <Label for="from">Desde</Label>
-                <Input id="from" v-model="filters.from" type="date" />
+                <DateInput id="from" v-model="filters.from" />
             </div>
             <div class="grid gap-1">
                 <Label for="to">Hasta</Label>
-                <Input id="to" v-model="filters.to" type="date" />
+                <DateInput id="to" v-model="filters.to" />
             </div>
             <Button type="submit" variant="outline">Aplicar</Button>
         </form>

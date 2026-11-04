@@ -70,6 +70,17 @@ defineProps<{ content: ReportContent }>();
             <h3 class="font-semibold">Resultado</h3>
             <p class="text-base" data-test="report-result">
                 {{ content.result ?? '—' }}
+                <template v-if="content.result_count">
+                    · {{ content.result_count }}</template
+                >
+            </p>
+            <p
+                v-if="content.rejection?.new_sample_requested_to"
+                data-test="report-new-sample"
+            >
+                Se solicitó una nueva muestra ({{
+                    content.rejection.new_sample_requested_to
+                }}).
             </p>
             <p v-if="content.reading_notes" class="text-muted-foreground">
                 {{ content.reading_notes }}
@@ -155,6 +166,26 @@ defineProps<{ content: ReportContent }>();
             <p v-if="isolate.no_ast_reason" class="text-muted-foreground">
                 Sin antibiograma: {{ isolate.no_ast_reason }}
             </p>
+            <p
+                v-for="test in isolate.tests ?? []"
+                :key="test.name"
+                data-test="report-isolate-test"
+            >
+                <span class="text-muted-foreground">{{ test.name }}:</span>
+                {{ test.result }}
+            </p>
+            <p
+                v-for="(referral, i) in isolate.referrals ?? []"
+                :key="i"
+                data-test="report-referral"
+            >
+                <span class="text-muted-foreground"
+                    >Derivado a {{ referral.destination }} ({{
+                        referral.reason
+                    }}):</span
+                >
+                {{ referral.result ?? 'resultado pendiente' }}
+            </p>
 
             <template v-if="isolate.susceptibility">
                 <p class="text-xs text-muted-foreground">
@@ -177,9 +208,7 @@ defineProps<{ content: ReportContent }>();
                     <thead class="text-left text-xs text-muted-foreground">
                         <tr>
                             <th class="py-1 font-medium">Antibiótico</th>
-                            <th class="py-1 text-right font-medium">
-                                {{ isolate.susceptibility.unit }}
-                            </th>
+                            <th class="py-1 text-right font-medium">Valor</th>
                             <th class="py-1 text-center font-medium">
                                 Interpretación
                             </th>
@@ -191,9 +220,25 @@ defineProps<{ content: ReportContent }>();
                             :key="result.antibiotic"
                             class="border-t"
                         >
-                            <td class="py-1">{{ result.antibiotic }}</td>
+                            <td class="py-1">
+                                {{ result.antibiotic }}
+                                <div
+                                    v-if="result.comment"
+                                    class="text-xs text-muted-foreground"
+                                >
+                                    {{ result.comment }}
+                                </div>
+                            </td>
                             <td class="py-1 text-right tabular-nums">
                                 {{ result.value ?? '—' }}
+                                <span
+                                    v-if="result.value"
+                                    class="text-xs text-muted-foreground"
+                                    >{{
+                                        result.unit ??
+                                        isolate.susceptibility.unit
+                                    }}</span
+                                >
                             </td>
                             <td class="py-1 text-center">
                                 <InterpretationBadge
@@ -203,7 +248,35 @@ defineProps<{ content: ReportContent }>();
                         </tr>
                     </tbody>
                 </table>
+                <p
+                    v-if="isolate.susceptibility.pending"
+                    class="text-xs text-muted-foreground"
+                >
+                    En curso: {{ isolate.susceptibility.pending }}
+                    {{
+                        isolate.susceptibility.pending === 1
+                            ? 'antibiótico'
+                            : 'antibióticos'
+                    }}
+                    más, que se informan cuando se lean.
+                </p>
             </template>
+        </section>
+
+        <section
+            v-if="content.other_isolates?.length"
+            class="grid gap-1"
+            data-test="report-other-isolates"
+        >
+            <h3 class="font-semibold">Otros desarrollos</h3>
+            <p v-for="other in content.other_isolates" :key="other.number">
+                <em v-if="other.organism">{{ other.organism }}</em>
+                <template v-else>{{ other.description }}</template>
+                <template v-if="other.count"> · {{ other.count }}</template>
+                <span class="text-muted-foreground">
+                    · {{ other.significance_label }}</span
+                >
+            </p>
         </section>
 
         <footer class="border-t pt-2 text-xs text-muted-foreground">

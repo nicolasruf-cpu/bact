@@ -106,6 +106,7 @@ class PlateCultureTemplateSeeder extends Seeder
                     'direct_exam_settings' => array_key_exists('direct_exam', $type) ? $type['direct_exam'] : ($definition['direct_exam'] ?? null),
                     'ast_read_min_hours' => 16,
                     'ast_read_due_hours' => 24,
+                    'allow_presumptive_ast' => true,
                     'activated_at' => $status === ProtocolVersionStatus::Active ? Date::now() : null,
                 ]);
 
@@ -120,6 +121,8 @@ class PlateCultureTemplateSeeder extends Seeder
                         'enrichment_subculture_min_hours' => $medium['enrichment']['min_hours'] ?? null,
                         'enrichment_subculture_due_hours' => $medium['enrichment']['due_hours'] ?? null,
                         'enrichment_subculture_media' => $medium['enrichment']['media'] ?? null,
+                        'read_from_hours' => $medium['from'] ?? null,
+                        'read_until_hours' => $medium['until'] ?? null,
                     ]);
                 }
             }
@@ -247,7 +250,8 @@ class PlateCultureTemplateSeeder extends Seeder
                     ['code' => 'MAC', 'atmosphere' => Atmosphere::Aerobic],
                     ['code' => 'SS', 'atmosphere' => Atmosphere::Aerobic],
                     ['code' => 'XLD', 'atmosphere' => Atmosphere::Aerobic],
-                    ['code' => 'CAMPY', 'atmosphere' => Atmosphere::Microaerophilic, 'temperature' => '42 ± 1 °C'],
+                    // Se lee a partir de la segunda lectura (revisión de marchas A3; a validar).
+                    ['code' => 'CAMPY', 'atmosphere' => Atmosphere::Microaerophilic, 'temperature' => '42 ± 1 °C', 'from' => 42],
                     ['code' => 'SEL', 'atmosphere' => Atmosphere::Aerobic, 'enrichment' => [
                         'min_hours' => 18,
                         'due_hours' => 24,
@@ -286,6 +290,12 @@ class PlateCultureTemplateSeeder extends Seeder
                         'direct_exam' => [
                             'label' => 'Examen directo (fresco y Gram)',
                             'fields' => [
+                                ['code' => 'PH', 'label' => 'pH', 'type' => 'number', 'unit' => null, 'options' => []],
+                                ['code' => 'AMI', 'label' => 'Test de aminas (KOH)', 'options' => [
+                                    ['code' => 'NEG', 'label' => 'Negativo'],
+                                    ['code' => 'POS', 'label' => 'Positivo'],
+                                ]],
+                                ['code' => 'NUG', 'label' => 'Score de Nugent', 'type' => 'number', 'unit' => null, 'options' => []],
                                 ['code' => 'LEU', 'label' => 'Leucocitos', 'options' => self::AMOUNT],
                                 ['code' => 'CG', 'label' => 'Células guía (clue cells)', 'options' => self::PRESENCE],
                                 ['code' => 'LEV', 'label' => 'Levaduras / pseudohifas', 'options' => [

@@ -4,6 +4,7 @@ namespace App\Modules\Cultures\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\Configuration\Models\ProtocolVersionMedium;
 use App\Modules\Cultures\Actions\SubcultureEnrichmentBroth;
 use App\Modules\Cultures\Models\Culture;
@@ -60,7 +61,7 @@ class EnrichmentController extends Controller
 
         /** @var User $user */
         $user = $request->user();
-        $subculture->handle($user, $plate);
+        $subculture->handle($user, $plate, EarlyConfirmation::fromRequest($request));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Repique del caldo registrado.']);
 

@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Audit\Models\AuditEvent;
 use App\Modules\Audit\Services\AuditChainVerifier;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\Configuration\Database\Seeders\ReferenceCatalogSeeder;
 use App\Modules\Configuration\Database\Seeders\SyntheticBreakpointSeeder;
 use App\Modules\Configuration\Database\Seeders\UrineCultureTemplateSeeder;
@@ -253,4 +255,55 @@ test('the assistant cannot read cultures', function () {
 
     expect(fn () => app(RecordReading::class)->handle($assistant, $culture, 'NEG', null))
         ->toThrow(AuthorizationException::class);
+});
+
+test('a reading before the protocol time needs confirmation and is audited with the reason', function () {
+    $culture = receiveAndInoculate($this->biochemist);
+    $this->travel(10)->hours();
+
+    expect(fn () => app(RecordReading::class)->handle($this->biochemist, $culture, 'NEG', null))
+        ->toThrow(ValidationException::class, 'Todavía no se cumplió el tiempo de incubación');
+
+    app(RecordReading::class)->handle($this->biochemist, $culture, 'NEG', null, [], new EarlyConfirmation(true, 'La siembra se cargó tarde.'));
+
+    $event = AuditEvent::where('action', 'configuration.incubation_time_not_met')->sole();
+    expect($culture->fresh()->status)->toBe(CultureStatus::ClosedNegative)
+        ->and(Activity::where('type', ActivityType::ReadCulture->value)->sole()->status)->toBe(ActivityStatus::Completed)
+        ->and(openActivity(ActivityType::ValidateReport))->not->toBeNull()
+        ->and($event->reason)->toBe('La siembra se cargó tarde.')
+        ->and($event->after['action'])->toBe('Lectura del cultivo')
+        ->and($event->after['minutes_early'])->toBe(8 * 60)
+        ->and(app(AuditChainVerifier::class)->verify()->valid)->toBeTrue();
+});
+
+test('a reading on time does not ask for confirmation nor leave an early record', function () {
+    $culture = receiveAndInoculate($this->biochemist);
+    $this->travel(18)->hours();
+
+    app(RecordReading::class)->handle($this->biochemist, $culture, 'NEG', null);
+
+    expect(AuditEvent::where('action', 'configuration.incubation_time_not_met')->count())->toBe(0);
+});
+
+test('the susceptibility test can be read before its minimum incubation, with confirmation', function () {
+    $culture = receiveAndInoculate($this->biochemist);
+    $this->travel(18)->hours();
+    app(RecordReading::class)->handle($this->biochemist, $culture, 'POS', null, [new IsolateData('BGN', 'GE5', null, true)]);
+    $isolate = Isolate::sole();
+    app(IdentifyIsolate::class)->handle($this->biochemist, $isolate, Organism::where('code', 'ECOL')->value('id'), IdentificationMethod::Biochemical, IdentificationLevel::Definitive, null, null, true, null);
+    $test = app(SetUpSusceptibilityTest::class)->handle($this->biochemist, $isolate, AstMethod::Disk);
+    $this->travel(2)->hours();
+
+    $inputs = $test->results->map(fn ($r) => new ResultInput($r->antibiotic_id, null, 25.0, null, null, true))->all();
+
+    expect(fn () => app(RecordSusceptibilityResults::class)->handle($this->biochemist, $test, $inputs))
+        ->toThrow(ValidationException::class, 'Todavía no se cumplió el tiempo de incubación');
+
+    app(RecordSusceptibilityResults::class)->handle($this->biochemist, $test, $inputs, new EarlyConfirmation(true));
+
+    $event = AuditEvent::where('action', 'configuration.incubation_time_not_met')->sole();
+    expect($test->fresh()->status->value)->toBe('completed')
+        ->and(openActivity(ActivityType::AstRead))->toBeNull()
+        ->and($event->after['action'])->toBe('Lectura del antibiograma')
+        ->and($event->reason)->toBeNull();
 });

@@ -82,8 +82,10 @@ class ActivityLifecycle
     private function transition(Activity $activity, ActivityStatus $target, array $attributes = []): void
     {
         // Una actividad programada cuya hora ya llegó está lista, aunque el liberador
-        // (activities:release, cada minuto) todavía no la haya marcado.
-        if ($activity->status === ActivityStatus::Scheduled && $activity->available_at->lessThanOrEqualTo(Date::now())) {
+        // (activities:release, cada minuto) todavía no la haya marcado. También se completa
+        // antes de su hora: los tiempos del protocolo advierten pero no bloquean (D-0020).
+        if ($activity->status === ActivityStatus::Scheduled
+            && ($activity->available_at->lessThanOrEqualTo(Date::now()) || $target === ActivityStatus::Completed)) {
             $activity->status = ActivityStatus::Ready;
         }
 

@@ -10,6 +10,7 @@ import {
 import { computed, ref, watch } from 'vue';
 import ProtocolSection from '@/components/domain/ProtocolSection.vue';
 import ProtocolSummary from '@/components/domain/ProtocolSummary.vue';
+import type { AstPanelCoverage } from '@/components/domain/ProtocolSummary.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +57,7 @@ const props = defineProps<{
         retired_at: string | null;
         samples_count: number;
         missing: { section: string; message: string }[];
+        ast_panels: AstPanelCoverage[];
         content: ProtocolContent;
         siblings: {
             id: number;
@@ -226,6 +228,9 @@ const blankMedium = (enrichment = false): ProtocolMedium => ({
     enrichment_subculture_min_hours: null,
     enrichment_subculture_due_hours: null,
     enrichment_subculture_media: [],
+    read_from_hours: null,
+    read_until_hours: null,
+    bottle_types: [],
 });
 
 function addReading() {
@@ -614,6 +619,8 @@ const hintClass = 'text-xs text-muted-foreground';
                         :media="props.media"
                         :atmospheres="props.atmospheres"
                         :outcomes="props.outcomes"
+                        :ast-panels="props.version.ast_panels"
+                        :sample-type="props.version.protocol.sample_type"
                     />
                 </ProtocolSection>
 
@@ -949,6 +956,53 @@ const hintClass = 'text-xs text-muted-foreground';
                                     </select>
                                 </label>
                             </div>
+                            <div
+                                v-if="!medium.is_enrichment"
+                                class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
+                            >
+                                Se lee en las lecturas del cronograma desde las
+                                <input
+                                    v-model.number="medium.read_from_hours"
+                                    type="number"
+                                    min="0"
+                                    :class="numberClass"
+                                    placeholder="—"
+                                    aria-label="Se lee desde (h)"
+                                />
+                                hasta las
+                                <input
+                                    v-model.number="medium.read_until_hours"
+                                    type="number"
+                                    min="0"
+                                    :class="numberClass"
+                                    placeholder="—"
+                                    aria-label="Se lee hasta (h)"
+                                />
+                                h. Vacío: en todas.
+                            </div>
+                            <div
+                                v-if="isBlood && c.blood_culture_settings"
+                                class="flex flex-wrap items-center gap-3 text-sm"
+                            >
+                                <span class="text-muted-foreground"
+                                    >Para los frascos (ninguno tildado =
+                                    todos):</span
+                                >
+                                <label
+                                    v-for="bt in c.blood_culture_settings
+                                        .bottle_types"
+                                    :key="bt.code"
+                                    class="flex items-center gap-1"
+                                >
+                                    <input
+                                        v-model="medium.bottle_types"
+                                        type="checkbox"
+                                        :value="bt.code"
+                                        class="size-4"
+                                    />
+                                    {{ bt.label }}
+                                </label>
+                            </div>
                             <label
                                 v-if="!isBlood"
                                 class="flex items-center gap-2 text-sm"
@@ -1173,7 +1227,36 @@ const hintClass = 'text-xs text-muted-foreground';
                                         placeholder="Qué se observa (p. ej. Leucocitos, Microorganismos)"
                                         aria-label="Nombre del campo"
                                     />
+                                    <select
+                                        v-model="field.type"
+                                        :class="inputClass"
+                                        class="w-40"
+                                        aria-label="Tipo de campo"
+                                    >
+                                        <option :value="undefined">
+                                            Opciones
+                                        </option>
+                                        <option value="options">
+                                            Opciones
+                                        </option>
+                                        <option value="number">Número</option>
+                                        <option value="text">Texto</option>
+                                    </select>
+                                    <Input
+                                        v-if="field.type === 'number'"
+                                        :model-value="field.unit ?? ''"
+                                        @update:model-value="
+                                            field.unit = String($event)
+                                        "
+                                        class="w-24"
+                                        placeholder="Unidad"
+                                        aria-label="Unidad"
+                                    />
                                     <label
+                                        v-if="
+                                            !field.type ||
+                                            field.type === 'options'
+                                        "
                                         class="flex items-center gap-2 text-sm"
                                     >
                                         <input
@@ -1198,9 +1281,20 @@ const hintClass = 'text-xs text-muted-foreground';
                                         ><Trash2 class="size-4"
                                     /></Button>
                                 </div>
-                                <p :class="hintClass" class="pl-4">Opciones:</p>
+                                <p
+                                    v-if="
+                                        !field.type || field.type === 'options'
+                                    "
+                                    :class="hintClass"
+                                    class="pl-4"
+                                >
+                                    Opciones:
+                                </p>
                                 <div
-                                    v-for="(option, j) in field.options"
+                                    v-for="(option, j) in field.type &&
+                                    field.type !== 'options'
+                                        ? []
+                                        : field.options"
                                     :key="j"
                                     class="flex flex-wrap items-center gap-2 pl-4"
                                 >
@@ -1238,7 +1332,11 @@ const hintClass = 'text-xs text-muted-foreground';
                                     /></Button>
                                 </div>
                                 <Button
-                                    v-if="editable"
+                                    v-if="
+                                        editable &&
+                                        (!field.type ||
+                                            field.type === 'options')
+                                    "
                                     type="button"
                                     variant="outline"
                                     size="sm"
@@ -1477,6 +1575,53 @@ const hintClass = 'text-xs text-muted-foreground';
 
                         <div
                             class="grid gap-2 rounded-md bg-muted/40 p-3 text-sm"
+                        >
+                            <h3 class="font-medium">
+                                Textos de las lecturas sin desarrollo
+                            </h3>
+                            <label class="grid gap-1">
+                                Lectura intermedia sin desarrollo (todavía
+                                quedan lecturas)
+                                <Input
+                                    :model-value="
+                                        c.intermediate_no_growth_label ?? ''
+                                    "
+                                    @update:model-value="
+                                        c.intermediate_no_growth_label =
+                                            String($event)
+                                    "
+                                    placeholder="Sin desarrollo hasta el momento"
+                                />
+                            </label>
+                            <label class="grid gap-1">
+                                Sin desarrollo nuevo, después de una lectura con
+                                desarrollo
+                                <Input
+                                    :model-value="c.no_new_growth_label ?? ''"
+                                    @update:model-value="
+                                        c.no_new_growth_label = String($event)
+                                    "
+                                    placeholder="Sin desarrollo nuevo"
+                                />
+                            </label>
+                            <p :class="hintClass">
+                                Así el historial no muestra el negativo final en
+                                una lectura que no lo es. Vacíos, se usa el
+                                texto de ejemplo.
+                            </p>
+                            <label class="flex items-center gap-2">
+                                <input
+                                    v-model="c.report_non_significant"
+                                    type="checkbox"
+                                    class="size-4"
+                                />
+                                El informe incluye los aislamientos no
+                                significativos y los probables contaminantes
+                            </label>
+                        </div>
+
+                        <div
+                            class="grid gap-2 rounded-md bg-muted/40 p-3 text-sm"
                             :class="{ 'opacity-60': !hasReincubate }"
                         >
                             <h3 class="font-medium">Reincubación</h3>
@@ -1589,9 +1734,25 @@ const hintClass = 'text-xs text-muted-foreground';
                             h de montado.
                         </div>
                         <p :class="hintClass">
-                            Los antibióticos de cada panel y los puntos de corte
-                            se configuran aparte.
+                            Un panel puede tener su propia incubación (por
+                            ejemplo, el VITEK): se configura en el panel. Los
+                            antibióticos de cada panel y los puntos de corte se
+                            configuran aparte.
                         </p>
+                        <label class="flex items-start gap-2 text-sm">
+                            <input
+                                v-model="c.allow_presumptive_ast"
+                                type="checkbox"
+                                class="mt-0.5 size-4"
+                            />
+                            <span
+                                >Se puede preparar el antibiograma con una
+                                identificación presuntiva (por ejemplo, tarjetas
+                                VITEK cargadas juntas, o difusión montada con el
+                                Gram y las pruebas rápidas). Se lee recién con
+                                la identificación definitiva.</span
+                            >
+                        </label>
                     </ProtocolSection>
 
                     <!-- Notas -->

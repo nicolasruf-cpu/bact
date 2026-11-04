@@ -7,6 +7,7 @@ use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use App\Modules\Configuration\Models\Organism;
 use App\Modules\Configuration\Models\SampleType;
 use App\Modules\Configuration\Models\Study;
+use App\Modules\Cultures\Enums\CultureStatus;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Identity\Database\Seeders\RolesAndPermissionsSeeder;
@@ -67,7 +68,7 @@ test('urine culture end to end through the screens, up to the susceptibility pro
 
     // Antibiograma: preparación y lectura.
     $this->actingAs($this->biochemist)->get(route('susceptibility.show', $isolate))
-        ->assertInertia(fn (Assert $page) => $page->component('susceptibility/Susceptibility')->where('test', null)->has('panels', 1)->where('breakpointSet.is_synthetic', true));
+        ->assertInertia(fn (Assert $page) => $page->component('susceptibility/Susceptibility')->where('test', null)->has('panels', 2)->where('panels.0.code', 'URO-ENT')->where('breakpointSet.is_synthetic', true));
     $this->actingAs($this->biochemist)->post(route('susceptibility.setup', $isolate), ['method' => 'disk'])->assertSessionHasNoErrors();
 
     $test = SusceptibilityTest::with('results')->sole();
@@ -166,4 +167,20 @@ test('workbenches require their permission', function () {
     $this->actingAs($this->assistant)->get(route('workbenches.show', 'validation'))->assertForbidden();
     $this->actingAs($this->assistant)->get(route('statistics.susceptibility'))->assertForbidden();
     $this->actingAs($this->biochemist)->get(route('workbenches.show', 'reading'))->assertOk();
+});
+
+test('the reading screen sends the early confirmation and its reason', function () {
+    receiveUrineOrder($this->assistant, ['M-200']);
+    $this->actingAs($this->assistant)->post(route('inoculations.store', SampleStudy::sole()))->assertSessionHasNoErrors();
+    $culture = Culture::sole();
+
+    $this->actingAs($this->biochemist)->post(route('readings.store', $culture), ['option_code' => 'NEG'])
+        ->assertSessionHasErrors('early_confirmed');
+    $this->actingAs($this->biochemist)->post(route('readings.store', $culture), [
+        'option_code' => 'NEG',
+        'early_confirmed' => true,
+        'early_reason' => 'Se leyó junto con la tanda de la mañana.',
+    ])->assertSessionHasNoErrors();
+
+    expect($culture->fresh()->status)->toBe(CultureStatus::ClosedNegative);
 });

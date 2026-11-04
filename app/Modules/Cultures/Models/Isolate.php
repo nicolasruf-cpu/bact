@@ -3,13 +3,15 @@
 namespace App\Modules\Cultures\Models;
 
 use App\Modules\Configuration\Models\Organism;
+use App\Modules\Cultures\Enums\IsolateSignificance;
 use App\Modules\Cultures\Enums\IsolateStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Aislamiento de un cultivo. La significancia la marca el bacteriólogo.
+ * Aislamiento de un cultivo. La significancia la marca el bacteriólogo y la puede cambiar
+ * con motivo (revisión de marchas A4); `is_significant` acompaña a `significance`.
  *
  * @property int $id
  * @property string $ulid
@@ -19,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $count_category
  * @property int|null $plate_id
  * @property bool $is_significant
+ * @property IsolateSignificance $significance
+ * @property string|null $significance_reason
  * @property IsolateStatus $status
  * @property int|null $organism_id
  * @property string|null $no_ast_reason
@@ -50,6 +54,7 @@ class Isolate extends Model
     {
         return [
             'is_significant' => 'boolean',
+            'significance' => IsolateSignificance::class,
             'status' => IsolateStatus::class,
         ];
     }

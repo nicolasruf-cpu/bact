@@ -4,6 +4,8 @@ import { ClipboardList, Plus, ScanLine, Trash2, UserCheck } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import PriorityBadge from '@/components/domain/PriorityBadge.vue';
 import ReferenceTemplateNotice from '@/components/domain/ReferenceTemplateNotice.vue';
+import DateInput from '@/components/DateInput.vue';
+import DateTimeInput from '@/components/DateTimeInput.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -409,10 +411,9 @@ function submit() {
                                 <Label for="birth_date"
                                     >Fecha de nacimiento</Label
                                 >
-                                <Input
+                                <DateInput
                                     id="birth_date"
                                     v-model="form.birth_date"
-                                    type="date"
                                     :readonly="patientLocked"
                                 />
                                 <InputError :message="form.errors.birth_date" />
@@ -603,10 +604,9 @@ function submit() {
                                     class="text-xs"
                                     >Fecha y hora de toma</Label
                                 >
-                                <Input
+                                <DateTimeInput
                                     :id="`collected_at_${index}`"
                                     v-model="row.collected_at"
-                                    type="datetime-local"
                                 />
                                 <InputError
                                     :message="

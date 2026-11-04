@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Modules\Audit\Models\AuditEvent;
 use App\Modules\BloodCultures\Enums\BottleStatus;
 use App\Modules\BloodCultures\Enums\PositivitySource;
 use App\Modules\BloodCultures\Models\BlindSubculture;
@@ -221,10 +222,10 @@ test('automated negative bottle closes only after the protocol incubation days',
     receiveBloodOrder($this->assistant, ['H-1']);
     $bottle = loadBottleFor($this->assistant, 'H-1');
 
-    // El Auxiliar no informa negativos; el Bioquímico, recién a los 5 días.
+    // El Auxiliar no informa negativos; el Bioquímico, antes de los 5 días, solo confirmando (D-0020).
     $this->actingAs($this->assistant)->post(route('bottles.negative', $bottle))->assertForbidden();
     $this->travel(4)->days();
-    $this->actingAs($this->biochemist)->post(route('bottles.negative', $bottle))->assertSessionHasErrors('bottle');
+    $this->actingAs($this->biochemist)->post(route('bottles.negative', $bottle))->assertSessionHasErrors('early_confirmed');
 
     $this->travel(1)->days();
     $this->actingAs($this->biochemist)->get(route('workbenches.blood-cultures'))
@@ -245,17 +246,17 @@ test('manual bottle: daily blind subcultures until the last one is read without 
     $bottle = loadBottleFor($this->assistant, 'H-1', 'manual');
     expect($bottle->incubationDays())->toBe(7);
 
-    // El primer repique corresponde a las 24 h.
-    $this->actingAs($this->assistant)->post(route('bottles.blind-subcultures.store', $bottle))->assertSessionHasErrors('bottle');
+    // El primer repique corresponde a las 24 h (antes, solo confirmando).
+    $this->actingAs($this->assistant)->post(route('bottles.blind-subcultures.store', $bottle))->assertSessionHasErrors('early_confirmed');
 
     for ($day = 1; $day <= 7; $day++) {
         $this->travel(24)->hours();
         $this->actingAs($this->assistant)->post(route('bottles.blind-subcultures.store', $bottle))->assertSessionHasNoErrors();
         $subculture = BlindSubculture::where('number', $day)->sole();
 
-        // El Auxiliar no lee; la lectura se habilita con la incubación mínima de la placa.
+        // El Auxiliar no lee; antes de la incubación mínima de la placa, solo confirmando.
         $this->actingAs($this->assistant)->post(route('blind-subcultures.read', $subculture), ['result' => 'no_growth'])->assertForbidden();
-        $this->actingAs($this->biochemist)->post(route('blind-subcultures.read', $subculture), ['result' => 'no_growth'])->assertSessionHasErrors('result');
+        $this->actingAs($this->biochemist)->post(route('blind-subcultures.read', $subculture), ['result' => 'no_growth'])->assertSessionHasErrors('early_confirmed');
 
         $this->travel(18)->hours();
         $this->actingAs($this->biochemist)->post(route('blind-subcultures.read', $subculture), ['result' => 'no_growth'])->assertSessionHasNoErrors();
@@ -336,4 +337,24 @@ test('blood culture screens of another site are not accessible', function () {
     $this->actingAs($other)->get(route('blood-cultures.show', bloodStudy('H-1')))->assertForbidden();
     $this->actingAs($other)->post(route('bottles.positive', $bottle))->assertForbidden();
     $this->actingAs(userWithRole($this->site, Role::Viewer))->get(route('workbenches.blood-cultures'))->assertForbidden();
+});
+
+test('bottles: negative, blind subculture and its reading before time, with confirmation', function () {
+    receiveBloodOrder($this->assistant, ['H-1', 'H-2']);
+    $automated = loadBottleFor($this->assistant, 'H-1');
+    $manual = loadBottleFor($this->assistant, 'H-2', 'manual');
+    $early = ['early_confirmed' => true, 'early_reason' => 'Carga del frasco registrada tarde.'];
+
+    $this->travel(2)->hours();
+    $this->actingAs($this->biochemist)->post(route('bottles.negative', $automated), $early)->assertSessionHasNoErrors();
+    expect($automated->refresh()->status)->toBe(BottleStatus::Negative)
+        ->and(Activity::where('subject_id', $automated->id)->where('type', ActivityType::ConfirmNegativeBottle->value)->sole()->status)->toBe(ActivityStatus::Completed);
+
+    $this->actingAs($this->assistant)->post(route('bottles.blind-subcultures.store', $manual), $early)->assertSessionHasNoErrors();
+    $subculture = BlindSubculture::sole();
+    $this->actingAs($this->biochemist)->post(route('blind-subcultures.read', $subculture), ['result' => 'no_growth', ...$early])->assertSessionHasNoErrors();
+
+    expect($subculture->fresh()->result?->value)->toBe('no_growth')
+        ->and(AuditEvent::where('action', 'configuration.incubation_time_not_met')->orderBy('id')->get()->map(fn (AuditEvent $e) => $e->after['action'])->all())
+        ->toBe(['Frasco negativo antes de los 5 días', 'Repique n.º 1 del frasco', 'Lectura del repique n.º 1']);
 });

@@ -16,13 +16,16 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $isolate_id
  * @property IdentificationMethod $method
- * @property int $organism_id
+ * @property int|null $organism_id
+ * @property int|null $instrument_run_id
  * @property IdentificationLevel $level
  * @property string|null $confidence
  * @property string|null $tests
+ * @property string|null $notes
  * @property int $identified_by
  * @property Carbon $identified_at
- * @property-read Organism $organism
+ * @property-read Organism|null $organism
+ * @property-read InstrumentRun|null $instrumentRun
  * @property-read Isolate $isolate
  */
 class Identification extends Model
@@ -44,6 +47,14 @@ class Identification extends Model
     public function organism(): BelongsTo
     {
         return $this->belongsTo(Organism::class);
+    }
+
+    /**
+     * @return BelongsTo<InstrumentRun, $this>
+     */
+    public function instrumentRun(): BelongsTo
+    {
+        return $this->belongsTo(InstrumentRun::class);
     }
 
     /**

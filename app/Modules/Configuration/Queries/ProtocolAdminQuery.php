@@ -4,14 +4,17 @@ namespace App\Modules\Configuration\Queries;
 
 use App\Models\User;
 use App\Modules\Configuration\Enums\Atmosphere;
+use App\Modules\Configuration\Enums\OrganismGroup;
 use App\Modules\Configuration\Enums\ProcessingKind;
 use App\Modules\Configuration\Enums\ProtocolVersionStatus;
 use App\Modules\Configuration\Enums\ReadingOutcome;
+use App\Modules\Configuration\Models\AstPanel;
 use App\Modules\Configuration\Models\Medium;
 use App\Modules\Configuration\Models\Protocol;
 use App\Modules\Configuration\Models\ProtocolVersion;
 use App\Modules\Configuration\Models\SampleType;
 use App\Modules\Configuration\Models\Study;
+use App\Modules\Configuration\Services\AstPanelResolver;
 use App\Modules\Configuration\Services\ProtocolVersionRules;
 use App\Modules\Identity\Enums\Permission;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +24,10 @@ use Illuminate\Support\Facades\DB;
  */
 class ProtocolAdminQuery
 {
-    public function __construct(private readonly ProtocolVersionRules $rules) {}
+    public function __construct(
+        private readonly ProtocolVersionRules $rules,
+        private readonly AstPanelResolver $panels,
+    ) {}
 
     /**
      * @return array<int, array<string, mixed>>
@@ -80,6 +86,7 @@ class ProtocolAdminQuery
             'retired_at' => $version->retired_at?->toIso8601String(),
             'samples_count' => DB::table('sample_studies')->where('protocol_version_id', $version->id)->count(),
             'missing' => $version->status === ProtocolVersionStatus::Draft ? $this->rules->missingItems($version) : [],
+            'ast_panels' => $this->astPanels($version->protocol->sample_type_id),
             'content' => [
                 'notes' => $version->notes,
                 'source' => $version->source,
@@ -91,6 +98,10 @@ class ProtocolAdminQuery
                 'count_categories' => $version->count_categories ?? [],
                 'ast_read_min_hours' => $version->ast_read_min_hours,
                 'ast_read_due_hours' => $version->ast_read_due_hours,
+                'allow_presumptive_ast' => $version->allow_presumptive_ast,
+                'report_non_significant' => $version->report_non_significant,
+                'no_new_growth_label' => $version->no_new_growth_label,
+                'intermediate_no_growth_label' => $version->intermediate_no_growth_label,
                 'media' => $version->media->map(fn ($m) => [
                     'medium_id' => $m->medium_id,
                     'inoculum' => $m->inoculum,
@@ -100,6 +111,9 @@ class ProtocolAdminQuery
                     'enrichment_subculture_min_hours' => $m->enrichment_subculture_min_hours,
                     'enrichment_subculture_due_hours' => $m->enrichment_subculture_due_hours,
                     'enrichment_subculture_media' => $m->enrichment_subculture_media ?? [],
+                    'read_from_hours' => $m->read_from_hours,
+                    'read_until_hours' => $m->read_until_hours,
+                    'bottle_types' => $m->bottle_types ?? [],
                 ])->values()->all(),
                 'direct_exam_settings' => $version->direct_exam_settings,
                 'blood_culture_settings' => $version->blood_culture_settings,
@@ -181,5 +195,22 @@ class ProtocolAdminQuery
             ReadingOutcome::NotSignificant => 'Cierra el cultivo como no significativo, sin cargar aislamientos.',
             ReadingOutcome::Reincubate => 'Vuelve a programar la lectura según las horas de reincubación, hasta el máximo de veces indicado.',
         };
+    }
+
+    /**
+     * Qué panel de antibiograma le toca a cada grupo en la muestra del protocolo (D-0021).
+     *
+     * @return array<int, array{group: string, label: string, panels: array<int, array{name: string, is_vitek: bool, all_samples: bool}>}>
+     */
+    private function astPanels(int $sampleTypeId): array
+    {
+        return array_map(fn (OrganismGroup $group) => [
+            'group' => $group->value,
+            'label' => $group->label(),
+            'panels' => $this->panels->candidates($group, $sampleTypeId)
+                ->map(fn (AstPanel $p) => ['name' => $p->name, 'is_vitek' => $p->is_vitek, 'all_samples' => $p->sample_types_count === 0])
+                ->values()
+                ->all(),
+        ], OrganismGroup::cases());
     }
 }

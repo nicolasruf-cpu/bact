@@ -21,7 +21,8 @@ Las respondidas se marcan **[RESPONDIDA aaaa-mm-dd]** y conservan la respuesta; 
   - ¿Se obliga a cambiar la contraseña en el primer ingreso? ¿Se exige segundo factor a algún perfil (por ejemplo, Director técnico)?
 - **Q-A10** El grupo de un microorganismo (define panel y puntos de corte) se fija en el alta y no se cambia, para no alterar interpretaciones. ¿Está bien, o el Director técnico tiene que poder cambiarlo con una versión nueva?
 - **Q-A11** ¿El responsable puede aprobar un borrador que preparó él mismo, o hace falta que lo prepare otra persona (doble control)? Hoy puede.
-- **Q-A12** Faltan los editores de paneles de antibiograma, reglas expertas, reglas de críticos y plantillas de informe (Fase 4d). ¿Cuál necesitan primero?
+- **Q-A12 [PARCIAL 2026-11-03]** Faltan los editores de reglas expertas, reglas de críticos y plantillas de informe (Fase 4d). ¿Cuál necesitan primero? El de paneles de antibiograma ya está (D-0021).
+  - ¿Los paneles necesitan versiones con aprobación, como los protocolos? Hoy los modifica directamente el Director técnico responsable, con auditoría.
 
 ## B. Integraciones
 - **Q-B1 ★ [PARCIAL 2026-10-31]** LIS: **LABWIN**. Hasta tener la interfaz: recepción manual escaneando la etiqueta del LIS.
@@ -37,6 +38,9 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-C1 ★ [PLANTILLA]** Protocolos de siembra por estudio y tipo de muestra: medios, condiciones de incubación, tiempos de lectura y reincubación.
 - **Q-C2 ★ [PLANTILLA]** Criterios de lectura de urocultivo: opciones, recuentos y umbrales de significancia por tipo de muestra.
 - **Q-C3 ★ [PARCIAL 2026-10-31] [PLANTILLA]** Antibiogramas: **algunos manuales (difusión) y otros por VITEK**, con **panel según el germen identificado**. Falta: qué grupos van por cada método y la composición de cada panel (se parte de la plantilla).
+  - **Implementado (2026-11-03, D-0021):** el laboratorio define los paneles en Administración, por uno o más grupos de germen y una o más muestras; el panel VITEK es un panel más, con la marca. Falta cargar los paneles reales (los 4 de referencia son de orina y valen para todas las muestras).
+  - Falta definir: si la sede sin VITEK debe ver los paneles VITEK (hoy los ven todas, ADR-0008).
+  - **Respondida (2026-11-03):** en casos especiales se prueban antibióticos por fuera del panel VITEK. Se agregan al preparar o al leer el panel (por ejemplo, al ver el VITEK), con su propia lectura; mientras tanto, preliminar con lo leído (D-0022).
 - **Q-C4 ★ [PARCIAL 2026-10-31]** Puntos de corte: **módulo de carga** (carga asistida + importación CSV) → el bacteriólogo **revisa, ajusta y confirma**. Coincide con el flujo `draft → approved → active` de MICROBIOLOGY_RULES §3.
   - Falta: ¿qué edición del M100 usan? ¿Confirma cualquier Bioquímico o solo el Director técnico? ¿Se aplican recomendaciones locales (SADEBAC / INEI-ANLIS)? **Los puntos de corte no tienen plantilla** (derechos de autor de CLSI): los datos salen de la edición licenciada del laboratorio.
   - **Implementado (2026-11-01, D-0019):** sets en borrador → aprobado → vigente, con importación CSV (plantilla descargable sin valores), carga en la tabla y copia de un set anterior. Prepara el Bioquímico o el Director técnico; aprueba y pone vigente el responsable (Q-A8).
@@ -48,7 +52,7 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 - **Q-C7 [PARCIAL 2026-11-01]** Hemocultivo positivo: **informe preliminar con el Gram** (decisión del laboratorio). Lo emite quien tiene permiso de validar. El preliminar congela lo registrado hasta ese momento, y el definitivo lo reemplaza.
   - **Con el examen directo también se puede emitir un preliminar** (decisión del laboratorio, 2026-11-01), una vez sembrada la muestra. Si el cultivo sigue abierto sin desarrollo, el preliminar dice "Cultivo en curso".
   - Falta: ¿hace falta un segundo preliminar con la identificación, antes del antibiograma? (Hoy se puede emitir otro.)
-- **Q-C8** Criterios de rechazo de muestras.
+- **Q-C8 [PARCIAL 2026-11-04, D-0027]** Criterios de rechazo de muestras. Ya se puede declarar una muestra no apta con motivo y pedir una nueva; los criterios los aplica el bacteriólogo. Falta decidir si el sistema sugiere el rechazo por el directo (p. ej., células epiteliales en esputo).
 
 ## D. Roles y validación
 - **Q-S1 ★ [RESPONDIDA 2026-10-31]** El Auxiliar **recibe, siembra y hace pruebas bioquímicas; no hace lecturas de cultivo** (ni siquiera "sin desarrollo").
@@ -65,7 +69,7 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
 ## F. Surgidas en la Fase 1 (diseño funcional)
 - **Q-F1 [RESPONDIDA 2026-10-31]** Confirmación en bloque de lecturas "sin desarrollo": **configurable por protocolo, desactivada por defecto**.
 - **Q-F2** ¿Se registran lotes de medios de cultivo, discos o tarjetas (trazabilidad)? ¿Se gestiona el control de calidad con cepas ATCC dentro del sistema?
-- **Q-F3** VITEK: ¿qué datos de carga se registran (turbidez de la suspensión, operador, casete/posición)?
+- **Q-F3 [IMPLEMENTADA 2026-11-04, D-0027]** VITEK: ¿qué datos de carga se registran (turbidez de la suspensión, operador, casete/posición)? Se registran tarjetas, números, casete, posición, suspensión, hora y operador. Falta la integración con el equipo (Q-B3).
 - **Q-F4 [RESPONDIDA 2026-10-31]** Validación de informes negativos en lote: **no**; cada informe se valida individualmente.
 - **Q-F6 [RESPONDIDA 2026-11-02]** El paciente se identifica por número de documento (D-0013 aceptada).
 - **Q-F8 [RESPONDIDA 2026-11-02]** Una orden (paciente, médico) puede tener varias muestras (p. ej., urocultivo + hemocultivo ×2 + retrocultivo). Cada muestra tiene su propio código; suelen llegar juntas, pero pueden llegar en distintos momentos. Implementado: recepción por orden con número de LABWIN; las muestras posteriores se suman a la orden existente.
@@ -85,7 +89,7 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
   - ¿Cómo se carga un resultado que llega solo con la interpretación (S/I/R), por ejemplo de un laboratorio de referencia?
   - ¿Se puede dejar sin ensayar un antibiótico del panel?
   - Surgió al cargar casos publicados (`docs/demo/CASOS_PUBLICADOS.md`).
-- **Q-C17** Pruebas complementarias: ¿dónde se registran y si salen en el informe?
+- **Q-C17 [IMPLEMENTADA 2026-11-04, D-0023]** Pruebas complementarias: ¿dónde se registran y si salen en el informe? Se registran en el aislamiento (catálogo de pruebas); cada prueba dice si se informa.
   - Serotipo o serogrupo (*S. pneumoniae*, *Salmonella*, *N. meningitidis*).
   - Mecanismos de resistencia (BLEE, carbapenemasas, β-lactamasa).
   - PCR y antígenos.
@@ -95,6 +99,15 @@ Decisión del usuario (2026-10-31): **usar contenido genérico aceptado por la i
   - ¿Las placas primarias se leen a las 24 h igual, y las del repique en la lectura siguiente?
   - Es un cambio del proceso: queda a confirmar.
 - **Q-C19** ¿Se puede marcar un examen directo como no realizado (con motivo)? Hoy la actividad queda abierta.
+- **Q-C20 [IMPLEMENTADA CONFIGURABLE 2026-11-04, D-0024]** (revisión de marchas, A1) ¿El antibiograma se puede preparar con una identificación presuntiva o de grupo? Por ejemplo, tarjetas VITEK de identificación y antibiograma cargadas juntas, o difusión montada con «BGN fermentador». Hoy exige la identificación definitiva.
+- **Q-C21 [IMPLEMENTADA CONFIGURABLE 2026-11-04, D-0024: incubación por panel]** (A2) ¿La incubación mínima del antibiograma depende del método o del panel (VITEK, difusión, CIM por tira)? Hoy es una por protocolo.
+- **Q-C22 [IMPLEMENTADA 2026-11-04, D-0025]** (A4, C3) ¿Se puede cambiar la significancia de un aislamiento después de identificarlo, con motivo? ¿Hace falta «probable contaminante» (por ejemplo, estafilococo coagulasa negativo en 1 de 2 hemocultivos) y cómo se informa?
+- **Q-C23 [IMPLEMENTADA CONFIGURABLE 2026-11-04, D-0025: el protocolo decide si se informan]** (C1) ¿Se informan los aislamientos no significativos, o el recuento de un desarrollo no significativo (por ejemplo, «< 10³ UFC/mL»)? Hoy no salen en el informe.
+- **Q-C24 [IMPLEMENTADA 2026-11-04, D-0029: un frasco por muestra; placa en anaerobiosis para el frasco anaerobio en la plantilla]** (A5) Hemocultivo: ¿el set aerobio + anaerobio es una muestra o dos? ¿El frasco anaerobio se subcultiva en anaerobiosis? Hoy hay un frasco por estudio, y cargar un segundo no da error pero no lo registra.
+- **Q-C25 [IMPLEMENTADA CONFIGURABLE 2026-11-04, D-0026]** (A6) ¿Qué texto queda en el historial para «sin desarrollo nuevo» después de un desarrollo, y para una lectura intermedia sin desarrollo? Hoy se usa el texto del negativo final.
+- **Q-C26 [IMPLEMENTADA 2026-11-04, D-0028: en el antibiótico]** (A7) ¿Hace falta la carga del disco (por ejemplo, gentamicina 10 y 120 µg) y las pruebas subrogantes (cefoxitina → oxacilina) como datos del antibiótico o del panel?
+- **Q-C27** (2026-11-04) Valores de referencia de las plantillas nuevas, a validar por el Director técnico: incubación de cada prueba del catálogo (bioquímicas 18 h, coagulasa en tubo 4 h, tubo germinativo 3 h); Campylobacter leído desde la segunda lectura; paneles para muestras no urinarias, coprocultivo, Staphylococcus y VITEK; placa Brucella en anaerobiosis para el frasco anaerobio; pH, aminas y Nugent en el fresco vaginal; carga de los discos agregados. Son plantillas de referencia, no reglas del sistema.
+- **Q-C28** (2026-11-04) ¿El sistema debe sugerir el rechazo de un esputo por el directo, o alcanza con que el bacteriólogo lo declare no apto?
 - **Q-S5** Hemocultivo: en la plantilla, el Auxiliar carga frascos y registra la alarma de positivo del equipo, pero no informa negativos ni lee repiques (siguiendo Q-S1). El Gram lo hace el Bioquímico. ¿Es así?
 - **Q-F9** Tandas de lectura: hoy la lectura, la identificación y el antibiograma se hacen ítem por ítem desde su mesada; ¿hace falta tanda también para la lectura (como en la siembra)?
-- **Q-F5** ¿Se derivan aislamientos a laboratorios de referencia (p. ej., INEI-ANLIS Malbrán)? ¿Hay que registrar derivaciones y sus resultados?
+- **Q-F5 [IMPLEMENTADA 2026-11-04, D-0027]** ¿Se derivan aislamientos a laboratorios de referencia (p. ej., INEI-ANLIS Malbrán)? ¿Hay que registrar derivaciones y sus resultados?

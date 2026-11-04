@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { ShieldCheck } from '@lucide/vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Route, ShieldCheck } from '@lucide/vue';
 import ReportBody from '@/components/domain/ReportBody.vue';
 import SampleHeaderCard from '@/components/domain/SampleHeaderCard.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { show as marchRoute } from '@/routes/marches';
 import { store as storeValidation } from '@/routes/validations';
 import type { ReportContent, SampleHeader } from '@/types/clinical';
 
@@ -39,11 +40,19 @@ function validate() {
         <SampleHeaderCard :sample="props.sample" />
 
         <section class="rounded-lg border p-6">
-            <p
-                class="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase"
-            >
-                Vista previa del informe
-            </p>
+            <div class="mb-4 flex items-center justify-between gap-2">
+                <p
+                    class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    Vista previa del informe
+                </p>
+                <Link
+                    :href="marchRoute(props.sample.sample_study_id).url"
+                    class="flex items-center gap-1 text-sm underline"
+                    data-test="march-link"
+                    ><Route class="size-4" /> Cómo se llegó (marcha)</Link
+                >
+            </div>
             <ReportBody :content="props.preview" />
         </section>
 

@@ -10,7 +10,11 @@ use App\Modules\Cultures\Enums\PlateStatus;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Plate;
 use App\Modules\Cultures\Models\Reading;
+use App\Modules\Identification\Models\InstrumentRun;
+use App\Modules\Identification\Models\IsolateSubculture;
+use App\Modules\Identification\Models\IsolateTest;
 use App\Modules\Susceptibility\Enums\SusceptibilityTestStatus;
+use App\Modules\Susceptibility\Models\SusceptibilityResult;
 use App\Modules\Susceptibility\Models\SusceptibilityTest;
 use App\Modules\Workflow\Enums\ActivityStatus;
 use App\Modules\Workflow\Models\Activity;
@@ -58,6 +62,15 @@ class AdvanceDemoClock extends Command
                 ->each(fn (BlindSubculture $s) => $shift($s, 'subcultured_at'));
             SusceptibilityTest::query()->where('status', SusceptibilityTestStatus::SetUp->value)
                 ->each(fn (SusceptibilityTest $t) => $shift($t, 'set_up_at'));
+            SusceptibilityResult::query()->whereNull('read_at')
+                ->each(fn (SusceptibilityResult $r) => $shift($r, 'set_up_at'));
+            // Pruebas sembradas, repiques de aislamientos y cargas del equipo sin resultado.
+            IsolateTest::query()->whereNull('read_at')
+                ->each(fn (IsolateTest $t) => $shift($t, 'set_up_at', 'readable_at'));
+            IsolateSubculture::query()->whereNull('read_at')
+                ->each(fn (IsolateSubculture $s) => $shift($s, 'subcultured_at'));
+            InstrumentRun::query()->where(fn ($q) => $q->whereNull('id_result_at')->orWhereNull('ast_result_at'))
+                ->each(fn (InstrumentRun $r) => $shift($r, 'loaded_at'));
 
             Activity::query()->whereIn('status', [ActivityStatus::Scheduled->value, ActivityStatus::Ready->value, ActivityStatus::InProgress->value])
                 ->each(function (Activity $activity) use ($shift) {

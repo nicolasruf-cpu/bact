@@ -21,6 +21,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $enrichment_subculture_min_hours
  * @property int|null $enrichment_subculture_due_hours
  * @property list<array{medium_code: string, incubation_temperature: string, atmosphere: string}>|null $enrichment_subculture_media
+ * @property int|null $read_from_hours lecturas del cronograma desde esta hora (null = desde la primera)
+ * @property int|null $read_until_hours lecturas del cronograma hasta esta hora (null = hasta la última)
+ * @property list<string>|null $bottle_types en hemocultivo, solo para estos tipos de frasco (null = todos)
  * @property-read Medium $medium
  */
 class ProtocolVersionMedium extends Model
@@ -35,6 +38,9 @@ class ProtocolVersionMedium extends Model
             'atmosphere' => Atmosphere::class,
             'is_enrichment' => 'boolean',
             'enrichment_subculture_media' => 'array',
+            'read_from_hours' => 'integer',
+            'read_until_hours' => 'integer',
+            'bottle_types' => 'array',
         ];
     }
 

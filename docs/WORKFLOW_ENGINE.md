@@ -12,7 +12,7 @@ Una tarea concreta, atómica y asignable sobre un sujeto (muestra, placa, aislam
 | `sample_id` | Desnormalizado: permite buscar y agrupar rápido por muestra |
 | `status` | ver §2 |
 | `priority` | `routine`, `urgent`, `stat` (calculada: solicitud + reglas + escalamiento) |
-| `available_at` | Desde cuándo se puede hacer (p. ej., fin de la incubación mínima) |
+| `available_at` | Desde cuándo corresponde hacerla (p. ej., fin de la incubación mínima). No bloquea: antes de esa hora se puede registrar igual, confirmando y con motivo opcional, y queda auditado (D-0020) |
 | `due_at` | Límite; si se pasa, la actividad está **demorada** |
 | `caused_by_activity_id` | Trazabilidad de qué actividad la originó |
 | `attempt` | Número de intento (repeticiones, reincubaciones) |
@@ -47,10 +47,18 @@ No se construye un motor BPMN genérico (ADR-0004). Se usan **políticas explíc
 | `ReadingRecorded(reincubate)` | `REINCUBATE_READ` con nuevo `available_at` |
 | `ReadingRecorded(growth)` + aislamientos creados | Por aislamiento: actividades de identificación según protocolo (Gram/bioquímicas/VITEK) |
 | `IsolateIdentified(definitive)` | Según protocolo + organismo + significancia → `AST_SETUP` o `VITEK_AST` |
-| `AstSetUp` | `AST_READ` con `available_at` según el método |
+| `AstSetUp` | `AST_READ` con `available_at` según la incubación del panel o, si no tiene, la del protocolo (D-0024) |
 | `AstRead` | Interpretación automática → si todo terminó → `VALIDATE_REPORT` |
 | `CriticalRuleMatched` | `CriticalAlert` + `COMMUNICATE_CRITICAL` (prioridad máxima) |
 | Positivo de hemocultivo (manual o integración) | `GRAM_STAIN` urgente + evaluación de regla crítica |
+| `IsolateTestsSetUp` (pruebas sembradas, D-0023) | `READ_IDENTIFICATION_TESTS` sobre el aislamiento, al cumplirse la incubación de la primera que vence; al leer, otra para las que falten |
+| `InstrumentLoaded` (VITEK, D-0027) | `INSTRUMENT_RESULT` sobre la carga; se completa cuando la tarjeta de identificación y la de antibiograma tienen resultado |
+| `IsolateSubcultured` (B4) | `READ_ISOLATE_SUBCULTURE` a la incubación de la primera lectura del protocolo |
+| `IsolateReferred` (B9) | `REFERRAL_RESULT` hasta que se registra lo que informó el laboratorio de referencia |
+| `IsolateSignificanceChanged` (D-0025) | Cancela lo pendiente que ya no corresponde; si vuelve a trabajarse, `IDENTIFY` o `AST_SETUP` |
+| `IsolateIdentified` con antibiograma presuntivo (D-0024) | No crea `AST_SETUP`; si la definitiva no requiere antibiograma, cancela su `AST_READ` |
+| `SusceptibilityTestCancelled` (D-0024) | Cancela `AST_READ`; si el aislamiento sigue esperando antibiograma, `AST_SETUP` |
+| `SampleStudyRejected` (B8) | Cancela todo lo pendiente del estudio (siembra, lecturas, aislamientos, antibiogramas, frasco); el cierre crea `VALIDATE_REPORT` |
 
 Reglas del motor:
 - Las políticas se ejecutan **de forma síncrona en la misma transacción** que el cambio clínico.

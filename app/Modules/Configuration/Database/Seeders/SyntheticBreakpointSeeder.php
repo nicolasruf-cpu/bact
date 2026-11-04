@@ -33,12 +33,14 @@ class SyntheticBreakpointSeeder extends Seeder
         }
 
         foreach (AstPanel::with('antibiotics')->get() as $panel) {
-            foreach ($panel->antibiotics as $antibiotic) {
-                foreach ([[AstMethod::Disk, 20, 14], [AstMethod::Mic, 1, 4]] as [$method, $s, $r]) {
-                    $set->breakpoints()->firstOrCreate(
-                        ['organism_group' => $panel->organism_group, 'antibiotic_id' => $antibiotic->id, 'method' => $method],
-                        ['susceptible_value' => $s, 'resistant_value' => $r],
-                    );
+            foreach ($panel->organism_groups as $group) {
+                foreach ($panel->antibiotics as $antibiotic) {
+                    foreach ([[AstMethod::Disk, 20, 14], [AstMethod::Mic, 1, 4]] as [$method, $s, $r]) {
+                        $set->breakpoints()->firstOrCreate(
+                            ['organism_group' => $group, 'antibiotic_id' => $antibiotic->id, 'method' => $method],
+                            ['susceptible_value' => $s, 'resistant_value' => $r],
+                        );
+                    }
                 }
             }
         }

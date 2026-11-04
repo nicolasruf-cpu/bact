@@ -7,6 +7,7 @@ use App\Modules\Audit\Services\Auditor;
 use App\Modules\Configuration\Enums\CatalogType;
 use App\Modules\Configuration\Enums\ConfigurationAuditAction;
 use App\Modules\Configuration\Enums\OrganismGroup;
+use App\Modules\Configuration\Models\Antibiotic;
 use App\Modules\Identity\Enums\Permission;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ class SaveCatalogEntry
     public function __construct(private readonly Auditor $auditor) {}
 
     /**
-     * @param  array{code?: string, name: string, is_active: bool, organism_group?: string|null}  $data
+     * @param  array{code?: string, name: string, is_active: bool, organism_group?: string|null, disk_content?: string|null, reported_as_antibiotic_id?: int|null}  $data
      *
      * @throws AuthorizationException|ValidationException
      */
@@ -37,11 +38,13 @@ class SaveCatalogEntry
             throw ValidationException::withMessages(['name' => 'Ingresá el nombre.']);
         }
 
-        return DB::transaction(function () use ($type, $id, $data, $name, $lockVersion) {
+        $extra = $type->hasAntibioticFields() ? $this->antibioticFields($id, $data) : [];
+
+        return DB::transaction(function () use ($type, $id, $data, $name, $lockVersion, $extra) {
             $class = $type->modelClass();
 
             if ($id === null) {
-                return $this->create($type, $class, $data, $name);
+                return $this->create($type, $class, $data, $name, $extra);
             }
 
             /** @var Model $entry */
@@ -52,6 +55,10 @@ class SaveCatalogEntry
 
             $before = ['name' => $entry->getAttribute('name'), 'is_active' => (bool) $entry->getAttribute('is_active')];
             $after = ['name' => $name, 'is_active' => (bool) $data['is_active']];
+            foreach (array_keys($extra) as $key) {
+                $before[$key] = $entry->getAttribute($key);
+            }
+            $after = [...$after, ...$extra];
             $changed = array_diff_assoc($after, $before);
             if ($changed === []) {
                 return $entry;
@@ -70,10 +77,28 @@ class SaveCatalogEntry
     }
 
     /**
+     * @param  array{disk_content?: string|null, reported_as_antibiotic_id?: int|null}  $data
+     * @return array{disk_content: string|null, reported_as_antibiotic_id: int|null}
+     *
+     * @throws ValidationException
+     */
+    private function antibioticFields(?int $id, array $data): array
+    {
+        $disk = filled($data['disk_content'] ?? null) ? trim((string) $data['disk_content']) : null;
+        $reportedAs = $data['reported_as_antibiotic_id'] ?? null;
+        if ($reportedAs !== null && ($reportedAs === $id || ! Antibiotic::query()->whereKey($reportedAs)->exists())) {
+            throw ValidationException::withMessages(['reported_as_antibiotic_id' => 'Elegí otro antibiótico para informar.']);
+        }
+
+        return ['disk_content' => $disk, 'reported_as_antibiotic_id' => $reportedAs];
+    }
+
+    /**
      * @param  class-string<Model>  $class
      * @param  array{code?: string, name: string, is_active: bool, organism_group?: string|null}  $data
+     * @param  array<string, mixed>  $extra
      */
-    private function create(CatalogType $type, string $class, array $data, string $name): Model
+    private function create(CatalogType $type, string $class, array $data, string $name, array $extra = []): Model
     {
         $code = mb_strtoupper(trim($data['code'] ?? ''));
         if ($code === '' || mb_strlen($code) > $type->codeMaxLength() || preg_match('/^[A-Z0-9][A-Z0-9._-]*$/u', $code) !== 1) {
@@ -83,7 +108,7 @@ class SaveCatalogEntry
             throw ValidationException::withMessages(['code' => 'Ya existe un ítem con ese código.']);
         }
 
-        $attributes = ['code' => $code, 'name' => $name, 'is_active' => (bool) $data['is_active']];
+        $attributes = ['code' => $code, 'name' => $name, 'is_active' => (bool) $data['is_active'], ...$extra];
 
         if ($type->hasOrganismGroup()) {
             $group = OrganismGroup::tryFrom((string) ($data['organism_group'] ?? ''));

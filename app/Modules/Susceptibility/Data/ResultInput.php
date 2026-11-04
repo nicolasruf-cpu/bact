@@ -14,4 +14,9 @@ final readonly class ResultInput
         public ?string $overrideReason,
         public bool $reported,
     ) {}
+
+    public function withOverride(?Interpretation $interpretation, string $reason): self
+    {
+        return new self($this->antibioticId, $this->micOperator, $this->value, $interpretation, $reason, $this->reported);
+    }
 }

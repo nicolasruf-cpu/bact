@@ -4,9 +4,11 @@ namespace App\Modules\Cultures\Actions;
 
 use App\Models\User;
 use App\Modules\Audit\Services\Auditor;
+use App\Modules\Configuration\Data\EarlyConfirmation;
 use App\Modules\Configuration\Enums\Atmosphere;
 use App\Modules\Configuration\Models\Medium;
 use App\Modules\Configuration\Models\ProtocolVersionMedium;
+use App\Modules\Configuration\Services\IncubationTimeCheck;
 use App\Modules\Cultures\Enums\CultureAuditAction;
 use App\Modules\Cultures\Enums\PlateStatus;
 use App\Modules\Cultures\Events\EnrichmentSubcultured;
@@ -21,26 +23,29 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Repique de un caldo de enriquecimiento a los medios que indica el protocolo congelado,
- * cumplidas las horas de incubación del caldo. Las placas nuevas quedan en el mismo
- * cultivo y se leen en sus lecturas programadas. Idempotente: un caldo ya repicado
+ * cumplidas las horas de incubación del caldo (antes, con confirmación: D-0020). Las placas
+ * nuevas quedan en el mismo cultivo y se leen en sus lecturas programadas. Idempotente: un caldo ya repicado
  * devuelve sus placas.
  */
 class SubcultureEnrichmentBroth
 {
-    public function __construct(private readonly Auditor $auditor) {}
+    public function __construct(
+        private readonly IncubationTimeCheck $timeCheck,
+        private readonly Auditor $auditor,
+    ) {}
 
     /**
      * @return Collection<int, Plate>
      *
      * @throws ValidationException|AuthorizationException
      */
-    public function handle(User $user, Plate $broth): Collection
+    public function handle(User $user, Plate $broth, EarlyConfirmation $early = new EarlyConfirmation): Collection
     {
         if (! $user->can(Permission::CulturesInoculate->value)) {
             throw new AuthorizationException('No tenés permiso para repicar.');
         }
 
-        return DB::transaction(function () use ($user, $broth) {
+        return DB::transaction(function () use ($user, $broth, $early) {
             /** @var Plate $broth */
             $broth = Plate::query()->lockForUpdate()->with('medium')->findOrFail($broth->id);
             /** @var Culture $culture */
@@ -64,9 +69,7 @@ class SubcultureEnrichmentBroth
             }
 
             $availableAt = $culture->inoculated_at->copy()->addHours((int) $setting->enrichment_subculture_min_hours);
-            if ($availableAt->isFuture()) {
-                throw ValidationException::withMessages(['plate' => 'Todavía no se cumplió la incubación del caldo.']);
-            }
+            $this->timeCheck->ensure($availableAt, $early, $culture, "Repique del caldo {$broth->medium->code}");
 
             $now = Date::now();
             $plates = collect($targets)->map(fn (array $target) => $culture->plates()->create([

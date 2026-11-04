@@ -49,12 +49,20 @@ class ProtocolVersionRules
             'count_categories.*.label' => ['required', 'string', 'max:255'],
             'ast_read_min_hours' => ['nullable', 'integer', 'min:0', 'max:2000'],
             'ast_read_due_hours' => ['nullable', 'integer', 'min:0', 'max:2000'],
+            'allow_presumptive_ast' => ['sometimes', 'boolean'],
+            'report_non_significant' => ['sometimes', 'boolean'],
+            'no_new_growth_label' => ['nullable', 'string', 'max:255'],
+            'intermediate_no_growth_label' => ['nullable', 'string', 'max:255'],
             'media' => ['present', 'array', 'max:20'],
             'media.*.medium_id' => ['required', 'integer', 'distinct', Rule::exists('media', 'id')->where('is_active', true)],
             'media.*.inoculum' => ['required', 'string', 'max:50'],
             'media.*.incubation_temperature' => ['required', 'string', 'max:30'],
             'media.*.atmosphere' => ['required', Rule::in($atmospheres)],
             'media.*.is_enrichment' => ['required', 'boolean'],
+            'media.*.read_from_hours' => ['nullable', 'integer', 'min:0', 'max:2000'],
+            'media.*.read_until_hours' => ['nullable', 'integer', 'min:0', 'max:2000'],
+            'media.*.bottle_types' => ['nullable', 'array', 'max:10'],
+            'media.*.bottle_types.*' => ['string', 'max:20'],
             'media.*.enrichment_subculture_min_hours' => ['nullable', 'integer', 'min:0', 'max:2000'],
             'media.*.enrichment_subculture_due_hours' => ['nullable', 'integer', 'min:0', 'max:2000'],
             'media.*.enrichment_subculture_media' => ['nullable', 'array', 'max:10'],
@@ -69,7 +77,9 @@ class ProtocolVersionRules
             'direct_exam_settings.fields.*.code' => ['required', 'string', 'max:20', self::CODE, 'distinct'],
             'direct_exam_settings.fields.*.label' => ['required', 'string', 'max:100'],
             'direct_exam_settings.fields.*.multiple' => ['boolean'],
-            'direct_exam_settings.fields.*.options' => ['required', 'array', 'min:1', 'max:30'],
+            'direct_exam_settings.fields.*.type' => ['nullable', Rule::in(['options', 'number', 'text'])],
+            'direct_exam_settings.fields.*.unit' => ['nullable', 'string', 'max:20'],
+            'direct_exam_settings.fields.*.options' => ['present', 'array', 'max:30'],
             'direct_exam_settings.fields.*.options.*.code' => ['required', 'string', 'max:20', self::CODE],
             'direct_exam_settings.fields.*.options.*.label' => ['required', 'string', 'max:255'],
             'direct_exam_settings.fields.*.options.*.organisms' => ['boolean'],
@@ -122,7 +132,26 @@ class ProtocolVersionRules
                 'enrichment_subculture_min_hours' => null,
                 'enrichment_subculture_due_hours' => null,
                 'enrichment_subculture_media' => null,
+                'read_from_hours' => null,
+                'read_until_hours' => null,
+                'bottle_types' => null,
             ];
+
+            // Placa que se lee solo en parte del cronograma (A3): tiene que caer al menos una lectura.
+            if (! $isEnrichment) {
+                $from = isset($medium['read_from_hours']) ? (int) $medium['read_from_hours'] : null;
+                $until = isset($medium['read_until_hours']) ? (int) $medium['read_until_hours'] : null;
+                if ($from !== null && $until !== null && $until < $from) {
+                    $errors["media.{$i}.read_until_hours"] = 'La última lectura no puede ser anterior a la primera.';
+                } elseif (($from !== null || $until !== null) && $schedule !== []
+                    && collect($schedule)->doesntContain(fn (array $s) => ($from === null || $s['min_hours'] >= $from) && ($until === null || $s['min_hours'] <= $until))) {
+                    $errors["media.{$i}.read_from_hours"] = 'Ninguna lectura del cronograma cae en las horas de esta placa.';
+                }
+                $row['read_from_hours'] = $from;
+                $row['read_until_hours'] = $until;
+            }
+            $bottleTypes = array_values(array_unique(array_map('strval', $medium['bottle_types'] ?? [])));
+            $row['bottle_types'] = $bottleTypes === [] ? null : $bottleTypes;
 
             if ($isEnrichment) {
                 $min = $medium['enrichment_subculture_min_hours'] ?? null;
@@ -149,6 +178,9 @@ class ProtocolVersionRules
         $directExam = $validated['direct_exam_settings'] ?? null;
         if ($directExam !== null) {
             foreach (array_values($directExam['fields']) as $i => $field) {
+                if (($field['type'] ?? 'options') === 'options' && $field['options'] === []) {
+                    $errors["direct_exam_settings.fields.{$i}.options"] = 'Cargá las opciones de '.$field['label'].'.';
+                }
                 $codes = array_column($field['options'], 'code');
                 if (count($codes) !== count(array_unique($codes))) {
                     $errors["direct_exam_settings.fields.{$i}.options"] = 'Hay opciones repetidas en '.$field['label'].'.';
@@ -162,7 +194,9 @@ class ProtocolVersionRules
                     'code' => (string) $field['code'],
                     'label' => trim((string) $field['label']),
                     'multiple' => (bool) ($field['multiple'] ?? false),
-                    'options' => array_map(fn (array $o) => [
+                    'type' => (string) ($field['type'] ?? 'options'),
+                    'unit' => filled($field['unit'] ?? null) ? trim((string) $field['unit']) : null,
+                    'options' => ($field['type'] ?? 'options') !== 'options' ? [] : array_map(fn (array $o) => [
                         'code' => (string) $o['code'],
                         'label' => trim((string) $o['label']),
                         'organisms' => (bool) ($o['organisms'] ?? false),
@@ -186,6 +220,13 @@ class ProtocolVersionRules
                 'negative_result_label' => trim((string) $blood['negative_result_label']),
                 'communicate_on_positive_gram' => (bool) ($blood['communicate_on_positive_gram'] ?? false),
             ];
+        }
+
+        $bottleCodes = $blood === null ? [] : array_column($blood['bottle_types'], 'code');
+        foreach ($media as $i => $row) {
+            if ($row['bottle_types'] !== null && ($blood === null || array_diff($row['bottle_types'], $bottleCodes) !== [])) {
+                $errors["media.{$i}.bottle_types"] = 'Hay un tipo de frasco que no está en los parámetros del frasco.';
+            }
         }
 
         if ($errors !== []) {
@@ -215,6 +256,10 @@ class ProtocolVersionRules
                 ], array_values($validated['count_categories'])),
                 'ast_read_min_hours' => $astMin === null ? null : (int) $astMin,
                 'ast_read_due_hours' => $astDue === null ? null : (int) $astDue,
+                'allow_presumptive_ast' => (bool) ($validated['allow_presumptive_ast'] ?? false),
+                'report_non_significant' => (bool) ($validated['report_non_significant'] ?? true),
+                'no_new_growth_label' => filled($validated['no_new_growth_label'] ?? null) ? trim((string) $validated['no_new_growth_label']) : null,
+                'intermediate_no_growth_label' => filled($validated['intermediate_no_growth_label'] ?? null) ? trim((string) $validated['intermediate_no_growth_label']) : null,
                 'direct_exam_settings' => $directExam,
                 'blood_culture_settings' => $blood,
             ],

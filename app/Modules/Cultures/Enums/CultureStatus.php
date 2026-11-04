@@ -13,6 +13,7 @@ enum CultureStatus: string
     case ClosedPositive = 'closed_positive';
     case ClosedNotSignificant = 'closed_not_significant';
     case ClosedContaminated = 'closed_contaminated';
+    case ClosedRejected = 'closed_rejected';
 
     public function label(): string
     {
@@ -23,6 +24,7 @@ enum CultureStatus: string
             self::ClosedPositive => 'Cerrado: positivo',
             self::ClosedNotSignificant => 'Cerrado: no significativo',
             self::ClosedContaminated => 'Cerrado: contaminado',
+            self::ClosedRejected => 'Cerrado: muestra no apta',
         };
     }
 

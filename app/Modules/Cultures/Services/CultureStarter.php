@@ -17,7 +17,7 @@ use Carbon\CarbonInterface;
 class CultureStarter
 {
     /**
-     * @param  iterable<array{medium_id: int, inoculum: string, incubation_temperature: string, atmosphere: mixed, is_enrichment?: bool}>  $plates
+     * @param  iterable<array{medium_id: int, inoculum: string, incubation_temperature: string, atmosphere: mixed, is_enrichment?: bool, read_from_hours?: int|null, read_until_hours?: int|null}>  $plates
      */
     public function start(SampleStudy $study, iterable $plates, CarbonInterface $inoculatedAt, int $userId, ?string $notes = null): Culture
     {

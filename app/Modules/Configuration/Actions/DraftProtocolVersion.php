@@ -23,7 +23,8 @@ class DraftProtocolVersion
         'processing_kind', 'is_reference_template', 'source', 'notes', 'first_read_min_hours', 'first_read_due_hours',
         'reading_schedule', 'reincubation_hours', 'max_reincubations', 'allow_bulk_negative_confirmation',
         'reading_options', 'count_categories', 'blood_culture_settings', 'direct_exam_settings',
-        'ast_read_min_hours', 'ast_read_due_hours',
+        'ast_read_min_hours', 'ast_read_due_hours', 'allow_presumptive_ast', 'report_non_significant',
+        'no_new_growth_label', 'intermediate_no_growth_label',
     ];
 
     public function __construct(private readonly Auditor $auditor) {}
@@ -66,7 +67,7 @@ class DraftProtocolVersion
                 $draft->media()->create($medium->only([
                     'medium_id', 'position', 'inoculum', 'incubation_temperature', 'atmosphere',
                     'is_enrichment', 'enrichment_subculture_min_hours', 'enrichment_subculture_due_hours',
-                    'enrichment_subculture_media',
+                    'enrichment_subculture_media', 'read_from_hours', 'read_until_hours', 'bottle_types',
                 ]));
             }
 

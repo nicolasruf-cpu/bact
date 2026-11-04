@@ -19,6 +19,13 @@ enum ConfigurationAuditAction: string implements AuditAction
     case BreakpointSetApproved = 'configuration.breakpoint_set_approved';
     case BreakpointSetActivated = 'configuration.breakpoint_set_activated';
     case BreakpointSetRetired = 'configuration.breakpoint_set_retired';
+    case AstPanelCreated = 'configuration.ast_panel_created';
+    case AstPanelUpdated = 'configuration.ast_panel_updated';
+    case IncubationTimeNotMet = 'configuration.incubation_time_not_met';
+    case IdentificationTestCreated = 'configuration.identification_test_created';
+    case IdentificationTestUpdated = 'configuration.identification_test_updated';
+    case AstRuleCreated = 'configuration.ast_rule_created';
+    case AstRuleUpdated = 'configuration.ast_rule_updated';
 
     public function auditName(): string
     {
@@ -41,6 +48,13 @@ enum ConfigurationAuditAction: string implements AuditAction
             self::BreakpointSetApproved => 'Aprobación de puntos de corte',
             self::BreakpointSetActivated => 'Puntos de corte vigentes',
             self::BreakpointSetRetired => 'Puntos de corte retirados',
+            self::AstPanelCreated => 'Panel de antibiograma nuevo',
+            self::AstPanelUpdated => 'Modificación de un panel de antibiograma',
+            self::IncubationTimeNotMet => 'Registro antes del tiempo de incubación',
+            self::IdentificationTestCreated => 'Prueba de identificación nueva',
+            self::IdentificationTestUpdated => 'Modificación de una prueba de identificación',
+            self::AstRuleCreated => 'Regla de antibiograma nueva',
+            self::AstRuleUpdated => 'Modificación de una regla de antibiograma',
         };
     }
 }

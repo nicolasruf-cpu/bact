@@ -11,6 +11,8 @@ enum CultureAuditAction: string implements AuditAction
     case Completed = 'culture.completed';
     case EnrichmentSubcultured = 'culture.enrichment_subcultured';
     case DirectExamRecorded = 'direct_exam.recorded';
+    case PlateLost = 'culture.plate_lost';
+    case SampleRejected = 'sample_study.rejected';
 
     public function auditName(): string
     {
@@ -25,6 +27,8 @@ enum CultureAuditAction: string implements AuditAction
             self::Completed => 'Cerró un cultivo',
             self::EnrichmentSubcultured => 'Repicó un caldo de enriquecimiento',
             self::DirectExamRecorded => 'Registró un examen directo',
+            self::PlateLost => 'Dio por perdida una placa',
+            self::SampleRejected => 'Declaró una muestra no apta',
         };
     }
 }

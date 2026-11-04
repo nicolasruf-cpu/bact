@@ -31,6 +31,8 @@ class CatalogQuery
                     'name' => (string) $entry->getAttribute('name'),
                     'is_active' => (bool) $entry->getAttribute('is_active'),
                     'organism_group' => $group instanceof OrganismGroup ? $group->label() : null,
+                    'disk_content' => $type->hasAntibioticFields() ? $entry->getAttribute('disk_content') : null,
+                    'reported_as_antibiotic_id' => $type->hasAntibioticFields() ? $entry->getAttribute('reported_as_antibiotic_id') : null,
                     'lock_version' => (int) $entry->getAttribute('lock_version'),
                 ];
             })

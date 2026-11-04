@@ -22,7 +22,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * Carga del frasco: en el equipo (se registra lo que informa el equipo) o en estufa para
  * procesamiento manual con repiques. Los días de incubación salen del protocolo congelado.
- * Idempotente: un estudio ya cargado devuelve su frasco.
+ * Idempotente: repetir la misma carga devuelve el frasco; otro frasco en la misma muestra es un error.
  */
 class LoadBottle
 {
@@ -48,9 +48,17 @@ class LoadBottle
             /** @var SampleStudy $study */
             $study = SampleStudy::query()->lockForUpdate()->with(['protocolVersion', 'sample'])->findOrFail($study->id);
 
+            // Reintento de la misma carga: devuelve el frasco. Otro frasco (p. ej., el anaerobio del
+            // set) es otra muestra con su código: no se ignora sin avisar (revisión de marchas A5).
             $existing = BloodCultureBottle::query()->where('sample_study_id', $study->id)->first();
             if ($existing !== null) {
-                return $existing;
+                if ($existing->bottle_type === $bottleType && $existing->method === $method) {
+                    return $existing;
+                }
+
+                throw ValidationException::withMessages([
+                    'bottle_type' => 'Esta muestra ya tiene un frasco cargado ('.$existing->settings()->bottleTypeLabel($existing->bottle_type).'). Cada frasco del set se recibe como una muestra propia, con su código.',
+                ]);
             }
 
             $settings = $study->protocolVersion->bloodCultureSettings();

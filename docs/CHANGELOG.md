@@ -1,6 +1,85 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-04 — Hallazgos de la revisión de marchas corregidos
+- **Prioridad 1 (B1, B2):** catálogo de pruebas de identificación (Administración → Pruebas de identificación) y registro del Gram, las pruebas rápidas y las bioquímicas en cada aislamiento, con siembra, lectura y resultado. Las bioquímicas sembradas aparecen para leer en la mesada de identificación (D-0023).
+- **Prioridad 2 (A1, A2):** antibiograma con identificación presuntiva si el protocolo lo habilita, con la hora real de montaje; se lee con la definitiva. Incubación propia por panel; un antibiograma sin leer se descarta con motivo (D-0024).
+- **Prioridad 3 (A4, C3, A6):** significancia editable con motivo y «probable contaminante»; «Otros desarrollos» en el informe; textos propios para «sin desarrollo nuevo» y la lectura intermedia (D-0025, D-0026).
+- **Prioridad 4 (A3):** lectura por placa y medios que se leen solo en parte del cronograma (D-0026).
+- **Prioridad 5 (B3, B5, B6):** carga del VITEK con tarjetas y resultado asociado; pruebas de mecanismo desde el antibiograma; identificación no concluyente (D-0023, D-0027).
+- **Prioridad 6:**
+  - placa perdida y resiembra (B7);
+  - muestra no apta con nueva muestra pedida (B8);
+  - derivación con resultado (B9);
+  - campos numéricos en el directo (B10);
+  - recuento en lecturas sin aislamientos (C1);
+  - reglas de antibiograma del laboratorio (C2);
+  - carga del disco y antibiótico subrogante (A7);
+  - un frasco por muestra con error claro y placa anaerobia para el frasco anaerobio (A5);
+  - plantillas y catálogo de referencia ampliados (D).
+- **Marcha:** página nueva que reconstruye cada estudio paso a paso con lo registrado; se abre desde la validación, la lectura y la identificación.
+- Dos migraciones nuevas (`2026_11_08_000100`, `2026_11_08_000200`). 216 pruebas en verde. `composer test` ya no corta a los 300 s.
+
+### 2026-11-03 — Revisión de marchas como bacteriólogo
+- Se recorrieron 20 marchas de los 18 protocolos con las acciones reales y se reconstruyó cada una solo con lo guardado. Informe: `docs/revision/MARCHAS_2026-11-03.md`; reconstrucciones: el anexo.
+- Hallazgos principales:
+  - el Gram y las pruebas de la colonia, las bioquímicas y la carga del VITEK quedan en texto libre;
+  - el antibiograma exige identificación definitiva y tiene una sola incubación mínima para todos los métodos;
+  - la lectura es del cultivo entero, no de cada placa;
+  - la significancia no cambia después de identificar;
+  - en hemocultivo hay un frasco por estudio, y el segundo se ignora sin avisar.
+- Preguntas nuevas: Q-C20 a Q-C26. No se cambió código.
+
+### 2026-11-03 — Antibióticos por fuera del panel (D-0022)
+- Al preparar el antibiograma se pueden agregar antibióticos que no están en el panel, cada uno con su método y un motivo opcional. Se leen junto con el panel.
+- Al leer el panel (por ejemplo, el VITEK) también se pueden agregar: lo leído queda registrado y se programa otra lectura para los agregados, con la incubación del protocolo y el mismo aviso si se lee antes de tiempo.
+- El aislamiento queda resuelto, y el cultivo puede cerrarse, recién cuando no falta leer ningún antibiótico. Mientras tanto, el informe preliminar muestra lo leído y avisa cuántos faltan.
+- Cada antibiótico se interpreta con el punto de corte de su método. El informe muestra la unidad en cada valor.
+- Migración: `susceptibility_results` suma `method`, `is_additional`, `addition_reason`, `set_up_at`, `set_up_by` y `read_at`. Los resultados existentes toman los datos de su antibiograma.
+
+### 2026-11-03 — Paneles de antibiograma (D-0021)
+- Nueva pantalla **Administración → Paneles de antibiograma**: alta y modificación de paneles con nombre, grupos de germen, muestras, marca VITEK y antibióticos en orden.
+  - Un panel vale para uno o más grupos y una o más muestras; sin muestras tildadas vale para todas.
+  - La pantalla muestra qué panel le toca a cada grupo y marca con «Revisá» los grupos sin panel o con panel solo para algunas muestras.
+  - Los define el Director técnico responsable; los demás con acceso a la configuración clínica los ven. Altas y cambios auditados, con control de concurrencia.
+- Al preparar el antibiograma se propone el panel de la muestra antes que el general. Un panel VITEK fija el método en CIM.
+- La identificación avisa cuando no hay panel para el grupo **en esa muestra**.
+- El resumen del protocolo muestra qué panel le toca a cada grupo en su muestra, y cuáles no tienen.
+- Migración: `ast_panels.organism_group` pasa a `organism_groups` (JSON), con `is_vitek`, `lock_version` y la tabla `ast_panel_sample_types`. Los paneles existentes conservan su grupo y valen para todas las muestras.
+
+### 2026-11-02 — Lectura del protocolo para detectar faltantes
+- El resumen del protocolo recorre el circuito completo: recepción, frasco, directo, siembra, lecturas, identificación, antibiograma, y validación e informe.
+- Cada paso dice en qué mesada aparece, qué se registra y qué pasa después.
+- Las opciones de lectura se muestran con el texto que sale en el informe y con lo que hace el sistema al elegirlas.
+- **«Revisá»:** preguntas que no impiden aprobar (`lib/protocolReview.ts`). No son reglas clínicas: muestran lo que el sistema va a hacer con lo cargado. Por ejemplo:
+  - el estudio no lleva directo;
+  - el directo abre un crítico, pero ninguna opción indica microorganismos;
+  - un campo del directo no tiene opciones;
+  - no hay opción de flora mixta, o no hay opción de no significativo;
+  - hay opciones de lectura sin texto;
+  - los aislamientos se cargan sin recuento;
+  - un caldo que se repica tan tarde que las placas del repique no llegan a la última lectura;
+  - faltan los tipos de frasco, el Gram o los equipos.
+- Se aclara lo que el protocolo no define: puntos de corte, paneles de antibiograma y criterios de rechazo.
+
+### 2026-11-02 — Fechas a un clic
+- Todos los campos de fecha tienen el botón **Hoy**: nacimiento en la recepción, y desde y hasta en el perfil de sensibilidad.
+- Todos los campos de fecha y hora tienen el botón **Ahora**: toma de la muestra, carga del frasco y hora del positivo.
+- Se hace con los componentes `DateInput` y `DateTimeInput` (regla en `UX_UI.md`).
+
+### 2026-11-02 — Los tiempos de incubación advierten, no bloquean (D-0020)
+- Antes de la hora del protocolo, ahora se puede registrar igual:
+  - lectura del cultivo;
+  - repique del caldo de enriquecimiento;
+  - lectura del antibiograma;
+  - repique ciego y lectura del repique;
+  - cierre del frasco como negativo.
+- La pantalla muestra «OJO: todavía no se cumplió el tiempo de incubación», desde cuándo corresponde y cuánto falta. Para seguir, hay que tildar «Registrar igual, antes de tiempo»; el motivo es opcional.
+- Si llega un pedido sin confirmar (por ejemplo, desde una pantalla abierta hace rato), el servidor lo rechaza con la misma advertencia.
+- Auditoría: evento «Registro antes del tiempo de incubación», con qué se registró, cuántos minutos faltaban y el motivo.
+- Una actividad programada se puede completar antes de su hora (`ActivityLifecycle`).
+- Pruebas: 174 en verde.
+
 ### 2026-11-01 — Editor de protocolos más fácil de interpretar
 - Las secciones siguen el orden de la mesada: siembra, directo, lecturas, qué se informa, recuentos y antibiograma. En el hemocultivo, el frasco va primero.
 - Índice lateral que marca las secciones con faltantes o errores. Cada faltante para aprobar aparece en su sección (`ProtocolVersionRules::missingItems`).

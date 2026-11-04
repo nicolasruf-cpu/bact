@@ -5,6 +5,8 @@ namespace App\Modules\Configuration\Data;
 /**
  * Examen directo de la muestra, tomado de la versión de protocolo congelada.
  * Cada campo tiene opciones; las que indican microorganismos llevan `organisms: true`.
+ * Un campo también puede ser un número (pH, score de Nugent) o un texto, con su unidad
+ * (revisión de marchas B10): se guarda como un solo valor.
  * Si `critical_if_organisms` está activo, un directo con microorganismos abre un
  * resultado crítico (LCR, decisión del laboratorio 2026-11-01). Son configuración del
  * laboratorio: el sistema no interpreta el directo.
@@ -12,7 +14,7 @@ namespace App\Modules\Configuration\Data;
 final readonly class DirectExamSettings
 {
     /**
-     * @param  list<array{code: string, label: string, multiple?: bool, options: list<array{code: string, label: string, organisms?: bool}>}>  $fields
+     * @param  list<array{code: string, label: string, type?: string, unit?: string|null, multiple?: bool, options: list<array{code: string, label: string, organisms?: bool}>}>  $fields
      */
     public function __construct(
         public string $label,
@@ -64,9 +66,12 @@ final readonly class DirectExamSettings
             if ($codes === []) {
                 continue;
             }
+            $type = $field['type'] ?? 'options';
             $lines[] = [
                 'field' => $field['label'],
-                'values' => array_map(fn (string $code) => $this->option($field['code'], $code)['label'] ?? $code, $codes),
+                'values' => $type === 'options'
+                    ? array_map(fn (string $code) => $this->option($field['code'], $code)['label'] ?? $code, $codes)
+                    : array_map(fn (string $value) => trim($value.' '.($field['unit'] ?? '')), $codes),
             ];
         }
 

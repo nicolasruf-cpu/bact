@@ -6,7 +6,10 @@ use App\Models\User;
 use App\Modules\BloodCultures\Models\BlindSubculture;
 use App\Modules\BloodCultures\Models\BloodCultureBottle;
 use App\Modules\Configuration\Models\Antibiotic;
+use App\Modules\Configuration\Models\AstPanel;
+use App\Modules\Configuration\Models\AstRule;
 use App\Modules\Configuration\Models\BreakpointSet;
+use App\Modules\Configuration\Models\IdentificationTest;
 use App\Modules\Configuration\Models\Medium;
 use App\Modules\Configuration\Models\Organism;
 use App\Modules\Configuration\Models\Protocol;
@@ -19,6 +22,9 @@ use App\Modules\Cultures\Models\DirectExam;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Cultures\Models\Plate;
 use App\Modules\Cultures\Models\Reading;
+use App\Modules\Identification\Models\InstrumentRun;
+use App\Modules\Identification\Models\IsolateSubculture;
+use App\Modules\Identification\Models\Referral;
 use App\Modules\Orders\Models\LabOrder;
 use App\Modules\Organization\Models\Site;
 use App\Modules\Patients\Models\Patient;
@@ -111,6 +117,12 @@ class AppServiceProvider extends ServiceProvider
             'medium' => Medium::class,
             'organism' => Organism::class,
             'antibiotic' => Antibiotic::class,
+            'ast_panel' => AstPanel::class,
+            'identification_test' => IdentificationTest::class,
+            'instrument_run' => InstrumentRun::class,
+            'isolate_subculture' => IsolateSubculture::class,
+            'referral' => Referral::class,
+            'ast_rule' => AstRule::class,
         ]);
     }
 }

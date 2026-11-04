@@ -3,10 +3,14 @@
 use App\Http\Controllers\DashboardController;
 use App\Modules\Audit\Http\Controllers\AuditLogController;
 use App\Modules\BloodCultures\Http\Controllers\BloodCultureController;
+use App\Modules\Configuration\Http\Controllers\AstPanelController;
+use App\Modules\Configuration\Http\Controllers\AstRuleController;
 use App\Modules\Configuration\Http\Controllers\BreakpointSetController;
 use App\Modules\Configuration\Http\Controllers\CatalogController;
+use App\Modules\Configuration\Http\Controllers\IdentificationTestController;
 use App\Modules\Configuration\Http\Controllers\ProtocolController;
 use App\Modules\CriticalResults\Http\Controllers\CriticalCommunicationController;
+use App\Modules\Cultures\Http\Controllers\CultureIncidentController;
 use App\Modules\Cultures\Http\Controllers\DirectExamController;
 use App\Modules\Cultures\Http\Controllers\EnrichmentController;
 use App\Modules\Cultures\Http\Controllers\InoculationController;
@@ -15,6 +19,7 @@ use App\Modules\Identification\Http\Controllers\IdentificationController;
 use App\Modules\Identity\Enums\Permission;
 use App\Modules\Identity\Http\Controllers\ActiveSiteController;
 use App\Modules\Identity\Http\Controllers\UserController;
+use App\Modules\Reporting\Http\Controllers\MarchController;
 use App\Modules\Reporting\Http\Controllers\ValidationController;
 use App\Modules\Samples\Http\Controllers\ReceptionController;
 use App\Modules\Statistics\Http\Controllers\SusceptibilityProfileController;
@@ -78,15 +83,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Lectura de cultivos.
     Route::get('cultures/{culture}/reading', [ReadingController::class, 'create'])->name('readings.create');
     Route::post('cultures/{culture}/reading', [ReadingController::class, 'store'])->name('readings.store');
+    Route::post('plates/{plate}/lost', [CultureIncidentController::class, 'plateLost'])->name('plates.lost');
+    Route::post('sample-studies/{sampleStudy}/rejection', [CultureIncidentController::class, 'reject'])->name('sample-studies.reject');
+    Route::get('sample-studies/{sampleStudy}/march', [MarchController::class, 'show'])->name('marches.show');
 
     // Identificación.
     Route::get('isolates/{isolate}/identification', [IdentificationController::class, 'create'])->name('identifications.create');
     Route::post('isolates/{isolate}/identification', [IdentificationController::class, 'store'])->name('identifications.store');
+    Route::post('isolates/{isolate}/tests', [IdentificationController::class, 'storeTests'])->name('isolate-tests.store');
+    Route::post('isolates/{isolate}/tests/reading', [IdentificationController::class, 'readTests'])->name('isolate-tests.read');
+    Route::post('isolates/{isolate}/significance', [IdentificationController::class, 'significance'])->name('isolates.significance');
+    Route::post('isolates/{isolate}/subcultures', [IdentificationController::class, 'subculture'])->name('isolate-subcultures.store');
+    Route::post('isolate-subcultures/{subculture}/reading', [IdentificationController::class, 'readSubculture'])->name('isolate-subcultures.read');
+    Route::post('isolates/{isolate}/instrument-runs', [IdentificationController::class, 'loadInstrument'])->name('instrument-runs.store');
+    Route::post('isolates/{isolate}/referrals', [IdentificationController::class, 'refer'])->name('referrals.store');
+    Route::post('referrals/{referral}/result', [IdentificationController::class, 'referralResult'])->name('referrals.result');
 
     // Antibiograma.
     Route::get('isolates/{isolate}/susceptibility', [SusceptibilityController::class, 'show'])->name('susceptibility.show');
     Route::post('isolates/{isolate}/susceptibility', [SusceptibilityController::class, 'setUp'])->name('susceptibility.setup');
     Route::post('isolates/{isolate}/susceptibility/results', [SusceptibilityController::class, 'read'])->name('susceptibility.read');
+    Route::post('isolates/{isolate}/susceptibility/cancel', [SusceptibilityController::class, 'cancel'])->name('susceptibility.cancel');
+    Route::post('isolates/{isolate}/susceptibility/tests', [SusceptibilityController::class, 'tests'])->name('susceptibility.tests');
 
     // Validación e informes.
     Route::get('sample-studies/{sampleStudy}/validation', [ValidationController::class, 'create'])->name('validations.create');
@@ -130,6 +148,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('protocol-versions/{version}/approve', [ProtocolController::class, 'approve'])->name('protocol-versions.approve');
         Route::post('protocol-versions/{version}/activate', [ProtocolController::class, 'activate'])->name('protocol-versions.activate');
         Route::post('protocol-versions/{version}/retire', [ProtocolController::class, 'retire'])->name('protocol-versions.retire');
+
+        Route::get('ast-panels', [AstPanelController::class, 'index'])->name('ast-panels.index');
+        Route::post('ast-panels', [AstPanelController::class, 'store'])->name('ast-panels.store');
+        Route::put('ast-panels/{panel}', [AstPanelController::class, 'update'])->name('ast-panels.update');
+
+        Route::get('identification-tests', [IdentificationTestController::class, 'index'])->name('identification-tests.index');
+        Route::post('identification-tests', [IdentificationTestController::class, 'store'])->name('identification-tests.store');
+        Route::put('identification-tests/{test}', [IdentificationTestController::class, 'update'])->name('identification-tests.update');
+
+        Route::get('ast-rules', [AstRuleController::class, 'index'])->name('ast-rules.index');
+        Route::post('ast-rules', [AstRuleController::class, 'store'])->name('ast-rules.store');
+        Route::put('ast-rules/{rule}', [AstRuleController::class, 'update'])->name('ast-rules.update');
 
         Route::get('breakpoint-sets', [BreakpointSetController::class, 'index'])->name('breakpoint-sets.index');
         Route::post('breakpoint-sets', [BreakpointSetController::class, 'store'])->name('breakpoint-sets.store');

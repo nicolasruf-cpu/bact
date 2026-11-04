@@ -36,7 +36,7 @@ enum Workbench: string
         return match ($this) {
             self::Processing => [ActivityType::DirectExam, ActivityType::SubcultureEnrichment],
             self::Reading => [ActivityType::ReadCulture],
-            self::Identification => [ActivityType::Identify],
+            self::Identification => [ActivityType::Identify, ActivityType::ReadIdentificationTests, ActivityType::InstrumentResult, ActivityType::ReadIsolateSubculture, ActivityType::ReferralResult],
             self::Susceptibility => [ActivityType::AstSetup, ActivityType::AstRead],
             self::Validation => [ActivityType::ValidateReport],
         };
@@ -52,7 +52,7 @@ enum Workbench: string
         return match ($this) {
             self::Processing => [Permission::DirectExamsPerform, Permission::CulturesInoculate],
             self::Reading => [Permission::CulturesReadNegative, Permission::CulturesReadPositive],
-            self::Identification => [Permission::IdentificationPerform],
+            self::Identification => [Permission::IdentificationPerform, Permission::IdentificationBiochemRead],
             self::Susceptibility => [Permission::AstSetup, Permission::AstRead],
             self::Validation => [Permission::ReportsValidate],
         };

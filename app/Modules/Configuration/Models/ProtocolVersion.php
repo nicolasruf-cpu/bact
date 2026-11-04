@@ -35,6 +35,10 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $direct_exam_settings
  * @property int|null $ast_read_min_hours
  * @property int|null $ast_read_due_hours
+ * @property bool $allow_presumptive_ast el antibiograma se puede preparar con identificación presuntiva
+ * @property bool $report_non_significant el informe incluye los aislamientos no significativos
+ * @property string|null $no_new_growth_label texto de «sin desarrollo nuevo» después de un desarrollo
+ * @property string|null $intermediate_no_growth_label texto de una lectura intermedia sin desarrollo
  * @property Carbon|null $approved_at
  * @property Carbon|null $activated_at
  * @property Carbon|null $retired_at
@@ -55,6 +59,8 @@ class ProtocolVersion extends Model
             'is_reference_template' => 'boolean',
             'processing_kind' => ProcessingKind::class,
             'allow_bulk_negative_confirmation' => 'boolean',
+            'allow_presumptive_ast' => 'boolean',
+            'report_non_significant' => 'boolean',
             'reading_options' => 'array',
             'count_categories' => 'array',
             'blood_culture_settings' => 'array',

@@ -11,6 +11,7 @@ use App\Modules\Cultures\Events\CultureCompleted;
 use App\Modules\Cultures\Models\Culture;
 use App\Modules\Cultures\Models\Isolate;
 use App\Modules\Samples\Enums\SampleStudyStatus;
+use App\Modules\Samples\Models\SampleStudy;
 
 /**
  * Cierre del cultivo: el estudio queda listo para validar. Se llama dentro de la transacción
@@ -34,6 +35,16 @@ class CultureClosure
         $this->auditor->record(CultureAuditAction::Completed, $culture, after: ['status' => $status->value]);
 
         event(new CultureCompleted($culture, $study));
+    }
+
+    /**
+     * Estudio sin cultivo que se cierra (muestra no apta antes de sembrar): pasa a validación.
+     */
+    public function closeStudy(SampleStudy $study): void
+    {
+        $study->update(['status' => SampleStudyStatus::ReadyForValidation, 'lock_version' => $study->lock_version + 1]);
+
+        event(new CultureCompleted(null, $study));
     }
 
     /**

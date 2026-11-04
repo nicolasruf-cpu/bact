@@ -80,6 +80,7 @@ class UrineCultureTemplateSeeder extends Seeder
                 'count_categories' => self::COUNT_CATEGORIES,
                 'ast_read_min_hours' => 16,
                 'ast_read_due_hours' => 24,
+                'allow_presumptive_ast' => true,
                 'activated_at' => $status === ProtocolVersionStatus::Active ? Date::now() : null,
             ]);
 

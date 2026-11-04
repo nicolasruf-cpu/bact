@@ -3,8 +3,10 @@
 namespace App\Modules\Cultures\Models;
 
 use App\Modules\Configuration\Enums\ReadingOutcome;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use LogicException;
 
@@ -16,10 +18,13 @@ use LogicException;
  * @property int $attempt
  * @property string $option_code
  * @property ReadingOutcome $outcome
+ * @property string|null $label texto con que quedó la lectura (A6: «sin desarrollo nuevo», intermedia)
+ * @property string|null $count_category recuento sin aislamientos (no significativo, flora mixta)
  * @property string|null $notes
  * @property int $read_by
  * @property Carbon $read_at
  * @property-read Culture $culture
+ * @property-read Collection<int, PlateReading> $plateReadings
  */
 class Reading extends Model
 {
@@ -36,6 +41,14 @@ class Reading extends Model
     protected static function booted(): void
     {
         static::updating(fn () => throw new LogicException('Las lecturas no se modifican: se registra una nueva.'));
+    }
+
+    /**
+     * @return HasMany<PlateReading, $this>
+     */
+    public function plateReadings(): HasMany
+    {
+        return $this->hasMany(PlateReading::class);
     }
 
     /**
