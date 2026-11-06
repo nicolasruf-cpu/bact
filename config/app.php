@@ -84,6 +84,9 @@ return [
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
+    // Contraseña de los usuarios de demostración. Obligatoria en una demo expuesta a internet.
+    'demo_password' => env('DEMO_PASSWORD'),
+
     /*
     |--------------------------------------------------------------------------
     | Encryption Key

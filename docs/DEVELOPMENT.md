@@ -44,7 +44,7 @@ cp .env.example .env
 Si aparecen errores de permisos en `storage/` o `node_modules/`:
 `MSYS_NO_PATHCONV=1 docker compose exec laravel.test chown -R sail:sail /var/www/html`.
 
-## Usuarios de demostración (sintéticos, contraseña `password`)
+## Usuarios de demostración (sintéticos, contraseña `DEMO_PASSWORD` del `.env` o, si no está, `password`)
 | Email | Rol | Sedes |
 |---|---|---|
 | admin@bactruf.test | Administrador | las 3 |

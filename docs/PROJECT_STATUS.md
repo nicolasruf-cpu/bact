@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-**Última actualización:** 2026-11-04
+**Última actualización:** 2026-11-05
 **Fase actual:** 4b — Urocultivo, hemocultivo y el resto de los cultivos en placa de punta a punta con datos sintéticos; pendiente revisión del usuario y validación clínica
 
 ## Terminado
@@ -54,7 +54,7 @@
 
 ## Próximos pasos
 1. Usuario: recorrer en el navegador las pantallas nuevas (identificación, lectura por placa, antibiograma presuntivo, marcha, pruebas y reglas) y repetir las 20 marchas de la revisión.
-2. Al desplegar: correr las migraciones y `ReferenceCatalogSeeder` (catálogo de pruebas, paneles y antibióticos nuevos). Las versiones de protocolo ya vigentes no cambian: para usar el antibiograma presuntivo o las horas por placa hay que aprobar una versión nueva.
+2. Demo en el hosting de Sitios Hispanos: seguir `docs/DEPLOYMENT.md`. En otras instalaciones existentes: correr las migraciones y `ReferenceCatalogSeeder` (catálogo de pruebas, paneles y antibióticos nuevos). Las versiones de protocolo ya vigentes no cambian: para usar el antibiograma presuntivo o las horas por placa hay que aprobar una versión nueva.
 3. Director técnico: validar los valores de referencia nuevos (Q-C27), cargar paneles reales y, si corresponde, reglas de antibiograma.
 4. Resto de la Fase 4d: reglas de críticos y plantillas de informe (Q-A12).
 5. Corrección de informes (nueva versión con motivo), PDF.

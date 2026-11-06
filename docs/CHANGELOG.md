@@ -1,6 +1,12 @@
 # Changelog
 
 ## [Sin publicar]
+### 2026-11-05 — Demo en hosting compartido sin SSH
+- Procedimiento en `docs/DEPLOYMENT.md` para cPanel: el paquete se arma en desarrollo (`deploy/package.py`) con `vendor/` y el frontend compilado.
+- `deploy/cron.sh`, cada minuto: corre las migraciones cuando se sube una versión nueva (y la demo en la primera instalación) y, si no, el planificador.
+- La contraseña de los usuarios de demostración sale de `DEMO_PASSWORD`.
+- Probado con una instalación simulada en `staging`; 217 pruebas en verde.
+
 ### 2026-11-04 — Hallazgos de la revisión de marchas corregidos
 - **Prioridad 1 (B1, B2):** catálogo de pruebas de identificación (Administración → Pruebas de identificación) y registro del Gram, las pruebas rápidas y las bioquímicas en cada aislamiento, con siembra, lectura y resultado. Las bioquímicas sembradas aparecen para leer en la mesada de identificación (D-0023).
 - **Prioridad 2 (A1, A2):** antibiograma con identificación presuntiva si el protocolo lo habilita, con la hora real de montaje; se lee con la definitiva. Incubación propia por panel; un antibiograma sin leer se descarta con motivo (D-0024).

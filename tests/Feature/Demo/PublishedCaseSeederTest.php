@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use App\Modules\Audit\Services\AuditChainVerifier;
 use App\Modules\CriticalResults\Models\CriticalAlert;
 use App\Modules\Cultures\Models\Isolate;
@@ -11,6 +12,7 @@ use App\Modules\Samples\Models\SampleStudy;
 use App\Modules\Susceptibility\Models\SusceptibilityTest;
 use Database\Seeders\DemoSeeder;
 use Database\Seeders\PublishedCaseSeeder;
+use Illuminate\Support\Facades\Hash;
 
 test('los casos publicados recorren el circuito real sin errores y sin duplicarse', function () {
     $this->seed(RolesAndPermissionsSeeder::class);
@@ -34,4 +36,14 @@ test('los casos publicados recorren el circuito real sin errores y sin duplicars
     // Idempotente.
     $this->seed(PublishedCaseSeeder::class);
     expect(Sample::where('barcode', 'like', 'PUB-%')->count())->toBe(12);
+});
+
+test('en una demo expuesta, los usuarios toman la contraseña de DEMO_PASSWORD', function () {
+    config(['app.demo_password' => 'Demo-Sintetica-2026']);
+    $this->seed(RolesAndPermissionsSeeder::class);
+    $this->seed(DemoSeeder::class);
+
+    $admin = User::where('email', 'admin@bactruf.test')->sole();
+    expect(Hash::check('Demo-Sintetica-2026', $admin->password))->toBeTrue()
+        ->and(Hash::check('password', $admin->password))->toBeFalse();
 });

@@ -16,7 +16,7 @@ use RuntimeException;
 
 /**
  * Datos de demostración SINTÉTICOS (sedes y usuarios ficticios). Nunca en producción.
- * Contraseña de todos los usuarios: "password".
+ * Contraseña de todos los usuarios: DEMO_PASSWORD del .env o, si no está, "password".
  */
 class DemoSeeder extends Seeder
 {
@@ -65,8 +65,9 @@ class DemoSeeder extends Seeder
      */
     private function user(string $email, string $name, array $assignments): void
     {
+        $password = config('app.demo_password');
         $user = User::where('email', $email)->first()
-            ?? User::factory()->create(['email' => $email, 'name' => $name]);
+            ?? User::factory()->create(['email' => $email, 'name' => $name, ...(is_string($password) && $password !== '' ? ['password' => $password] : [])]);
 
         foreach ($assignments as [$site, $role]) {
             setPermissionsTeamId($site->id);
